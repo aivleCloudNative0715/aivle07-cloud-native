@@ -1,102 +1,32 @@
-# 
+# Aivle 걷다가서재
 
-## Model
-www.msaez.io/#/88013406/storming/de2bd2f106a41aaac5496fda1cf063f9
+AI 기반 자동 출간 및 구독 플랫폼  
+**도메인 주도 설계(DDD)** 와 **마이크로서비스 아키텍처(MSA)** 기반으로 구현된  
+클라우드 네이티브 애플리케이션 프로젝트입니다.
 
-## Before Running Services
-### Make sure there is a Kafka server running
-```
-cd kafka
-docker-compose up
-```
-- Check the Kafka messages:
-```
-cd infra
-docker-compose exec -it kafka /bin/bash
-cd /bin
-./kafka-console-consumer --bootstrap-server localhost:9092 --topic
-```
+## 🧩 주요 기술 스택
 
-## Run the backend micro-services
-See the README.md files inside the each microservices directory:
+- **Spring Boot**, **React** 기반 마이크로서비스
+- **Kubernetes** + **Azure** 배포
+- **Istio** 기반 **Service Mesh**
+- **CI/CD** 자동화 파이프라인 구성
+- **Event-Driven Architecture**
+- **Domain-Driven Design (DDD)** 적용
 
-- user
-- author
-- aiservice
-- platform
-- writing
-- point
+## 🎯 핵심 기능
 
+- AI 기반 자동 출판 기능
+- 포인트 기반 전자책 구독 시스템
+- 구독 및 열람 내역 실시간 반영 (CQRS)
+- 작가 및 관리자 기능
+- 실시간 메시징 및 상태 전달 (Event)
 
-## Run API Gateway (Spring Gateway)
-```
-cd gateway
-mvn spring-boot:run
-```
+## 🎓 학습 목표
 
-## Test by API
-- user
-```
- http :8088/users id="id"email="email"userName="userName"hasActiveSubscription="hasActiveSubscription"message="	message"subscriptionDueDate="subscriptionDueDate"isKt="isKT"
-```
-- author
-```
- http :8088/authors id="id"authorEmail="authorEmail"authorName="authorName"bio="bio"representativeWork="representativeWork"portfolio="portfolio"isApproved="isApproved"
-```
-- aiservice
-```
- http :8088/bookWorks id="id"manuscriptId="manuscriptId"title="title"summary="summary"keywords="keywords"coverImageUrl="coverImageUrl"ebookUrl="ebookUrl"category="category"price="price"status="status"
-```
-- platform
-```
- http :8088/books id="id"title="title"authorName="authorName"summary="summary"category="category"coverImageUrl="coverImageUrl"ebookUrl="ebookUrl"price="price"viewCount="viewCount"
- http :8088/bookViews bookId="bookId"title="title"authorName="authorName"summary="summary"category="category"viewCount="viewCount"isbestseller="isbestseller"
-```
-- writing
-```
- http :8088/manuscripts id="id"authorId="authorId"title="title"content="content"status="status"lastModifiedAt="lastModifiedAt"summary="summary"keywords="keywords"
-```
-- point
-```
- http :8088/points id="id"currentPoints="currentPoints"userId="userId"isKTmember="isKTmember"isKTmember="isKTmember"
-```
+- 마이크로서비스 분석 및 설계 역량 강화
+- AI 서비스와 Event-driven 아키텍처 통합
+- 클라우드 환경에서의 실전형 애플리케이션 구축
 
+---
 
-## Run the frontend
-```
-cd frontend
-npm i
-npm run serve
-```
-
-## Test by UI
-Open a browser to localhost:8088
-
-## Required Utilities
-
-- httpie (alternative for curl / POSTMAN) and network utils
-```
-sudo apt-get update
-sudo apt-get install net-tools
-sudo apt install iputils-ping
-pip install httpie
-```
-
-- kubernetes utilities (kubectl)
-```
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-```
-
-- aws cli (aws)
-```
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
-```
-
-- eksctl 
-```
-curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-sudo mv /tmp/eksctl /usr/local/bin
-```
+> 📁 Repository 구조, 사용 방법, 시연 영상 등은 추후 업데이트 예정입니다.
