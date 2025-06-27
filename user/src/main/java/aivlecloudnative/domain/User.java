@@ -40,6 +40,7 @@ public class User {
     public void signUp(SignUpCommand signUpCommand) {
         this.userName = signUpCommand.getUserName();
         this.email = signUpCommand.getEmail();
+        this.isKt = signUpCommand.getIsKt();
 
         SubscriberSignedUp subscriberSignedUp = new SubscriberSignedUp(this);
         subscriberSignedUp.publishAfterCommit();

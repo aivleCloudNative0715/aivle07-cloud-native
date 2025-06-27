@@ -2,6 +2,7 @@ package aivlecloudnative.infra;
 import aivlecloudnative.application.UserService;
 import aivlecloudnative.domain.*;
 
+import javax.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    //TODO: 비밀번호 추가 및 검사
     @RequestMapping(
             value = "/users/signup",
             method = RequestMethod.POST,
@@ -28,7 +30,7 @@ public class UserController {
     public User signUp(
             HttpServletRequest request,
             HttpServletResponse response,
-            @RequestBody SignUpCommand signUpCommand
+            @Valid @RequestBody SignUpCommand signUpCommand
     ) throws Exception {
         System.out.println("##### /user/signUp  called #####");
         return userService.signUp(signUpCommand);
