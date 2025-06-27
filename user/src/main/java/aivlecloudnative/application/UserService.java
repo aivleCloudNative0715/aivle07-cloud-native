@@ -1,5 +1,6 @@
 package aivlecloudnative.application;
 
+import aivlecloudnative.domain.RequestSubscriptionCommand;
 import aivlecloudnative.domain.SignUpCommand;
 import aivlecloudnative.domain.User;
 import aivlecloudnative.domain.UserRepository;
@@ -20,5 +21,16 @@ public class UserService {
         User user = new User();
         user.signUp(cmd);
         return userRepository.save(user);
+    }
+
+    public User requestSubscription(RequestSubscriptionCommand command) {
+        Long userId = command.getUser_id();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID입니다: " + userId));
+
+        user.setHasActiveSubscription(true);
+        userRepository.save(user);
+        return user;
     }
 }
