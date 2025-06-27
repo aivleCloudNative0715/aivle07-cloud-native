@@ -1,0 +1,342 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user
+  labels:
+    app: user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      containers:
+        - name: user
+          image: username/user:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: author
+  labels:
+    app: author
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: author
+  template:
+    metadata:
+      labels:
+        app: author
+    spec:
+      containers:
+        - name: author
+          image: username/author:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiservice
+  labels:
+    app: aiservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aiservice
+  template:
+    metadata:
+      labels:
+        app: aiservice
+    spec:
+      containers:
+        - name: aiservice
+          image: username/aiservice:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform
+  labels:
+    app: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform
+  template:
+    metadata:
+      labels:
+        app: platform
+    spec:
+      containers:
+        - name: platform
+          image: username/platform:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: writing
+  labels:
+    app: writing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: writing
+  template:
+    metadata:
+      labels:
+        app: writing
+    spec:
+      containers:
+        - name: writing
+          image: username/writing:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: point
+  labels:
+    app: point
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: point
+  template:
+    metadata:
+      labels:
+        app: point
+    spec:
+      containers:
+        - name: point
+          image: username/point:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: user
+  labels:
+    app: user
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: user
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: author
+  labels:
+    app: author
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: author
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: aiservice
+  labels:
+    app: aiservice
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: aiservice
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform
+  labels:
+    app: platform
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: platform
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: writing
+  labels:
+    app: writing
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: writing
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: point
+  labels:
+    app: point
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: point
+
