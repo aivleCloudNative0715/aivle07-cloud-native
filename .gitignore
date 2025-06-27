@@ -20,9 +20,12 @@
 
 # Maven / Gradle 관련 캐시
 .mvn/
-!**/src/**/mvn/
 .gradle/
 build/
+
+# Python 가상환경
+.venv/
+venv/
 
 # 임시 파일
 *.tmp
