@@ -36,7 +36,7 @@ public class UserController {
         return userService.signUp(signUpCommand);
     }
 
-    @RequestMapping(value = "/users/requestsubscription",
+    @RequestMapping(value = "/users/request-subscription",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
     public User requestSubscription(

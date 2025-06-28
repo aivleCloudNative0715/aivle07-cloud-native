@@ -80,7 +80,7 @@ class UserControllerTest {
         Mockito.when(userService.requestSubscription(any()))
                 .thenReturn(dummy);
 
-        mockMvc.perform(post("/users/requestsubscription")
+        mockMvc.perform(post("/users/request-subscription")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isOk());
