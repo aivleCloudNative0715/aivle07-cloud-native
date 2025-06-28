@@ -1,19 +1,14 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.PlatformApplication;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "BookView_table")
 @Data
-@NoArgsConstructor 
+@NoArgsConstructor
 //<<< DDD / Aggregate Root
 public class BookView {
 

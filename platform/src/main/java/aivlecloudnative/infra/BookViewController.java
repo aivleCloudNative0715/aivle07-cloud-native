@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.transaction.annotation.Transactional; // @Transactional 임포트 추가
+import org.springframework.transaction.annotation.Transactional;
 
 //<<< Clean Arch / Inbound Adaptor
 

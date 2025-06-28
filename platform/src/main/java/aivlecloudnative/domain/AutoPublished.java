@@ -1,12 +1,13 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.domain.*;
 import aivlecloudnative.infra.AbstractEvent;
-import java.util.*;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
 @ToString
+@EqualsAndHashCode(callSuper=false)
 public class AutoPublished extends AbstractEvent {
 
     private Long id;
@@ -19,4 +20,5 @@ public class AutoPublished extends AbstractEvent {
     private String category;
     private Integer price;
     private String status;
+    private String authorName;
 }

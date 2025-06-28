@@ -1,9 +1,6 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.domain.*;
 import aivlecloudnative.infra.AbstractEvent;
-import java.time.LocalDate;
-import java.util.*;
 import lombok.*;
 
 //<<< DDD / Domain Event

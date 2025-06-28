@@ -1,10 +1,15 @@
 package aivlecloudnative.infra;
 
 import aivlecloudnative.config.kafka.KafkaProcessor;
-import aivlecloudnative.domain.*;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.naming.NameParser;
+import aivlecloudnative.domain.AccessRequestedAsSubscriber;
+import aivlecloudnative.domain.AutoPublished;
+import aivlecloudnative.domain.Book;
+import aivlecloudnative.domain.BookRepository;
+import aivlecloudnative.domain.BookView;
+import aivlecloudnative.domain.BookViewRepository;
+import aivlecloudnative.domain.BookViewed;
+import aivlecloudnative.domain.PointsDeducted;
+
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
@@ -32,7 +37,6 @@ public class PolicyHandler {
     public void wheneverAutoPublished_RegisterNewBook(
         @Payload AutoPublished autoPublished
     ) {
-        AutoPublished event = autoPublished;
         System.out.println(
             "\n\n##### listener RegisterNewBook : " + autoPublished + "\n\n"
         );
@@ -60,7 +64,6 @@ public class PolicyHandler {
     public void wheneverAccessRequestedAsSubscriber_BookView(
         @Payload AccessRequestedAsSubscriber accessRequestedAsSubscriber
     ) {
-        AccessRequestedAsSubscriber event = accessRequestedAsSubscriber;
         System.out.println(
             "\n\n##### listener BookView : " +
             accessRequestedAsSubscriber +
@@ -70,7 +73,7 @@ public class PolicyHandler {
         // Logic //
 
         // 1. 이벤트에서 BookId 추출
-        Long bookId = event.getBookId();
+        Long bookId = accessRequestedAsSubscriber.getBookId();
 
         // 2. Book Aggregate 조회
         bookRepository.findById(bookId).ifPresent(book -> {
@@ -90,7 +93,6 @@ public class PolicyHandler {
     public void wheneverPointsDeducted_BookView(
         @Payload PointsDeducted pointsDeducted
     ) {
-        PointsDeducted event = pointsDeducted;
         System.out.println(
             "\n\n##### listener BookView : " + pointsDeducted + "\n\n"
         );
@@ -98,7 +100,7 @@ public class PolicyHandler {
         // Logic //
 
         // 1. 이벤트에서 BookId 추출
-        Long bookId = event.getBookId();
+        Long bookId = pointsDeducted.getBookId();
 
         // 2. Book Aggregate 조회
         bookRepository.findById(bookId).ifPresent(book -> {
