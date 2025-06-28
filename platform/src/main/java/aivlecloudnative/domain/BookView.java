@@ -13,11 +13,11 @@ import lombok.Data;
 @Entity
 @Table(name = "BookView_table")
 @Data
+@NoArgsConstructor 
 //<<< DDD / Aggregate Root
 public class BookView {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long bookId;
 
     private String title;
@@ -28,7 +28,7 @@ public class BookView {
 
     private String category;
 
-    private Integer viewCount;
+    private Long viewCount;
 
     private Boolean isbestseller;
 
@@ -37,6 +37,20 @@ public class BookView {
             BookViewRepository.class
         );
         return bookViewRepository;
+    }
+
+    // BookViewed 이벤트를 받아서 BookView를 업데이트하는 헬퍼 메서드
+    public void updateFrom(BookViewed event) {
+        this.bookId = event.getId(); // BookViewed 이벤트의 id는 Book의 id
+        this.title = event.getTitle();
+        this.viewCount = event.getViewCount();
+        
+        // 조회수 3회 이상이면 베스트셀러로 간주
+        if (event.getViewCount() >= 3) {
+            this.isbestseller = true;
+        } else {
+            this.isbestseller = false;
+        }
     }
 }
 //>>> DDD / Aggregate Root

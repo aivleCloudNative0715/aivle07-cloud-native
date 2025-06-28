@@ -19,5 +19,4 @@ public class AutoPublished extends AbstractEvent {
     private String category;
     private Integer price;
     private String status;
-    private String summery;
 }

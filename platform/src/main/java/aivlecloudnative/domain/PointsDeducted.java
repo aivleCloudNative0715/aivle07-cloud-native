@@ -13,4 +13,5 @@ public class PointsDeducted extends AbstractEvent {
     private Long userId;
     private Long deductedPoints;
     private Integer currentPoints;
+    private Long bookId;
 }
