@@ -1,6 +1,6 @@
 package aivlecloudnative.domain;
 
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,8 +8,7 @@ import java.util.List;
 
 //<<< PoEAA / Repository
 @RepositoryRestResource(collectionResourceRel = "bookViews", path = "bookViews")
-public interface BookViewRepository
-    extends PagingAndSortingRepository<BookView, Long> {
+public interface BookViewRepository extends JpaRepository<BookView, Long> {
         // 특정 카테고리의 BookView를 조회
         List<BookView> findByCategory(String category);
 

@@ -1,12 +1,11 @@
 package aivlecloudnative.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-import aivlecloudnative.PlatformApplication;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -37,19 +36,9 @@ public class Book {
 
     private Long viewCount;
 
-    public static BookRepository repository() {
-        BookRepository bookRepository = PlatformApplication.applicationContext.getBean(
-            BookRepository.class
-        );
-        return bookRepository;
-    }
-
     //<<< Clean Arch / Port Method
     public static Book registerNewBook(AutoPublished autoPublished) {
-        //implement business logic here:
-        
         Book book = new Book();
-        // AutoPublished 이벤트에서 받은 데이터로 Book 객체 필드 초기화
         book.setTitle(autoPublished.getTitle());
         book.setAuthorName(autoPublished.getAuthorName());
         book.setSummary(autoPublished.getSummary());
@@ -58,8 +47,6 @@ public class Book {
         book.setEbookUrl(autoPublished.getEbookUrl());
         book.setPrice(autoPublished.getPrice());
         book.setViewCount(0L); // 신규 도서 등록 시 조회수는 0으로 초기화
-
-        repository().save(book); // 새로 생성된 Book 객체 저장
 
         return book; // 생성된 Book 객체 반환
     }
