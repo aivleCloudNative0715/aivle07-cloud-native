@@ -1,12 +1,10 @@
 package aivlecloudnative.domain;
 
-import java.time.LocalDate;
-import java.util.*;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class RequestSubscriptionCommand {
-
-    private String email;
-    private String userName;
+    @NotNull(message = "아이디를 입력해주세요")
+    private Long user_id;
 }

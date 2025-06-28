@@ -39,13 +39,12 @@ public class UserController {
     @RequestMapping(value = "/users/requestsubscription",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
-    public User requestSubscription(HttpServletRequest request, HttpServletResponse response, 
-        @RequestBody RequestSubscriptionCommand requestSubscriptionCommand) throws Exception {
+    public User requestSubscription(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @Valid @RequestBody RequestSubscriptionCommand requestSubscriptionCommand) throws Exception {
             System.out.println("##### /user/requestSubscription  called #####");
-            User user = new User();
-            user.requestSubscription(requestSubscriptionCommand);
-//            userRepository.save(user);
-            return user;
+            return userService.requestSubscription(requestSubscriptionCommand);
     }
     @RequestMapping(value = "/users/requestcontentaccess",
             method = RequestMethod.POST,
