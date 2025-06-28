@@ -1,12 +1,7 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.UserApplication;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.*;
 import lombok.Data;
 
@@ -36,15 +31,16 @@ public class User {
     private Boolean isKt;
 
     public static UserRepository repository() {
-        UserRepository userRepository = UserApplication.applicationContext.getBean(
+        return UserApplication.applicationContext.getBean(
             UserRepository.class
         );
-        return userRepository;
     }
 
     //<<< Clean Arch / Port Method
-    public void signUp() {
-        //implement business logic here:
+    public void signUp(SignUpCommand signUpCommand) {
+        this.userName = signUpCommand.getUserName();
+        this.email = signUpCommand.getEmail();
+        this.isKt = signUpCommand.getIsKt();
 
         SubscriberSignedUp subscriberSignedUp = new SubscriberSignedUp(this);
         subscriberSignedUp.publishAfterCommit();
