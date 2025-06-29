@@ -1,20 +1,20 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.domain.*;
+import aivlecloudnative.domain.*; 
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
+import jakarta.servlet.http.HttpServletRequest; // 변경: javax -> jakarta
+import jakarta.servlet.http.HttpServletResponse; // 변경: javax -> jakarta
+import javax.transaction.Transactional; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional; 
 
 //<<< Clean Arch / Inbound Adaptor
 
 @RestController
-// @RequestMapping(value="/manuscripts")
-@Transactional
+// @RequestMapping(value="/manuscripts") 
+@Transactional 
 public class ManuscriptController {
 
     @Autowired
@@ -26,8 +26,8 @@ public class ManuscriptController {
         produces = "application/json;charset=UTF-8"
     )
     public Manuscript publicationRequest(
-        HttpServletRequest request,
-        HttpServletResponse response,
+        HttpServletRequest request,  // Jakarta Servlet API 사용
+        HttpServletResponse response, // Jakarta Servlet API 사용
         @RequestBody PublicationRequestCommand publicationRequestCommand
     ) throws Exception {
         System.out.println(
@@ -45,8 +45,8 @@ public class ManuscriptController {
         produces = "application/json;charset=UTF-8"
     )
     public Manuscript manuscriptRegistration(
-        HttpServletRequest request,
-        HttpServletResponse response,
+        HttpServletRequest request,  // Jakarta Servlet API 사용
+        HttpServletResponse response, // Jakarta Servlet API 사용
         @RequestBody ManuscriptRegistrationCommand manuscriptRegistrationCommand
     ) throws Exception {
         System.out.println(
@@ -66,8 +66,8 @@ public class ManuscriptController {
     public Manuscript manuscriptSave(
         @PathVariable(value = "id") Long id,
         @RequestBody ManuscriptSaveCommand manuscriptSaveCommand,
-        HttpServletRequest request,
-        HttpServletResponse response
+        HttpServletRequest request, // Jakarta Servlet API 사용
+        HttpServletResponse response // Jakarta Servlet API 사용
     ) throws Exception {
         System.out.println("##### /manuscript/manuscriptSave  called #####");
         Optional<Manuscript> optionalManuscript = manuscriptRepository.findById(

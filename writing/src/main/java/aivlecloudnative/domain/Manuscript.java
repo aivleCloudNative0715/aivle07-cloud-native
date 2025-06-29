@@ -1,14 +1,18 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.WritingApplication;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import javax.persistence.*;
-import lombok.Data;
+
+import com.fasterxml.jackson.databind.ObjectMapper; 
+import jakarta.persistence.Entity;     
+import jakarta.persistence.Id;      
+import jakarta.persistence.GeneratedValue; 
+import jakarta.persistence.GenerationType; 
+import jakarta.persistence.Table;      
+
+
+import lombok.Data; 
+
+import java.time.LocalDateTime; // 변경: java.util.Date 대신 사용 권장
 
 @Entity
 @Table(name = "Manuscript_table")
@@ -28,7 +32,7 @@ public class Manuscript {
 
     private String status;
 
-    private Date lastModifiedAt;
+    private LocalDateTime lastModifiedAt; // Date -> LocalDateTime으로 변경
 
     private String summary;
 

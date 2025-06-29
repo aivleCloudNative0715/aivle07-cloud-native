@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: writing
-          image: "username/writing:latest"
+          image: confluentinc/cp-kafka:7.4.3
           ports:
             - containerPort: 8080
           readinessProbe:

@@ -2,8 +2,10 @@ package aivlecloudnative.domain;
 
 import aivlecloudnative.domain.*;
 import aivlecloudnative.infra.AbstractEvent;
-import java.time.LocalDate;
+
+import java.time.LocalDateTime;
 import java.util.*;
+
 import lombok.*;
 
 //<<< DDD / Domain Event
@@ -16,7 +18,7 @@ public class ManuscriptSaved extends AbstractEvent {
     private String title;
     private String content;
     private String status;
-    private Date lastModifiedAt;
+    private LocalDateTime  lastModifiedAt;
     private String summary;
     private String keywords;
 
