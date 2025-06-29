@@ -2,8 +2,10 @@ package aivlecloudnative.application;
 
 import aivlecloudnative.domain.RequestSubscriptionCommand;
 import aivlecloudnative.domain.SignUpCommand;
+import aivlecloudnative.domain.SubscriberSignedUp;
 import aivlecloudnative.domain.User;
 import aivlecloudnative.domain.UserRepository;
+import aivlecloudnative.infra.AbstractEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AbstractEventPublisher eventPublisher;
 
     public User signUp(SignUpCommand cmd) {
         if (userRepository.existsByEmail(cmd.getEmail())) {
@@ -20,7 +23,13 @@ public class UserService {
 
         User user = new User();
         user.signUp(cmd);
-        return userRepository.save(user);
+
+        userRepository.save(user);
+
+        SubscriberSignedUp subscriberSignedUp = new SubscriberSignedUp(user);
+        eventPublisher.publish("event-out", subscriberSignedUp, "SubscriberSignedUp");
+
+        return user;
     }
 
     public User requestSubscription(RequestSubscriptionCommand command) {

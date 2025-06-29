@@ -2,15 +2,16 @@ package aivlecloudnative.infra;
 import aivlecloudnative.application.UserService;
 import aivlecloudnative.domain.*;
 
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
+
 
 //<<< Clean Arch / Inbound Adaptor
 
@@ -46,16 +47,16 @@ public class UserController {
             System.out.println("##### /user/requestSubscription  called #####");
             return userService.requestSubscription(requestSubscriptionCommand);
     }
-    @RequestMapping(value = "/users/requestcontentaccess",
-            method = RequestMethod.POST,
-            produces = "application/json;charset=UTF-8")
-    public User requestContentAccess(HttpServletRequest request, HttpServletResponse response, 
-        @RequestBody RequestContentAccessCommand requestContentAccessCommand) throws Exception {
-            System.out.println("##### /user/requestContentAccess  called #####");
-            User user = new User();
-            user.requestContentAccess(requestContentAccessCommand);
-//            userRepository.save(user);
-            return user;
-    }
+//    @RequestMapping(value = "/users/requestcontentaccess",
+//            method = RequestMethod.POST,
+//            produces = "application/json;charset=UTF-8")
+//    public User requestContentAccess(HttpServletRequest request, HttpServletResponse response,
+//        @RequestBody RequestContentAccessCommand requestContentAccessCommand) throws Exception {
+//            System.out.println("##### /user/requestContentAccess  called #####");
+//            User user = new User();
+//            user.requestContentAccess(requestContentAccessCommand);
+////            userRepository.save(user);
+//            return user;
+//    }
 }
 //>>> Clean Arch / Inbound Adaptor
