@@ -2,10 +2,9 @@ package aivlecloudnative.application;
 
 import aivlecloudnative.domain.RequestSubscriptionCommand;
 import aivlecloudnative.domain.SignUpCommand;
-import aivlecloudnative.domain.SubscriberSignedUp;
 import aivlecloudnative.domain.User;
 import aivlecloudnative.domain.UserRepository;
-import aivlecloudnative.infra.AbstractEventPublisher;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,8 +13,8 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final AbstractEventPublisher eventPublisher;
 
+    @Transactional
     public User signUp(SignUpCommand cmd) {
         if (userRepository.existsByEmail(cmd.getEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
@@ -24,12 +23,7 @@ public class UserService {
         User user = new User();
         user.signUp(cmd);
 
-        userRepository.save(user);
-
-        SubscriberSignedUp subscriberSignedUp = new SubscriberSignedUp(user);
-        eventPublisher.publish("event-out", subscriberSignedUp, "SubscriberSignedUp");
-
-        return user;
+        return userRepository.save(user);
     }
 
     public User requestSubscription(RequestSubscriptionCommand command) {
@@ -39,7 +33,7 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID입니다: " + userId));
 
         user.setHasActiveSubscription(true);
-        userRepository.save(user);
-        return user;
+
+        return userRepository.save(user);
     }
 }

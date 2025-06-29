@@ -40,7 +40,7 @@ class UserControllerTest {
         SignUpCommand command = new SignUpCommand();
         command.setUserName("홍길동");
         command.setEmail("test@example.com");
-        command.setIsKt(true); // 반드시 있어야 함
+        command.setIsKt(true);
 
         mockMvc.perform(post("/users/signup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -93,7 +93,7 @@ class UserControllerTest {
     void requestSubscription_should_return400_when_userId_missing() throws Exception {
         RequestSubscriptionCommand command = new RequestSubscriptionCommand();
 
-        mockMvc.perform(post("/users/requestsubscription")
+        mockMvc.perform(post("/users/request-subscription")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isBadRequest());
