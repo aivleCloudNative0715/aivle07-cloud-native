@@ -1,11 +1,10 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.AiserviceApplication;
-import aivlecloudnative.config.kafka.KafkaProcessor;
+import aivlecloudnative.AiserviceApplication; // ApplicationContext를 가져오기 위함 (Bean을 얻기 위함)
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
-import org.springframework.messaging.MessageChannel;
+import org.springframework.cloud.stream.function.StreamBridge; // StreamBridge import
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
@@ -30,34 +29,31 @@ public class AbstractEvent {
 
     public void publish() {
         /**
-         * spring streams 방식
+         * spring streams 방식 (StreamBridge 사용)
          */
-        KafkaProcessor processor = AiserviceApplication.applicationContext.getBean(
-            KafkaProcessor.class
-        );
-        MessageChannel outputChannel = processor.outboundTopic();
+        // KafkaProcessor 대신 StreamBridge를 사용합니다.
+        StreamBridge streamBridge = AiserviceApplication.applicationContext.getBean(StreamBridge.class);
 
-        outputChannel.send(
-            MessageBuilder
-                .withPayload(this)
-                .setHeader(
-                    MessageHeaders.CONTENT_TYPE,
-                    MimeTypeUtils.APPLICATION_JSON
-                )
-                .setHeader("type", getEventType())
-                .build()
-        );
+        // "event-out"은 메시지를 보낼 output 바인딩의 이름입니다.
+        // application.yml 또는 application.properties에
+        // spring.cloud.stream.bindings.event-out.destination=your-topic-name
+        // 과 같이 정의되어야 합니다.
+        streamBridge.send("event-out",
+                MessageBuilder
+                        .withPayload(this)
+                        .setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
+                        .setHeader("type", getEventType())
+                        .build());
     }
 
     public void publishAfterCommit() {
         TransactionSynchronizationManager.registerSynchronization(
-            new TransactionSynchronizationAdapter() {
-                @Override
-                public void afterCompletion(int status) {
-                    AbstractEvent.this.publish();
-                }
-            }
-        );
+                new TransactionSynchronizationAdapter() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        AbstractEvent.this.publish();
+                    }
+                });
     }
 
     public String getEventType() {
@@ -93,4 +89,4 @@ public class AbstractEvent {
         return json;
     }
 }
-//>>> Clean Arch / Outbound Adaptor
+// >>> Clean Arch / Outbound Adaptor

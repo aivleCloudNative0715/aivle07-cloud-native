@@ -9,8 +9,9 @@ import lombok.*;
 @ToString
 public class PublicationRequested extends AbstractEvent {
 
-    private Long manuscriptIdId;
+    private Long manuscriptId;
     private String title;
     private String summary;
     private String keywords;
+    private String authorName;
 }

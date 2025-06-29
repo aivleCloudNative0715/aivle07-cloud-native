@@ -1,13 +1,13 @@
 server:
-  port: 8080
+  port: 8080 # default 프로파일이 활성화되면 이 포트가 사용됩니다.
 
 spring:
   application:
     name: aiservice
----
-
-spring:
-  profiles: default
+  # --- 기본 프로파일 설정 ---
+  config:
+    activate:
+      on-profile: default
   jpa:
     properties:
       hibernate:
@@ -16,6 +16,8 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     stream:
+      function:
+        definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
       kafka:
         binder:
           brokers: localhost:9092
@@ -28,31 +30,40 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        event-in:
+        publicationRequestedConsumer-in-0:
+          destination: bookwork.publication.requested
           group: aiservice
-#<<< EDA / Topic Name
-          destination: aivlecloudnative
-#>>> EDA / Topic Name
+          contentType: application/json
+        publicationInfoCreationRequestedConsumer-in-0:
+          destination: bookwork.publication-info.creation-requested
+          group: aiservice
           contentType: application/json
         event-out:
-#<<< EDA / Topic Name
           destination: aivlecloudnative
-#>>> EDA / Topic Name
           contentType: application/json
+
+  # --- GPT API 설정 (default 프로파일 안에 포함) ---
+  gpt: # 이 gpt 블록의 들여쓰기를 spring: 과 동일하게 맞춥니다.
+    api-key: YOUR_OPENAI_API_KEY
+    base-url: https://api.openai.com/v1/chat/completions
+    image-url: https://api.openai.com/v1/images/generations
+    model: gpt-4o-mini
+    image-model: dall-e-3
 
 logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
 
-
-server:
-  port: 8084
-
 ---
+# --- Docker 프로파일 설정 ---
+server:
+  port: 8084 # docker 프로파일이 활성화되면 이 포트가 사용됩니다.
 
 spring:
-  profiles: docker
+  config:
+    activate:
+      on-profile: docker
   jpa:
     properties:
       hibernate:
@@ -61,6 +72,8 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     stream:
+      function:
+        definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
       kafka:
         binder:
           brokers: my-kafka:9092
@@ -73,12 +86,25 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        event-in:
+        publicationRequestedConsumer-in-0:
+          destination: bookwork.publication.requested
           group: aiservice
-          destination: aivlecloudnative
+          contentType: application/json
+        publicationInfoCreationRequestedConsumer-in-0:
+          destination: bookwork.publication-info.creation-requested
+          group: aiservice
           contentType: application/json
         event-out:
           destination: aivlecloudnative
           contentType: application/json
 
-
+  # --- Docker 프로파일에도 GPT API 설정을 포함 (필요하다면) ---
+  # 만약 docker 환경에서도 다른 GPT 설정을 사용한다면 여기에 명시
+  # 그렇지 않다면, 이 부분을 삭제해도 됩니다.
+  # 현재로서는 default 프로파일에만 GPT 설정이 있으면 됩니다.
+  # gpt:
+  #   api-key: your-docker-gpt-key
+  #   base-url: your-docker-gpt-base-url
+  #   image-url: your-docker-gpt-image-url
+  #   model: your-docker-gpt-model
+  #   image-model: your-docker-gpt-image-model
