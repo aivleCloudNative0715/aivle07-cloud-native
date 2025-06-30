@@ -1,7 +1,8 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.domain.User;
+import aivlecloudnative.application.UserService;
 import aivlecloudnative.domain.BookViewed;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,11 +11,14 @@ import java.util.function.Consumer;
 @Configuration
 public class PolicyHandler {
 
+    @Autowired
+    private UserService userService;
+
     @Bean
     public Consumer<BookViewed> updateBookRead() {
         return bookViewed -> {
             System.out.println("##### listener UpdateBookRead : " + bookViewed);
-            User.updateBookRead(bookViewed);
+            userService.updateBookRead(bookViewed);
         };
     }
 }

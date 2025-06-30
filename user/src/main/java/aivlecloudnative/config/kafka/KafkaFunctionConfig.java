@@ -1,7 +1,7 @@
 package aivlecloudnative.config.kafka;
 
+import aivlecloudnative.application.UserService;
 import aivlecloudnative.domain.BookViewed;
-import aivlecloudnative.domain.User;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.springframework.context.annotation.Bean;
@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaFunctionConfig {
 
     @Bean
-    public Consumer<BookViewed> bookViewedConsumer() {
+    public Consumer<BookViewed> bookViewedConsumer(UserService userService) {
         return bookViewed -> {
             System.out.println("📘 Book Viewed: " + bookViewed);
-            User.updateBookRead(bookViewed);
+            userService.updateBookRead(bookViewed);
         };
     }
 

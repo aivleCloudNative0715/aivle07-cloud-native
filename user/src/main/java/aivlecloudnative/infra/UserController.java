@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 //<<< Clean Arch / Inbound Adaptor
 
 @RestController
-// @RequestMapping(value="/users")
+@RequestMapping(value="/users")
 @Transactional
 public class UserController {
     @Autowired
@@ -24,7 +24,7 @@ public class UserController {
 
     //TODO: 비밀번호 추가 및 검사
     @RequestMapping(
-            value = "/users/signup",
+            value = "/signup",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8"
     )
@@ -37,7 +37,7 @@ public class UserController {
         return userService.signUp(signUpCommand);
     }
 
-    @RequestMapping(value = "/users/request-subscription",
+    @RequestMapping(value = "/request-subscription",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
     public User requestSubscription(
@@ -48,7 +48,7 @@ public class UserController {
             return userService.requestSubscription(requestSubscriptionCommand);
     }
 
-    @RequestMapping(value = "/users/request-content-access",
+    @RequestMapping(value = "/request-content-access",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
     public User requestContentAccess(
