@@ -33,26 +33,31 @@ public class ManuscriptService {
     // 기존 원고 수정 유스케이스
     public Manuscript saveManuscript(Long id, ManuscriptSaveCommand command) {
 
-        // 커맨드 데이터 유효성 검증
-        if (command.getTitle() == null || command.getContent() == null) {
-            throw new IllegalArgumentException("Title and content must not be null for manuscript save.");
-        }
-
-        // 기존 원고를 찾아서 업데이트
+        // 1. 기존 원고를 먼저 찾아서 existingManuscript 변수에 할당
         Manuscript existingManuscript = manuscriptRepository.findById(id)
-                        .orElseThrow(() -> new IllegalArgumentException("Manuscript not found"));
+                                        .orElseThrow(() -> new IllegalArgumentException("Manuscript not found with ID: " + id));
 
-        // 권한 확인
+        // 2. 권한 확인
         if (!existingManuscript.getAuthorId().equals(command.getAuthorId())) {
             throw new SecurityException("You do not have permission to modify this manuscript.");
         }
 
-        // 엔티티의 비즈니스 메서드를 호출하여 내용 업데이트 및 상태 변경
-        existingManuscript.setTitle(command.getTitle()); // 단순 필드 업데이트는 Setter 사용
+        // 3. 상태 검증: PUBLICATION_REQUESTED 상태인지 확인
+        if ("PUBLICATION_REQUESTED".equals(existingManuscript.getStatus())) {
+            throw new IllegalStateException("출간 요청된 원고는 수정할 수 없습니다.");
+        }
+
+        // 4. 커맨드 데이터 유효성 검증
+        if (command.getTitle() == null || command.getContent() == null) {
+            throw new IllegalArgumentException("Title and content must not be null for manuscript save.");
+        }
+
+        // 5. 엔티티의 비즈니스 메서드를 호출하여 내용 업데이트 및 상태 변경
+        existingManuscript.setTitle(command.getTitle());
         existingManuscript.setContent(command.getContent());
         existingManuscript.setSummary(command.getSummary());
         existingManuscript.setKeywords(command.getKeywords());
-        existingManuscript.changeStatusToSaved(); // 상태 변경 로직은 엔티티 내부에서!
+        existingManuscript.changeStatusToSaved(); // 상태 변경 로직은 엔티티 내부에서
 
         return manuscriptRepository.save(existingManuscript); // DB 저장 및 @PostUpdate 이벤트 발생
     }
