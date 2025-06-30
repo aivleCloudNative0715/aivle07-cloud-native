@@ -1,70 +1,75 @@
 package aivlecloudnative.infra;
 
 import aivlecloudnative.domain.*;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
-import org.springframework.context.annotation.Bean; 
-import java.util.function.Consumer; 
-
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.List;
+import aivlecloudnative.domain.TransactionType;
 
 @Service
+@Transactional
 public class PointInquiryViewHandler {
 
     @Autowired
-    private PointInquiryRepository pointInquiryRepository;
+    private PointInquiryRepository pointInquiryRepository; // <-- 이 줄이 44번 근처에 있을 가능성이 높습니다.
 
     @Bean
-    public Consumer<PointsGranted> whenPointsGranted() {
+    public Consumer<PointsGranted> processPointsGrantedEvent() {
         return pointsGranted -> {
             try {
-                if (!pointsGranted.validate()) return;
+                if (!pointsGranted.validate()) {
+                    System.err.println("##### PointsGranted event validation failed: " + pointsGranted.toJson() + "\n");
+                    return;
+                }
 
                 System.out.println(
-                    "\n\n##### listener PointsGranted : " + pointsGranted.toJson() + "\n\n"
+                    "\n\n##### Listener: Received PointsGranted event: " + pointsGranted.toJson() + "\n\n"
                 );
 
-                // PointsGranted 이벤트 발생 시 새로운 PointInquiry 엔티티를 생성하거나 업데이트
-                // 여기서는 새로운 엔티티를 생성하는 로직으로 보입니다.
                 PointInquiry pointInquiry = new PointInquiry();
                 pointInquiry.setUserId(pointsGranted.getUserId());
-                pointInquiry.setPoints(pointsGranted.getPointsGrantedAmount()); // PointsGranted에 getPointsGrantedAmount()가 있다고 가정
-                pointInquiry.setTransactionType("GRANTED");
+                pointInquiry.setPoints(pointsGranted.getPointsGrantedAmount());
+                pointInquiry.setTransactionType(TransactionType.GRANTED.name());
+                // pointInquiry.setTransactionDate(pointsGranted.getTimestamp());
 
                 pointInquiryRepository.save(pointInquiry);
+                System.out.println("##### Read Model Updated: PointInquiry saved for PointsGranted event. User: " + pointsGranted.getUserId() + "\n");
 
             } catch (Exception e) {
+                System.err.println("##### Error processing PointsGranted event: " + e.getMessage());
                 e.printStackTrace();
             }
         };
     }
 
     @Bean
-    public Consumer<PointsDeducted> whenPointsDeducted() {
+    public Consumer<PointsDeducted> processPointsDeductedEvent() {
         return pointsDeducted -> {
             try {
-                if (!pointsDeducted.validate()) return;
+                if (!pointsDeducted.validate()) {
+                    System.err.println("##### PointsDeducted event validation failed: " + pointsDeducted.toJson() + "\n");
+                    return;
+                }
 
                 System.out.println(
-                    "\n\n##### listener PointsDeducted : " + pointsDeducted.toJson() + "\n\n"
+                    "\n\n##### Listener: Received PointsDeducted event: " + pointsDeducted.toJson() + "\n\n"
                 );
 
-                // findByUserId는 List를 반환하므로, List로 받고 첫 번째 항목을 Optional로 변환
-                List<PointInquiry> pointInquiryList = pointInquiryRepository.findByUserId(pointsDeducted.getUserId());
-                Optional<PointInquiry> optionalPointInquiry = pointInquiryList.stream().findFirst();
+                PointInquiry pointInquiry = new PointInquiry();
+                pointInquiry.setUserId(pointsDeducted.getUserId());
+                pointInquiry.setPoints(pointsDeducted.getDeductedPoints().intValue());
+                pointInquiry.setTransactionType(TransactionType.DEDUCTED.name());
+                // pointInquiry.setTransactionDate(pointsDeducted.getTimestamp());
 
-                optionalPointInquiry.ifPresent(pointInquiry -> {
-                    // PointsDeducted 클래스에서 getDeductedPoints()로 필드명을 변경했으므로, 해당 Getter를 사용합니다.
-                    pointInquiry.setPoints(pointInquiry.getPoints() - pointsDeducted.getDeductedPoints().intValue()); // Long -> Integer 변환
-                    pointInquiry.setTransactionType("DEDUCTED");
-
-                    pointInquiryRepository.save(pointInquiry);
-                });
+                pointInquiryRepository.save(pointInquiry);
+                System.out.println("##### Read Model Updated: PointInquiry saved for PointsDeducted event. User: " + pointsDeducted.getUserId() + "\n");
 
             } catch (Exception e) {
+                System.err.println("##### Error processing PointsDeducted event: " + e.getMessage());
                 e.printStackTrace();
             }
         };
