@@ -24,7 +24,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   user:
-    depends_on: 
+    depends_on:
       - kafka
     image: adoptopenjdk/maven-openjdk11:latest
     environment:
@@ -36,9 +36,9 @@ services:
     volumes:
       - ./user:/usr/src
       - ./maven-repo:/root/.m2
-      
+
   author:
-    depends_on: 
+    depends_on:
       - kafka
     image: adoptopenjdk/maven-openjdk11:latest
     environment:
@@ -50,29 +50,26 @@ services:
     volumes:
       - ./author:/usr/src
       - ./maven-repo:/root/.m2
-      
+
   aiservice:
     depends_on:
       - kafka
-    image: eclipse-temurin:21
+    build:
+      context: ./aiservice
+      dockerfile: Dockerfile
+    ports:
+      - 8084:8084
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_GPT_BASE_URL=https://api.openai.com/v1
-      - SPRING_GPT_IMAGE_URL=https://api.openai.com/v1/images/generations
-      - SPRING_GPT_MODEL=gpt-4o-mini
-      - SPRING_GPT_IMAGE_MODEL=dall-e-3
-      # 이 부분을 변경합니다: Docker Compose의 환경 변수를 직접 전달
-      - SPRING_GPT_API_KEY=${GPT_API_KEY} # .env 파일의 값을 이 환경 변수로 전달
-    command: bash -c "apt-get update && apt-get install -y maven && mvn spring-boot:run"
-    ports:
-      - 8084:8084
-    working_dir: /usr/src
-    volumes:
-      - ./aiservice:/usr/src
-      - ./maven-repo:/root/.m2
-      
+      - SPRING_GPT_IMAGE_URL: https://api.openai.com/v1/images/generations
+      - SPRING_GPT_MODEL: gpt-4o-mini
+      - SPRING_GPT_IMAGE_MODEL: dall-e-3
+      - SPRING_GPT_API_KEY=${SPRING_GPT_API_KEY}
+    # networks 설정이 완전히 제거되었습니다.
+
   platform:
-    depends_on: 
+    depends_on:
       - kafka
     image: adoptopenjdk/maven-openjdk11:latest
     environment:
@@ -84,9 +81,9 @@ services:
     volumes:
       - ./platform:/usr/src
       - ./maven-repo:/root/.m2
-      
+
   writing:
-    depends_on: 
+    depends_on:
       - kafka
     image: adoptopenjdk/maven-openjdk11:latest
     environment:
@@ -98,9 +95,9 @@ services:
     volumes:
       - ./writing:/usr/src
       - ./maven-repo:/root/.m2
-      
+
   point:
-    depends_on: 
+    depends_on:
       - kafka
     image: adoptopenjdk/maven-openjdk11:latest
     environment:
@@ -112,3 +109,5 @@ services:
     volumes:
       - ./point:/usr/src
       - ./maven-repo:/root/.m2
+
+# networks 블록 전체가 제거되었습니다.

@@ -38,14 +38,15 @@ spring:
           destination: bookwork.publication-info.creation-requested
           group: aiservice
           contentType: application/json
-        event-out-0: # 'event-out'을 'event-out-0'으로 변경하고 producer 설정을 추가
-          destination: aivlecloudnative
+        # ⭐️ 이 부분의 destination을 위 publicationInfoCreationRequestedConsumer-in-0과 동일하게 수정했습니다.
+        event-out-0:
+          destination: bookwork.publication-info.creation-requested # <--- 이 부분을 수정!
           contentType: application/json
-          producer: # <- 이 producer 섹션 추가
-            headerMode: embeddedHeaders # 또는 none, kafka. Spring Cloud Stream 버전에 따라 다를 수 있음
+          producer:
+            headerMode: embeddedHeaders
 
   # --- GPT API 설정 (default 프로파일 안에 포함) ---
-  gpt: # 이 gpt 블록의 들여쓰기를 spring: 과 동일하게 맞춥니다.
+  gpt:
     api-key: ${SPRING_GPT_API_KEY}
     base-url: https://api.openai.com/v1/chat/completions
     image-url: https://api.openai.com/v1/images/generations
@@ -96,14 +97,15 @@ spring:
           destination: bookwork.publication-info.creation-requested
           group: aiservice
           contentType: application/json
-        event-out-0: # 'event-out'을 'event-out-0'으로 변경하고 producer 설정을 추가
-          destination: aivlecloudnative
+        # ⭐️ 이 부분의 destination을 위 publicationInfoCreationRequestedConsumer-in-0과 동일하게 수정했습니다.
+        event-out-0:
+          destination: bookwork.publication-info.creation-requested # <--- 이 부분을 수정!
           contentType: application/json
-          producer: # <- 이 producer 섹션 추가
-            headerMode: embeddedHeaders # 또는 none, kafka. Spring Cloud Stream 버전에 따라 다를 수 있음
+          producer:
+            headerMode: embeddedHeaders
 
   # --- Docker 프로파일에도 GPT API 설정을 포함 ---
-  gpt: # 이 gpt 블록의 들여쓰기를 spring: 과 동일하게 맞춥니다.
+  gpt:
     api-key: ${SPRING_GPT_API_KEY}
     base-url: https://api.openai.com/v1/chat/completions
     image-url: https://api.openai.com/v1/images/generations
