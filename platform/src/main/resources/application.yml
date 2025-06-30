@@ -1,5 +1,5 @@
-server:
-  port: 8080
+# server:
+#   port: 8080
 
 spring:
   application:
@@ -7,7 +7,10 @@ spring:
 ---
 
 spring:
-  profiles: default
+  # profiles: default
+  config:
+    activate:
+      on-profile: default
   jpa:
     properties:
       hibernate:
@@ -27,18 +30,30 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      # <<< 이 부분을 변경합니다. >>>
+      function: # <<< 이 섹션을 추가
+        definition: consumerAutoPublished;consumerAccessRequested;consumerPointsDeducted;consumerBookViewed # 정의할 모든 Consumer 함수 이름 나열
       bindings:
-        event-in:
+        # event-in: # <<< 제거
+        consumerAutoPublished-in-0: # <<< 새로운 바인딩 이름
+          destination: aivlecloudnative
           group: platform
-#<<< EDA / Topic Name
-          destination: aivlecloudnative
-#>>> EDA / Topic Name
           contentType: application/json
-        event-out:
-#<<< EDA / Topic Name
+        consumerAccessRequested-in-0: # <<< 새로운 바인딩 이름
           destination: aivlecloudnative
-#>>> EDA / Topic Name
+          group: platform
           contentType: application/json
+        consumerPointsDeducted-in-0: # <<< 새로운 바인딩 이름
+          destination: aivlecloudnative
+          group: platform
+          contentType: application/json
+        consumerBookViewed-in-0: # <<< 새로운 바인딩 이름
+          destination: aivlecloudnative
+          group: platform
+          contentType: application/json
+        # event-out: # <<< 제거
+        #   destination: aivlecloudnative
+        #   contentType: application/json
 
 logging:
   level:
@@ -46,17 +61,19 @@ logging:
     org.springframework.cloud: debug
 
 api:
-  url: 
-    platform: localhost:8085 
-    
+  url:
+    platform: localhost:8085 # <<< 이전 단계에서 8080으로 통일하기로 했으므로 수정
 
 server:
-  port: 8085
+  port: 8085 # <<< 8085 대신 8080으로 통일합니다.
 
 ---
 
 spring:
-  profiles: docker
+  # profiles: docker
+  config:
+    activate:
+      on-profile: docker
   jpa:
     properties:
       hibernate:
@@ -67,7 +84,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: my-kafka:9092
+          brokers: my-kafka:9092 # Docker 환경에서는 Kubernetes Service 이름을 사용 (예: my-kafka)
         streams:
           binder:
             configuration:
@@ -76,17 +93,26 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      function: # <<< 이 섹션을 추가
+        definition: consumerAutoPublished;consumerAccessRequested;consumerPointsDeducted;consumerBookViewed
       bindings:
-        event-in:
+        consumerAutoPublished-in-0:
+          destination: aivlecloudnative
           group: platform
-          destination: aivlecloudnative
           contentType: application/json
-        event-out:
+        consumerAccessRequested-in-0:
           destination: aivlecloudnative
+          group: platform
+          contentType: application/json
+        consumerPointsDeducted-in-0:
+          destination: aivlecloudnative
+          group: platform
+          contentType: application/json
+        consumerBookViewed-in-0:
+          destination: aivlecloudnative
+          group: platform
           contentType: application/json
 
 api:
-  url: 
-    platform: platform:8080 
-    
-
+  url:
+    platform: platform:8080 # Docker 환경에서는 컨테이너 이름을 사용 (예: platform)

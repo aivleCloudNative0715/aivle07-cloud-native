@@ -1,19 +1,18 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.PlatformApplication;
-import aivlecloudnative.domain.BookViewed;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import javax.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "Book_table")
 @Data
+@NoArgsConstructor
 //<<< DDD / Aggregate Root
 public class Book {
 
@@ -35,99 +34,36 @@ public class Book {
 
     private Integer price;
 
-    private String viewCount;
-
-    public static BookRepository repository() {
-        BookRepository bookRepository = PlatformApplication.applicationContext.getBean(
-            BookRepository.class
-        );
-        return bookRepository;
-    }
+    private Long viewCount;
 
     //<<< Clean Arch / Port Method
-    public static void registerNewBook(AutoPublished autoPublished) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
+    public static Book registerNewBook(AutoPublished autoPublished) {
         Book book = new Book();
-        repository().save(book);
+        book.setTitle(autoPublished.getTitle());
+        book.setAuthorName(autoPublished.getAuthorName());
+        book.setSummary(autoPublished.getSummary());
+        book.setCategory(autoPublished.getCategory());
+        book.setCoverImageUrl(autoPublished.getCoverImageUrl());
+        book.setEbookUrl(autoPublished.getEbookUrl());
+        book.setPrice(autoPublished.getPrice());
+        book.setViewCount(0L); // 신규 도서 등록 시 조회수는 0으로 초기화
 
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(autoPublished.get???()).ifPresent(book->{
-            
-            book // do something
-            repository().save(book);
-
-
-         });
-        */
-
+        return book; // 생성된 Book 객체 반환
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public static void bookView(
-        AccessRequestedAsSubscriber accessRequestedAsSubscriber
-    ) {
-        //implement business logic here:
+    // bookView -> increaseViewCount로 이름 변경 (포인트,구독자 모두 여기로 접근)
+    public void increaseViewCount() {
+        if (this.viewCount == null) {
+            this.viewCount = 1L;
+        } else {
+            this.viewCount++;
+        }
 
-        /** Example 1:  new item 
-        Book book = new Book();
-        repository().save(book);
-
-        BookViewed bookViewed = new BookViewed(book);
-        bookViewed.publishAfterCommit();
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(accessRequestedAsSubscriber.get???()).ifPresent(book->{
-            
-            book // do something
-            repository().save(book);
-
-            BookViewed bookViewed = new BookViewed(book);
-            bookViewed.publishAfterCommit();
-
-         });
-        */
-
+        // 조회수 증가 후 BookViewed 이벤트 발행
+        BookViewed bookViewed = new BookViewed(this); // 현재 Book 객체(aggregate)를 인자로 전달
+        bookViewed.publishAfterCommit(); // 트랜잭션 커밋 후 이벤트 발행 (AbstractEvent의 메서드)
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public static void bookView(PointsDeducted pointsDeducted) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        Book book = new Book();
-        repository().save(book);
-
-        BookViewed bookViewed = new BookViewed(book);
-        bookViewed.publishAfterCommit();
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(pointsDeducted.get???()).ifPresent(book->{
-            
-            book // do something
-            repository().save(book);
-
-            BookViewed bookViewed = new BookViewed(book);
-            bookViewed.publishAfterCommit();
-
-         });
-        */
-
-    }
-    //>>> Clean Arch / Port Method
 
 }
 //>>> DDD / Aggregate Root
