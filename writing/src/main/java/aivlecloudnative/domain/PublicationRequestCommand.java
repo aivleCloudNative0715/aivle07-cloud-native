@@ -1,6 +1,6 @@
 package aivlecloudnative.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import lombok.Data;
 
@@ -12,7 +12,7 @@ public class PublicationRequestCommand {
     private String title;
     private String content;
     private String status;
-    private Date lastModifiedAt;
+    private LocalDateTime lastModifiedAt;
     private String summary;
     private String keywords;
 }

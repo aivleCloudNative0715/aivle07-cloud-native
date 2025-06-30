@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.3.1.RELEASE</version>
+		<version>3.2.5</version> <!-- Spring Boot 3.x로-->
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>aivlecloudnative</groupId>
@@ -14,11 +14,11 @@
 	<name>writing</name>
 	<description>Demo project for Spring Boot</description>
 
+<!-- spring cloud 버전 업그레이드-->
 	<properties>
-		<java.version>11</java.version>
-		<spring-cloud.version>Hoxton.SR12</spring-cloud.version>
-		<spring-cloud-stream.version>Germantown.SR1</spring-cloud-stream.version>
-		<cucumber.version>6.8.1</cucumber.version>
+    <java.version>21</java.version>
+    <spring-cloud.version>2023.0.2</spring-cloud.version> 
+	<cucumber.version>7.16.1</cucumber.version> 
 	</properties>
 
 	<dependencies>
@@ -43,17 +43,20 @@
 		<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
-				<version>1.18.12</version>
+				<version>1.18.30</version> <!-- lombok 버전 업그레이드-->
 				<scope>provided</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
-		<dependency>
+
+		<!-- 1. spring-cloud-starter-sleuth 제거 -->
+		<!-- <dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-sleuth</artifactId>
-		</dependency>
+		</dependency> -->
 
 		<!-- kafka streams -->
 		<dependency>
@@ -101,13 +104,14 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<dependency>
+			<!-- spring cloud stream 명시적 임포트 제거-->
+			<!-- <dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-stream-dependencies</artifactId>
 				<version>${spring-cloud-stream.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
+			</dependency> -->
 		</dependencies>
 	</dependencyManagement>
 
