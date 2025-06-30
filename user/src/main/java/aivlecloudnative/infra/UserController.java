@@ -1,85 +1,55 @@
 package aivlecloudnative.infra;
+
 import aivlecloudnative.application.UserService;
 import aivlecloudnative.domain.*;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import java.util.List;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-
 //<<< Clean Arch / Inbound Adaptor
-
 @RestController
-@RequestMapping(value="/users")
+@RequestMapping("/users")
 @Transactional
+@RequiredArgsConstructor        // 생성자 주입
 public class UserController {
-    @Autowired
-    private UserService userService;
 
-    //TODO: 비밀번호 추가 및 검사
-    @RequestMapping(
-            value = "/signup",
-            method = RequestMethod.POST,
-            produces = "application/json;charset=UTF-8"
-    )
-    public User signUp(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            @Valid @RequestBody SignUpCommand signUpCommand
-    ) throws Exception {
-        System.out.println("##### /user/signUp  called #####");
-        return userService.signUp(signUpCommand);
+    private final UserService userService;
+
+    /* ---------- 회원가입 ---------- */
+    @PostMapping("/signup")
+    public User signUp(@RequestBody @Valid SignUpCommand cmd) {
+        return userService.signUp(cmd);
     }
 
-    @RequestMapping(value = "/request-subscription",
-            method = RequestMethod.POST,
-            produces = "application/json;charset=UTF-8")
-    public User requestSubscription(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            @Valid @RequestBody RequestSubscriptionCommand requestSubscriptionCommand) throws Exception {
-            System.out.println("##### /user/requestSubscription  called #####");
-            return userService.requestSubscription(requestSubscriptionCommand);
+    /* ---------- 로그인 ---------- */
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody @Valid LoginCommand cmd) {
+        return userService.login(cmd);
     }
 
-    @RequestMapping(value = "/request-content-access",
-            method = RequestMethod.POST,
-            produces = "application/json;charset=UTF-8")
-    public User requestContentAccess(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            @Valid @RequestBody RequestContentAccessCommand requestContentAccessCommand) throws Exception {
-            System.out.println("##### /user/requestContentAccess  called #####");
-            return userService.requestContentAccess(requestContentAccessCommand);
+    /* ---------- 구독 신청 ---------- */
+    @PostMapping("/request-subscription")
+    public User requestSubscription(@RequestBody @Valid RequestSubscriptionCommand cmd) {
+        return userService.requestSubscription(cmd);
     }
 
-    @RequestMapping(
-            value = "/{id}/is-subscribed",
-            method = RequestMethod.GET,
-            produces = "application/json;charset=UTF-8"
-    )
-    public boolean getUserSubscriptionsStatus(
-            @PathVariable("id") Long id
-    ) throws Exception {
-        System.out.println("##### /users/{id}/is-subscribed called #####");
+    /* ---------- 열람 신청 ---------- */
+    @PostMapping("/request-content-access")
+    public User requestContentAccess(@RequestBody @Valid RequestContentAccessCommand cmd) {
+        return userService.requestContentAccess(cmd);
+    }
+
+    /* ---------- 구독 상태 조회 ---------- */
+    @GetMapping("/{id}/is-subscribed")
+    public boolean getSubscriptionStatus(@PathVariable Long id) {
         return userService.getSubscriptionStatus(id);
     }
 
-    @RequestMapping(
-            value = "/{id}/content-histories",
-            method = RequestMethod.GET,
-            produces = "application/json;charset=UTF-8"
-    )
-    public List<Long> getUserContentHistories(
-            @PathVariable("id") Long id
-    ) throws Exception {
-        System.out.println("##### /users/{id}/content-histories called #####");
+    /* ---------- 열람 이력 조회 ---------- */
+    @GetMapping("/{id}/content-histories")
+    public List<Long> getContentHistories(@PathVariable Long id) {
         return userService.getContentHistory(id);
     }
 }

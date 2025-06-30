@@ -1,6 +1,7 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.UserApplication;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,6 +22,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(unique = true)
     private String email;
 
     private String userName;
@@ -35,6 +37,8 @@ public class User {
     private List<Long> myBookHistory;
 
     private Boolean isKt;
+
+    private String password;
 
     public static UserRepository repository() {
         return UserApplication.applicationContext.getBean(

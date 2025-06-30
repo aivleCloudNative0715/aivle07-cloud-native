@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import aivlecloudnative.application.UserService;
+import aivlecloudnative.domain.LoginCommand;
+import aivlecloudnative.domain.LoginResponse;
 import aivlecloudnative.domain.RequestContentAccessCommand;
 import aivlecloudnative.domain.RequestSubscriptionCommand;
 import aivlecloudnative.domain.SignUpCommand;
@@ -20,9 +22,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+@Import(TestSecurityConfig.class)
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
@@ -45,6 +49,7 @@ class UserControllerTest {
         command.setUserName("홍길동");
         command.setEmail("test@example.com");
         command.setIsKt(true);
+        command.setPassword("test1234");
 
         mockMvc.perform(post("/users/signup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -66,6 +71,31 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isBadRequest());
+    }
+
+    // -----------------------------
+    // ✅ 로그인 테스트
+    // -----------------------------
+
+    @Test
+    @DisplayName("로그인 성공 시 200 응답 및 토큰 반환")
+    void login_should_return200_and_token_when_valid() throws Exception {
+        LoginCommand cmd = new LoginCommand();
+        cmd.setEmail("user@example.com");
+        cmd.setPassword("1234");
+
+        LoginResponse response = new LoginResponse("mock-token", "Bearer", 1L, "user@example.com");
+
+        Mockito.when(userService.login(any(LoginCommand.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cmd)))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(response)));
+
+        Mockito.verify(userService).login(any(LoginCommand.class));
     }
 
     // -----------------------------

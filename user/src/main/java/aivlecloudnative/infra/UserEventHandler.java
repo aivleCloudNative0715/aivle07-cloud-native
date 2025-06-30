@@ -1,5 +1,6 @@
 package aivlecloudnative.infra;
 
+import aivlecloudnative.application.AbstractEventPublisher;
 import aivlecloudnative.domain.UserSignedUp;
 import aivlecloudnative.domain.UserSubscribed;
 import org.springframework.stereotype.Component;

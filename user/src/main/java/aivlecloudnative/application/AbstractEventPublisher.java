@@ -1,4 +1,4 @@
-package aivlecloudnative.infra;
+package aivlecloudnative.application;
 
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.MessageHeaders;
