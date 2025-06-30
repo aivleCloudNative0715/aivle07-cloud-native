@@ -6,16 +6,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException; // ResponseStatusException 임포트
-import org.springframework.http.HttpStatus; // HttpStatus 임포트
-import org.springframework.transaction.annotation.Transactional; // Spring의 @Transactional 임포트
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 
-// 추가: PointDeductionCommand 임포트 (이미 있었지만 다시 확인)
-import aivlecloudnative.domain.PointDeductionCommand; 
+import aivlecloudnative.domain.PointDeductionCommand;
 
 @RestController
-// @RequestMapping(value="/points") // 이 어노테이션은 현재 없으므로 주석 처리된 상태 유지
-@Transactional // Spring의 Transactional 사용
+// @RequestMapping(value="/points")
+@Transactional
 public class PointController {
 
     @Autowired
@@ -29,27 +28,21 @@ public class PointController {
     )
     public Point pointDeduction(
         @PathVariable(value = "id") Long id,
-        @RequestBody PointDeductionCommand command, // PointDeductionCommand를 @RequestBody로 받음
+        @RequestBody PointDeductionCommand command,
         HttpServletRequest request,
         HttpServletResponse response
     ) throws Exception {
         System.out.println("##### /point/pointDeduction called #####");
-        
-        // findById는 Optional을 반환하므로 .orElseThrow()를 사용하여 Point 객체를 가져옵니다.
-        // HttpStatus.NOT_FOUND를 사용하여 404 응답을 보낼 수 있습니다.
+
         Point point = pointRepository.findById(id)
                                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Point not found for id: " + id));
 
-        // point.pointDeduction() 메서드는 Integer deductionAmount를 인자로 받으므로,
-        // command 객체에서 해당 금액을 추출하여 전달해야 합니다.
-        // PointDeductionCommand 클래스에 getAmount() 또는 getDeductionAmount()와 같은 메서드가 있다고 가정합니다.
-        // 실제 PointDeductionCommand 클래스에 정의된 필드에 맞는 getter를 사용해야 합니다.
-        // 예를 들어 PointDeductionCommand에 private Integer amount; 필드가 있다면 command.getAmount() 사용
-        // 또는 private Integer deductionAmount; 필드가 있다면 command.getDeductionAmount() 사용
-        point.pointDeduction(command.getAmount()); // <-- PointDeductionCommand에 getAmount()가 있다고 가정
+        // PointDeductionCommand에 getPointsToDeduct()가 Long 타입이므로 intValue()로 변환
+        point.pointDeduction(command.getPointsToDeduct().intValue());
 
-        // pointRepository.save(point); // Point 클래스 내부에서 publishAfterCommit()이 호출되면서 저장될 것으로 예상되므로, 일반적으로 컨트롤러에서 save를 직접 호출하지 않습니다.
-                                         // 만약 도메인 이벤트 발행과 별도로 직접 저장이 필요하면 남겨두세요.
+        // pointRepository.save(point); // 엔티티 내부에서 저장 로직 주석 처리했으므로, 여기에서 저장하는 것이 적절
+        // 하지만 현재 Architecture에서는 Domain Event 발생 시 Transactional Listener를 통해 처리될 것으로 보입니다.
+        // 일단 컴파일을 위해 이 줄은 유지하거나, 확실하지 않으면 주석 처리하고 나중에 확인
         return point;
     }
 }
