@@ -1,15 +1,17 @@
-package aivlecloudnative.infra; // 파일을 생성한 패키지 경로에 맞춥니다.
+package aivlecloudnative.infra;
 
-import lombok.Data; // Lombok 어노테이션을 사용하므로 lombok이 pom.xml에 추가되어 있어야 합니다.
+import lombok.Data;
 
-@Data // getter, setter, toString, equals, hashCode를 자동으로 생성해줍니다.
+@Data
 public class BookWorkRequestDto {
-    private Long manuscriptId;
+    // Manuscript ID를 일관되게 'manuscriptIdId'로 명명
+    private Long manuscriptIdId;
     private String title;
+    private String content; // ✨ PublicationRequested 및 BookWork 엔티티에 맞춰 'content' 필드 추가
     private String summary;
     private String keywords;
     private String authorName;
-    private String status;
-    // id, coverImageUrl, ebookUrl, category, price 등은
-    // 클라이언트(curl)가 POST 요청 시 보내지 않는 정보이므로 이 DTO에는 포함하지 않습니다.
+    // status 필드는 API 요청 시 클라이언트가 보내는 정보라기보다는
+    // 서버 비즈니스 로직에 의해 결정되는 것이 일반적이므로 DTO에서 제거하거나 선택적으로 사용합니다.
+    // 여기서는 일단 제거합니다.
 }

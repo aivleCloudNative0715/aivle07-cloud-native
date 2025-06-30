@@ -1,94 +1,159 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.AiserviceApplication; // ApplicationContext를 가져오기 위함
-import jakarta.persistence.*; // javax➡️jakarta로 변경
-import lombok.Data; // Lombok 어노테이션
-import org.springframework.beans.BeanUtils; // 객체 복사를 위한 유틸리티
-
-import java.time.LocalDate; // 필요하다면 유지
-import java.util.Date; // 필요하다면 유지
+import aivlecloudnative.infra.AbstractEvent;
+import jakarta.persistence.*; // <-- 여기를 javax에서 jakarta로 변경
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "BookWork_table")
-@Data // Lombok: getter, setter, toString, equals, hashCode 자동 생성
-// <<< DDD / Aggregate Root
+@Table(name = "book_work_table")
 public class BookWork {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private Long manuscriptId;
-
+    private Long manuscriptIdId; // 원고 ID
     private String title;
-
     private String summary;
-
     private String keywords;
-
     private String authorName;
-
+    @Lob // 큰 텍스트 저장을 위해 @Lob 추가
+    private String content;
     private String coverImageUrl;
-
     private String ebookUrl;
-
     private String category;
+    private Integer price; // Integer로 유지
+    private String status; // 상태 필드
+    private LocalDateTime createdDate;
 
-    private Integer price;
-
-    private String status;
-
-    public static BookWorkRepository repository() {
-        BookWorkRepository bookWorkRepository = AiserviceApplication.applicationContext.getBean(
-                BookWorkRepository.class);
-        return bookWorkRepository;
-    }
-
-    // --- 비즈니스 로직 메소드들 ---
-
-    // requestNewBookPublication 메서드의 반환 타입을 BookWork로 변경했습니다.
-    public static BookWork requestNewBookPublication(PublicationRequested event) {
+    // 이전의 requestNewBookPublication 메서드 시그니처만 남기고 내부 로직 제거
+    public static BookWork requestNewBookPublication(PublicationRequested publicationRequested) {
+        // 이 메서드는 이제 사용되지 않거나, BookWork 객체를 생성하는 단순 역할만 수행해야 합니다.
+        // 여기서는 PublicationRequested 이벤트를 기반으로 BookWork 객체를 생성하는 로직만 남깁니다.
         BookWork bookWork = new BookWork();
-
-        bookWork.setManuscriptId(event.getManuscriptId());
-        bookWork.setTitle(event.getTitle());
-        bookWork.setSummary(event.getSummary());
-        bookWork.setKeywords(event.getKeywords());
-        bookWork.setAuthorName(event.getAuthorName());
-        // 초기 상태를 PublicationInfoCreationRequested로 설정합니다.
-        bookWork.setStatus("PublicationInfoCreationRequested");
-
-        // 변경된 BookWork 객체를 저장합니다.
-        repository().save(bookWork);
-
-        // PublicationInfoCreationRequested 이벤트 발행
-        PublicationInfoCreationRequested publicationInfoCreationRequested = new PublicationInfoCreationRequested();
-        // 저장된 BookWork 객체의 속성을 이벤트 객체로 복사합니다.
-        // 여기서 BeanUtils를 사용하려면 org.springframework.beans.BeanUtils를 임포트해야 합니다.
-        BeanUtils.copyProperties(bookWork, publicationInfoCreationRequested);
-        publicationInfoCreationRequested.publishAfterCommit();
-
-        // 저장된 BookWork 객체를 반환합니다.
-        return bookWork; // <--- 이 부분이 추가 및 수정되었습니다.
+        bookWork.setManuscriptIdId(publicationRequested.getManuscriptIdId());
+        bookWork.setTitle(publicationRequested.getTitle());
+        bookWork.setSummary(publicationRequested.getSummary());
+        bookWork.setKeywords(publicationRequested.getKeywords());
+        bookWork.setAuthorName(publicationRequested.getAuthorName());
+        bookWork.setContent(publicationRequested.getContent()); // 필요하다면 content도 설정
+        bookWork.setStatus("PublicationInfoCreationRequested"); // 초기 상태 설정
+        bookWork.setCreatedDate(LocalDateTime.now());
+        // 이벤트 발행 로직은 여기서 제거
+        return bookWork;
     }
 
-    public void applyPublicationInfoAndAutoPublish(
-            String coverImageUrl,
-            String ebookUrl,
-            String category,
-            Integer price) {
+    // AI 응답으로 정보 업데이트 및 최종 이벤트 발행
+    public void applyPublicationInfoAndAutoPublish(String coverImageUrl, String ebookUrl, String category,
+            Integer price, String aiGeneratedSummary) {
         this.setCoverImageUrl(coverImageUrl);
         this.setEbookUrl(ebookUrl);
         this.setCategory(category);
         this.setPrice(price);
-        this.setStatus("AutoPublished"); // 상태를 AutoPublished로 변경
+        this.setStatus("AutoPublished"); // 최종 상태
+    }
 
-        repository().save(this); // 변경된 BookWork 객체를 저장합니다.
+    // Lombok을 사용하지 않는다면 아래 getter/setter 필요
+    public Long getId() {
+        return id;
+    }
 
-        // AutoPublished 이벤트 발행
-        AutoPublished autoPublished = new AutoPublished();
-        BeanUtils.copyProperties(this, autoPublished);
-        autoPublished.publishAfterCommit();
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getManuscriptIdId() {
+        return manuscriptIdId;
+    }
+
+    public void setManuscriptIdId(Long manuscriptIdId) {
+        this.manuscriptIdId = manuscriptIdId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getKeywords() {
+        return keywords;
+    }
+
+    public void setKeywords(String keywords) {
+        this.keywords = keywords;
+    }
+
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getCoverImageUrl() {
+        return coverImageUrl;
+    }
+
+    public void setCoverImageUrl(String coverImageUrl) {
+        this.coverImageUrl = coverImageUrl;
+    }
+
+    public String getEbookUrl() {
+        return ebookUrl;
+    }
+
+    public void setEbookUrl(String ebookUrl) {
+        this.ebookUrl = ebookUrl;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
     }
 }
-// >>> DDD / Aggregate Root

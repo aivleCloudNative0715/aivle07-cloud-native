@@ -38,7 +38,7 @@ public class AbstractEvent {
         // application.yml 또는 application.properties에
         // spring.cloud.stream.bindings.event-out.destination=your-topic-name
         // 과 같이 정의되어야 합니다.
-        streamBridge.send("event-out",
+        streamBridge.send("event-out-0",
                 MessageBuilder
                         .withPayload(this)
                         .setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)

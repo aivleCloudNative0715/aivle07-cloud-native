@@ -17,7 +17,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
+        definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer # 이벤트를 소비하는 컨슈머 함수 정의
       kafka:
         binder:
           brokers: localhost:9092
@@ -30,33 +30,50 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
+        # ---- Input Bindings (Consumers) ----
         publicationRequestedConsumer-in-0:
-          destination: bookwork.publication.requested
+          destination: bookwork.publication.requested # writing 서비스에서 발행하는 이벤트 소비
           group: aiservice
           contentType: application/json
+          # default 프로파일은 consumer 설정이 없어도 기본값이 적용될 수 있지만, 명시적으로 추가하는 것이 좋습니다.
+          consumer:
+            auto-offset-reset: earliest
         publicationInfoCreationRequestedConsumer-in-0:
-          destination: bookwork.publication-info.creation-requested
+          destination: bookwork.publication-info.creation-requested # aiservice 내에서 발행하는 이벤트 소비 (내부 전달용)
           group: aiservice
           contentType: application/json
-        # ⭐️ 이 부분의 destination을 위 publicationInfoCreationRequestedConsumer-in-0과 동일하게 수정했습니다.
-        event-out-0:
-          destination: bookwork.publication-info.creation-requested # <--- 이 부분을 수정!
+          # default 프로파일은 consumer 설정이 없어도 기본값이 적용될 수 있지만, 명시적으로 추가하는 것이 좋습니다.
+          consumer:
+            auto-offset-reset: earliest
+
+        publicationInfoCreationRequested-out-0: # 이 이름은 EventPublishSupport 등에서 호출하는 메서드명 또는 @SendTo 어노테이션과 일치해야 함
+          destination: bookwork.publication-info.creation-requested # PolicyHandler가 구독하는 토픽과 정확히 일치!
+          contentType: application/json
+          producer:
+            headerMode: embeddedHeaders # CloudEvents를 사용하는 경우 중요
+
+        # 최종 AutoPublished 이벤트를 위한 출력 채널
+        event-out-0: # BookWork에서 발행하는 AutoPublished 이벤트의 목적지
+          destination: bookwork.auto-published
           contentType: application/json
           producer:
             headerMode: embeddedHeaders
 
-  # --- GPT API 설정 (default 프로파일 안에 포함) ---
+  # GPT API 설정
   gpt:
     api-key: ${SPRING_GPT_API_KEY}
-    base-url: https://api.openai.com/v1/chat/completions
-    image-url: https://api.openai.com/v1/images/generations
+    base-url: https://api.openai.com/v1
+    image-url: https://api.openai.com/v1
     model: gpt-4o-mini
     image-model: dall-e-3
 
 logging:
   level:
+    root: INFO # 기본 로그 레벨은 INFO로 유지
     org.hibernate.type: trace
-    org.springframework.cloud: debug
+    org.springframework.cloud: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG
+    aivlecloudnative: DEBUG # 사용자 정의 패키지 로그는 DEBUG로 유지
 
 ---
 # --- Docker 프로파일 설정 ---
@@ -79,7 +96,7 @@ spring:
         definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
       kafka:
         binder:
-          brokers: my-kafka:9092
+          brokers: my-kafka:9092 # Docker 환경의 Kafka 브로커 주소
         streams:
           binder:
             configuration:
@@ -89,33 +106,44 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
+        # ---- Input Bindings (Consumers) ----
         publicationRequestedConsumer-in-0:
           destination: bookwork.publication.requested
           group: aiservice
           contentType: application/json
+          consumer: # <-- 이 부분이 추가되었습니다!
+            auto-offset-reset: earliest # <-- 이 라인도 추가되었습니다!
         publicationInfoCreationRequestedConsumer-in-0:
           destination: bookwork.publication-info.creation-requested
           group: aiservice
           contentType: application/json
-        # ⭐️ 이 부분의 destination을 위 publicationInfoCreationRequestedConsumer-in-0과 동일하게 수정했습니다.
-        event-out-0:
-          destination: bookwork.publication-info.creation-requested # <--- 이 부분을 수정!
+          consumer: # <-- 이 부분이 추가되었습니다!
+            auto-offset-reset: earliest # <-- 이 라인도 추가되었습니다!
+
+        # ---- Output Bindings (Producers) ----
+        publicationInfoCreationRequested-out-0:
+          destination: bookwork.publication-info.creation-requested
           contentType: application/json
           producer:
             headerMode: embeddedHeaders
 
-  # --- Docker 프로파일에도 GPT API 설정을 포함 ---
+        event-out-0:
+          destination: bookwork.auto-published
+          contentType: application/json
+          producer:
+            headerMode: embeddedHeaders
+
+  # Docker 프로파일에도 GPT API 설정을 포함
   gpt:
     api-key: ${SPRING_GPT_API_KEY}
-    base-url: https://api.openai.com/v1/chat/completions
-    image-url: https://api.openai.com/v1/images/generations
+    base-url: https://api.openai.com/v1
+    image-url: https://api.openai.com/v1
     model: gpt-4o-mini
     image-model: dall-e-3
 
 logging:
   level:
     root: INFO
-    org.hibernate.type: trace
-    org.springframework.cloud: DEBUG
-    org.springframework.web.reactive.function.client: DEBUG # WebClient 로그
-    aivlecloudnative: DEBUG
+    org.springframework.cloud.stream: TRACE
+    org.springframework.kafka: TRACE
+    org.apache.kafka: TRACE

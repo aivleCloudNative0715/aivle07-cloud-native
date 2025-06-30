@@ -1,40 +1,59 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.domain.*;
-import org.springframework.beans.BeanUtils; // BeanUtils 사용을 위한 import 추가
-import java.util.Optional;
-import org.springframework.transaction.annotation.Transactional;
+import aivlecloudnative.domain.BookWork;
+import aivlecloudnative.domain.BookWorkRepository;
+import aivlecloudnative.domain.PublicationInfoCreationRequested; // 이 이벤트는 여기서 발행
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import aivlecloudnative.infra.BookWorkRequestDto;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.cloud.stream.function.StreamBridge; // StreamBridge 주입
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+
+import java.time.LocalDateTime; // LocalDateTime 임포트
 
 @RestController
-@RequestMapping(value = "/bookWorks")
-@Transactional
+@RequestMapping("/bookWorks")
 public class BookWorkController {
 
     @Autowired
-    BookWorkRepository bookWorkRepository;
+    private BookWorkRepository bookWorkRepository;
 
-    @GetMapping("/{id}")
-    public Optional<BookWork> getBookWorkById(@PathVariable Long id) {
-        return bookWorkRepository.findById(id);
-    }
+    @Autowired
+    private StreamBridge streamBridge; // StreamBridge 주입
 
     @PostMapping
-    public BookWork createBookWork(@RequestBody BookWorkRequestDto requestDto) {
-        // 1. DTO의 속성을 PublicationRequested 이벤트 객체로 복사
-        PublicationRequested publicationRequested = new PublicationRequested();
-        BeanUtils.copyProperties(requestDto, publicationRequested);
+    public ResponseEntity<BookWork> createBookWork(@RequestBody BookWork bookWork) {
+        try {
+            // BookWork 상태 초기화 (필요하다면)
+            bookWork.setStatus("PublicationInfoCreationRequested"); // 초기 상태 설정
+            bookWork.setCreatedDate(LocalDateTime.now()); // 생성 시간 설정
 
-        // 2. BookWork 엔티티의 static 메서드를 호출하여 비즈니스 로직 실행
-        // 이 메서드 안에서 BookWork가 저장되고 PublicationInfoCreationRequested 이벤트가 발행될 것입니다.
-        // 이 메서드는 이제 저장된 BookWork 인스턴스를 반환하도록 BookWork.java 파일을 수정해야 합니다.
-        BookWork createdBookWork = BookWork.requestNewBookPublication(publicationRequested);
+            // DB에 BookWork 저장
+            BookWork savedBookWork = bookWorkRepository.save(bookWork);
 
-        // 3. 비즈니스 로직 처리 후 반환된 BookWork 객체를 클라이언트에 응답
-        return createdBookWork;
+            // PublicationInfoCreationRequested 이벤트를 직접 발행
+            PublicationInfoCreationRequested event = new PublicationInfoCreationRequested(savedBookWork);
+
+            // StreamBridge를 사용하여 이벤트 발행 (application.yml의 바인딩 이름 사용)
+            // "publicationInfoCreationRequested-out-0" 바인딩으로 전송
+            boolean success = streamBridge.send("publicationInfoCreationRequested-out-0",
+                    MessageBuilder.withPayload(event).build());
+
+            if (!success) {
+                // 이벤트 발행 실패 시 로깅 또는 예외 처리
+                System.err.println("Failed to send PublicationInfoCreationRequested event for manuscriptIdId: "
+                        + savedBookWork.getManuscriptIdId());
+            } else {
+                System.out.println("##### [Controller] PublicationInfoCreationRequested 이벤트 발행 완료: " + event.toJson());
+            }
+
+            return new ResponseEntity<>(savedBookWork, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("Error creating BookWork: " + e.getMessage());
+            e.printStackTrace(); // 스택 트레이스 출력
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-
-    // 기타 필요한 CRUD 메서드 (PUT, DELETE 등)를 추가할 수 있습니다.
 }

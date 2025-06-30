@@ -4,105 +4,119 @@ import aivlecloudnative.domain.BookWork;
 import aivlecloudnative.domain.BookWorkRepository;
 import aivlecloudnative.domain.PublicationRequested;
 import aivlecloudnative.domain.PublicationInfoCreationRequested;
-import aivlecloudnative.external.AIServiceSystem; // AIServiceSystem 인터페이스 또는 클라이언트
+import aivlecloudnative.external.AIServiceSystem;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // 트랜잭션 관리
+import org.springframework.context.annotation.Configuration; // <-- @Configuration 추가
+import org.springframework.context.annotation.Bean; // <-- @Bean import 확인
+// import org.springframework.stereotype.Service; // <-- 이 줄은 삭제
+// import org.springframework.transaction.annotation.Transactional; // <-- 이 줄은 삭제
 import java.util.function.Consumer;
-import org.slf4j.Logger; // Logger 임포트
-import org.slf4j.LoggerFactory; // LoggerFactory 임포트
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Service
-@Transactional // 트랜잭션 관리가 필요할 수 있음 (특히 DB 작업 포함 시)
+@Configuration // PolicyHandler 클래스를 Spring Configuration 빈으로 등록합니다.
 public class PolicyHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(PolicyHandler.class); // Logger 인스턴스 생성
+        private static final Logger logger = LoggerFactory.getLogger(PolicyHandler.class);
 
-    @Autowired
-    private BookWorkRepository bookWorkRepository;
+        @Autowired
+        private BookWorkRepository bookWorkRepository;
 
-    @Autowired
-    private AIServiceSystem aiServiceSystem; // AIServiceSystem 주입
+        @Autowired
+        private AIServiceSystem aiServiceSystem;
 
-    // PublicationRequested 이벤트를 처리하는 Consumer (입력 바인딩)
-    // 이 함수는 'publicationRequestedConsumer'라는 이름으로 Spring Context에 등록됩니다.
-    // application.yml/properties에
-    // spring.cloud.stream.function.definition=publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
-    // spring.cloud.stream.bindings.publicationRequestedConsumer-in-0.destination=<토픽_이름_PublicationRequested>
-    public Consumer<PublicationRequested> publicationRequestedConsumer() {
-        return publicationRequested -> {
-            // 초기 PublicationRequested 이벤트 수신 로그
-            logger.info("\n\n##### publicationRequestedConsumer (PublicationRequested) : "
-                    + publicationRequested.toJson() + "\n\n");
+        // PublicationRequested 이벤트 핸들러
+        @Bean // 이 메서드를 Spring Cloud Stream 컨슈머 함수로 등록합니다.
+        public Consumer<PublicationRequested> publicationRequestedConsumer() {
+                return publicationRequested -> {
+                        logger.info("\n\n##### [Step 1] PublicationRequested 이벤트 수신 시작 (Consumer): "
+                                        + publicationRequested.toJson()
+                                        + "\n");
+                        // 도메인 로직 호출. 필요 시 별도의 @Service 메서드에 @Transactional을 적용할 수 있습니다.
+                        BookWork.requestNewBookPublication(publicationRequested);
+                        logger.info(
+                                        "##### [Step 2] BookWork 생성 및 PublicationInfoCreationRequested 이벤트 발행 요청 완료 (BookWork.requestNewBookPublication 호출).");
+                };
+        }
 
-            // 1. PublicationRequested 이벤트를 받아 BookWork Aggregate 생성 또는 로드
-            // 여기서는 신규 요청이므로 BookWork의 static 메소드를 호출하여 초기화 및 이벤트 발행
-            // 이 메소드 안에서 BookWork이 저장되고 PublicationInfoCreationRequested 이벤트가 발행됩니다.
-            BookWork.requestNewBookPublication(publicationRequested);
-        };
-    }
+        // PublicationInfoCreationRequested 이벤트 핸들러
+        @Bean // 이 메서드를 Spring Cloud Stream 컨슈머 함수로 등록합니다.
+        public Consumer<PublicationInfoCreationRequested> publicationInfoCreationRequestedConsumer() {
+                return publicationInfoCreationRequested -> {
+                        logger.info("\n\n##### [Step 3] PublicationInfoCreationRequested 이벤트 수신 시작 (Consumer): "
+                                        + publicationInfoCreationRequested.toJson() + "\n");
 
-    // PublicationInfoCreationRequested 이벤트를 처리하는 Consumer (입력 바인딩)
-    // 이 함수는 'publicationInfoCreationRequestedConsumer'라는 이름으로 Spring Context에 등록
-    // application.yml/properties에
-    // spring.cloud.stream.bindings.publicationInfoCreationRequestedConsumer-in-0.destination=<토픽_이름_PublicationInfoCreationRequested>
-    public Consumer<PublicationInfoCreationRequested> publicationInfoCreationRequestedConsumer() {
-        return publicationInfoCreationRequested -> {
-            // PublicationInfoCreationRequested 이벤트 수신 로그
-            logger.info("\n\n##### publicationInfoCreationRequestedConsumer (PublicationInfoCreationRequested) : "
-                    + publicationInfoCreationRequested.toJson() + "\n\n");
+                        // BookWork 조회 및 처리 로직
+                        bookWorkRepository.findById(publicationInfoCreationRequested.getId()).ifPresent(bookWork -> {
+                                logger.info("##### [Step 3-1] DB에서 BookWork 엔티티 (ID: {}) 조회 성공. 현재 상태: {}",
+                                                bookWork.getId(),
+                                                bookWork.getStatus());
 
-            // 2. PublicationInfoCreationRequested 이벤트를 받아 AIServiceSystem 호출
-            // BookWork ID로 해당 Aggregate를 로드합니다.
-            bookWorkRepository.findById(publicationInfoCreationRequested.getId()).ifPresent(bookWork -> {
-                try {
-                    // GPT API 호출 전 로그
-                    logger.info("### Calling GPT API for BookWork ID: {}", bookWork.getId());
-                    AIServiceSystem.AIResponse aiResponse = aiServiceSystem.callGPTApi(
-                            publicationInfoCreationRequested.getTitle(),
-                            publicationInfoCreationRequested.getSummary(),
-                            publicationInfoCreationRequested.getKeywords(),
-                            publicationInfoCreationRequested.getAuthorName()
-                    // 필요한 다른 정보들도 전달 (e.g., manuscript content)
-                    );
+                                try {
+                                        logger.info("##### [Step 4] GPT API 호출을 위한 데이터 준비 중. BookWork ID: {}",
+                                                        bookWork.getId());
+                                        logger.info("     AI 모델에 전달될 제목: {}",
+                                                        publicationInfoCreationRequested.getTitle());
+                                        logger.info("     AI 모델에 전달될 요약: {}",
+                                                        publicationInfoCreationRequested.getSummary());
+                                        logger.info("     AI 모델에 전달될 키워드: {}",
+                                                        publicationInfoCreationRequested.getKeywords());
+                                        logger.info("     AI 모델에 전달될 저자명: {}",
+                                                        publicationInfoCreationRequested.getAuthorName());
+                                        logger.info("     AI 모델에 전달될 원고 내용 (일부): {}...",
+                                                        bookWork.getContent() != null
+                                                                        && bookWork.getContent().length() > 100
+                                                                                        ? bookWork.getContent()
+                                                                                                        .substring(0, 100)
+                                                                                        : bookWork.getContent());
 
-                    // ⭐️ GPT API 응답 결과 콘솔 출력
-                    logger.info("### GPT API Response Received for BookWork ID {}:", bookWork.getId());
-                    logger.info("    Cover Image URL: {}", aiResponse.getCoverImageUrl());
-                    logger.info("    Ebook URL: {}", aiResponse.getEbookUrl());
-                    logger.info("    Category: {}", aiResponse.getCategory());
-                    logger.info("    Price: {}", aiResponse.getPrice());
+                                        AIServiceSystem.AIResponse aiResponse = aiServiceSystem.callGPTApi(
+                                                        bookWork.getManuscriptIdId(),
+                                                        publicationInfoCreationRequested.getTitle(),
+                                                        publicationInfoCreationRequested.getSummary(),
+                                                        publicationInfoCreationRequested.getKeywords(),
+                                                        publicationInfoCreationRequested.getAuthorName(),
+                                                        bookWork.getContent());
 
-                    // 3. AI 처리 결과로 BookWork Aggregate의 상태를 업데이트하고 AutoPublished 이벤트 발행
-                    bookWork.applyPublicationInfoAndAutoPublish(
-                            aiResponse.getCoverImageUrl(),
-                            aiResponse.getEbookUrl(),
-                            aiResponse.getCategory(),
-                            aiResponse.getPrice());
-                    // save는 applyPublicationInfoAndAutoPublish 내부에서 처리됨
+                                        logger.info("##### [Step 5] GPT API 응답 성공적으로 수신 (BookWork ID: {}):",
+                                                        bookWork.getId());
+                                        logger.info("     AI 응답 - Cover Image URL: {}", aiResponse.getCoverImageUrl());
+                                        logger.info("     AI 응답 - Ebook URL: {}", aiResponse.getEbookUrl());
+                                        logger.info("     AI 응답 - Category: {}", aiResponse.getCategory());
+                                        logger.info("     AI 응답 - Price: {}", aiResponse.getPrice());
 
-                    // ⭐️ BookWork 업데이트 후 최종 상태 콘솔 출력
-                    logger.info("### BookWork Updated and AutoPublished for ID {}:", bookWork.getId());
-                    logger.info("    Final Cover Image URL: {}", bookWork.getCoverImageUrl());
-                    logger.info("    Final Ebook URL: {}", bookWork.getEbookUrl());
-                    logger.info("    Final Category: {}", bookWork.getCategory());
-                    logger.info("    Final Price: {}", bookWork.getPrice());
-                    logger.info("    Final Status: {}", bookWork.getStatus());
-                    logger.info("### BookWork processing completed for ID {}.\n", bookWork.getId());
+                                        bookWork.applyPublicationInfoAndAutoPublish(
+                                                        aiResponse.getCoverImageUrl(),
+                                                        aiResponse.getEbookUrl(),
+                                                        aiResponse.getCategory(),
+                                                        aiResponse.getPrice(),
+                                                        bookWork.getSummary()); // summary는 GPT API 응답에서 받지 않고 기존
+                                                                                // bookWork의 summary를 그대로 사용
 
-                } catch (Exception e) {
-                    // 오류 발생 시 로그 및 상태 업데이트
-                    logger.error("##### AIServiceSystem 호출 중 오류 발생 for BookWork ID {}: {}", bookWork.getId(),
-                            e.getMessage(), e);
-                    // ⚠️ 중요: 에러 처리 로직 (보상 트랜잭션, 실패 이벤트 발행, 알림 등)
-                    // 예를 들어, BookWork의 상태를 "AI_PROCESSING_FAILED" 등으로 업데이트하고
-                    // FailureEvent를 발행하여 다른 시스템에 알릴 수 있습니다.
-                    bookWork.setStatus("AI_PROCESSING_FAILED");
-                    bookWorkRepository.save(bookWork);
-                    // new AiProcessingFailed(bookWork.getId(),
-                    // e.getMessage()).publishAfterCommit();
-                }
-            });
-        };
-    }
+                                        logger.info("##### [Step 6] BookWork 엔티티 (ID: {}) 최종 정보 업데이트 및 AutoPublished 이벤트 발행 완료.",
+                                                        bookWork.getId());
+                                        logger.info("     최종 Cover Image URL: {}", bookWork.getCoverImageUrl());
+                                        logger.info("     최종 Ebook URL: {}", bookWork.getEbookUrl());
+                                        logger.info("     최종 Category: {}", bookWork.getCategory());
+                                        logger.info("     최종 Price: {}", bookWork.getPrice());
+                                        logger.info("     최종 Status: {}", bookWork.getStatus());
+                                        logger.info("##### [Step 6] BookWork 전체 처리 프로세스 완료 (BookWork ID: {}).\n",
+                                                        bookWork.getId());
+
+                                } catch (Exception e) {
+                                        logger.error("##### [Step 7] AIServiceSystem 호출 중 치명적인 오류 발생 (BookWork ID: {}): {}",
+                                                        bookWork.getId(), e.getMessage(), e);
+                                        bookWork.setStatus("AI_PROCESSING_FAILED");
+                                        bookWorkRepository.save(bookWork);
+                                        logger.error("##### [Step 7] BookWork (ID: {}) 상태가 'AI_PROCESSING_FAILED'로 업데이트됨.",
+                                                        bookWork.getId());
+                                }
+                        });
+                        if (!bookWorkRepository.findById(publicationInfoCreationRequested.getId()).isPresent()) {
+                                logger.warn(
+                                                "##### [WARNING] PublicationInfoCreationRequested 이벤트에 해당하는 BookWork (ID: {})를 DB에서 찾을 수 없습니다. (이전 이벤트 누락 가능성)",
+                                                publicationInfoCreationRequested.getId());
+                        }
+                };
+        }
 }
