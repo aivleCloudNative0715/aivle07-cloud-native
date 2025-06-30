@@ -48,6 +48,10 @@ logging:
 server:
   port: 8082
 
+# TODO: docker profile에도 추가
+jwt:
+  secret: ${JWT_SECRET}
+
 ---
 
 spring:
@@ -81,3 +85,4 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+

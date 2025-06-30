@@ -3,6 +3,8 @@ package aivlecloudnative.application;
 import aivlecloudnative.domain.AccessRequestedAsSubscriber;
 import aivlecloudnative.domain.AccessRequestedWithPoints;
 import aivlecloudnative.domain.BookViewed;
+import aivlecloudnative.domain.LoginCommand;
+import aivlecloudnative.domain.LoginResponse;
 import aivlecloudnative.domain.OutboxMessage;
 import aivlecloudnative.domain.OutboxMessageRepository;
 import aivlecloudnative.domain.RequestContentAccessCommand;
@@ -13,12 +15,14 @@ import aivlecloudnative.domain.UserRepository;
 import aivlecloudnative.domain.UserSignedUp;
 import aivlecloudnative.domain.UserSubscribed;
 import aivlecloudnative.infra.AbstractEvent;
+import aivlecloudnative.infra.JwtTokenProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,6 +32,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final OutboxMessageRepository outboxMessageRepository;
     private final ObjectMapper objectMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public User signUp(SignUpCommand cmd) {
@@ -38,9 +44,27 @@ public class UserService {
         User user = new User();
         user.signUp(cmd);
 
+        String hashedPassword = passwordEncoder.encode(cmd.getPassword());
+        user.setPassword(hashedPassword);
+
         saveOutbox(new UserSignedUp(user), "UserSignedUp");
 
         return userRepository.save(user);
+    }
+
+    public LoginResponse login(LoginCommand cmd) {
+        User user = userRepository.findByEmail(cmd.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+
+        if (!passwordEncoder.matches(cmd.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // ✅ JWT 토큰 생성 (권한 정보 포함)
+        String token = jwtTokenProvider.createToken(user.getId(), List.of("ROLE_USER"));
+
+        // ✅ 토큰 + 사용자 정보 응답
+        return new LoginResponse(token, "Bearer", user.getId(), user.getEmail());
     }
 
     @Transactional

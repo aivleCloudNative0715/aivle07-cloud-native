@@ -21,4 +21,7 @@ public class SignUpCommand {
 
     @NotNull(message = "KT 여부를 선택해 주세요")
     private Boolean isKt;
+
+    @NotNull(message ="비밀번호를 입력해 주세요")
+    private String password;
 }
