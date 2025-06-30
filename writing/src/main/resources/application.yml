@@ -15,6 +15,8 @@ spring:
         format_sql: true
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
+    function: # <-- 이 부분을 추가
+      definition: manuscriptEventsIn # <-- 이 부분을 추가: 명시적으로 사용할 Consumer 빈의 이름 지정
     stream:
       kafka:
         binder:
@@ -28,13 +30,18 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        event-in:
-          group: writing
-          destination: aivlecloudnative #<<< EDA / Topic Name
+        manuscriptEventsIn-in-0:
+          destination: aivlecloudnative
+          group: manuscript-read-model-group
           contentType: application/json
+          consumer:
+            maxAttempts: 3
+
         event-out:
-          destination: aivlecloudnative #<<< EDA / Topic Name
-          contentType: application/json
+          destination: aivlecloudnative
+          producer:
+            headerMode: headers
+            partitionCount: 1
 
 logging:
   level:
@@ -45,13 +52,13 @@ logging:
 --- # --- 여기는 프로필 간의 구분선입니다. ---
 
 server:
-  port: 8086 # Docker
+  port: 8086
 
 spring:
   # --- Docker 프로필 설정 ---
   config:
     activate:
-      on-profile: docker # 'spring.profiles: docker'를 이처럼 변경합니다.
+      on-profile: docker
   jpa:
     properties:
       hibernate:
@@ -59,6 +66,8 @@ spring:
         format_sql: true
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
+    function: # <-- 이 부분을 추가
+      definition: manuscriptEventsIn # <-- 이 부분을 추가: 명시적으로 사용할 Consumer 빈의 이름 지정
     stream:
       kafka:
         binder:
@@ -72,10 +81,15 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        event-in:
-          group: writing
+        manuscriptEventsIn-in-0:
           destination: aivlecloudnative
+          group: manuscript-read-model-group
           contentType: application/json
+          consumer:
+            maxAttempts: 3
+
         event-out:
           destination: aivlecloudnative
-          contentType: application/json
+          producer:
+            headerMode: headers
+            partitionCount: 1

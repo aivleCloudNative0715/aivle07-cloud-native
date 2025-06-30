@@ -1,5 +1,7 @@
 package aivlecloudnative.infra;
 
+import java.util.Optional;
+
 import aivlecloudnative.domain.Manuscript;
 import aivlecloudnative.domain.ManuscriptRegistrationCommand;
 import aivlecloudnative.domain.ManuscriptSaveCommand;
@@ -11,8 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid; 
+import jakarta.validation.Valid;
 
+import aivlecloudnative.domain.ManuscriptListRepository;
+import aivlecloudnative.domain.ManuscriptList;
 
 // 원고 관련 HTTP 요청을 처리하는 REST 컨트롤러
 @RestController
@@ -23,6 +27,8 @@ public class ManuscriptController {
     @Autowired
     private ManuscriptService manuscriptService;
 
+    @Autowired
+    private ManuscriptListRepository manuscriptListRepository;
 
     @PostMapping("/registration")
     public ResponseEntity<Manuscript> manuscriptRegistration(
@@ -50,12 +56,38 @@ public class ManuscriptController {
 
     @PostMapping("/publication-request")
     public ResponseEntity<Manuscript> publicationRequest(
-        @Valid @RequestBody PublicationRequestCommand cmd 
+        @Valid @RequestBody PublicationRequestCommand cmd
     ) {
         System.out.println("##### /manuscripts/publication-request called #####");
         // 서비스 계층으로 로직 위임
         Manuscript result = manuscriptService.requestPublication(cmd);
         return new ResponseEntity<>(result, HttpStatus.OK); // 성공 시 200 OK
+    }
+
+    // 리드 모델(Read Model) 조회 엔드포인트
+
+    // 1. 모든 원고 목록 조회
+    @GetMapping
+    public ResponseEntity<Iterable<ManuscriptList>> getAllManuscripts() {
+        System.out.println("##### /manuscripts called (GET all) #####");
+        // ManuscriptListRepository를 사용하여 모든 ManuscriptList 데이터를 조회
+        Iterable<ManuscriptList> manuscriptLists = manuscriptListRepository.findAll();
+        return new ResponseEntity<>(manuscriptLists, HttpStatus.OK);
+    }
+
+    // 2. 특정 원고 상세 조회
+    @GetMapping("/{manuscriptId}")
+    public ResponseEntity<ManuscriptList> getManuscriptById(@PathVariable Long manuscriptId) {
+        System.out.println("##### /manuscripts/{manuscriptId} called (GET by ID) #####");
+        // ManuscriptListRepository를 사용하여 특정 ID의 ManuscriptList 데이터를 조회
+        Optional<ManuscriptList> manuscriptListOptional = manuscriptListRepository.findById(manuscriptId);
+
+        if (manuscriptListOptional.isPresent()) {
+            return new ResponseEntity<>(manuscriptListOptional.get(), HttpStatus.OK);
+        } else {
+
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
 }

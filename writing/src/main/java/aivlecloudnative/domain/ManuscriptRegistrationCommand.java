@@ -2,6 +2,7 @@ package aivlecloudnative.domain;
 import lombok.Data;
 import java.time.LocalDateTime; // LocalDateTime만 사용하므로 이것만 남깁니다.
 import java.util.*;
+import jakarta.validation.constraints.NotBlank;
 
 @Data
 public class ManuscriptRegistrationCommand {

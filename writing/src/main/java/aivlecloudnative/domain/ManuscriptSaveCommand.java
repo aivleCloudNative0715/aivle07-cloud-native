@@ -4,8 +4,7 @@ import java.util.*;
 import java.time.LocalDateTime; // LocalDateTime을 사용하므로 추가
 
 import lombok.Data;
-
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 @Data
 public class ManuscriptSaveCommand {

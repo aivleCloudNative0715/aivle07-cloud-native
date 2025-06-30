@@ -1,11 +1,11 @@
-package aivlecloudnative.domain; 
+package aivlecloudnative.domain;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; 
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional 
+@Transactional
 public class ManuscriptService {
 
     @Autowired
@@ -32,7 +32,7 @@ public class ManuscriptService {
 
     // 기존 원고 수정 유스케이스
     public Manuscript saveManuscript(Long id, ManuscriptSaveCommand command) {
-        
+
         // 커맨드 데이터 유효성 검증
         if (command.getTitle() == null || command.getContent() == null) {
             throw new IllegalArgumentException("Title and content must not be null for manuscript save.");
@@ -61,7 +61,7 @@ public class ManuscriptService {
     public Manuscript requestPublication(PublicationRequestCommand command) {
 
         // Command 유효성 검증
-        if (command.getId() == null) {
+        if (command.getManuscriptId() == null) {
             throw new IllegalArgumentException("Manuscript ID must not be null for publication request.");
         }
 

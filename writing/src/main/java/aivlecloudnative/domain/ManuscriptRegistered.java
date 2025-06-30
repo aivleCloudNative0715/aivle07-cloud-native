@@ -1,26 +1,26 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.domain.*;
 import aivlecloudnative.infra.AbstractEvent;
-import java.time.LocalDate;
-import java.util.*;
+import java.time.LocalDateTime;
 import lombok.*;
-import lombok.Data;
 
 //<<< DDD / Domain Event
+
 @Data
-@ToString
 @EqualsAndHashCode(callSuper = false)
-public class PublicationRequested extends AbstractEvent {
+@NoArgsConstructor
+public class ManuscriptRegistered extends AbstractEvent {
 
     private Long manuscriptId;
+    private String authorId;
     private String title;
     private String content;
     private String summary;
     private String keywords;
-    private String authorId;
+    private String status;
+    private LocalDateTime lastModifiedAt;
 
-    public PublicationRequested(Manuscript aggregate) {
+    public ManuscriptRegistered(Manuscript aggregate) {
         super();
         this.manuscriptId = aggregate.getId();
         this.authorId = aggregate.getAuthorId();
@@ -28,15 +28,12 @@ public class PublicationRequested extends AbstractEvent {
         this.content = aggregate.getContent();
         this.summary = aggregate.getSummary();
         this.keywords = aggregate.getKeywords();
+        this.status = aggregate.getStatus();
+        this.lastModifiedAt = aggregate.getLastModifiedAt();
     }
-
-    public PublicationRequested() {
-        super();
-    }
-
     @Override
     public String getEventType() {
-        return "PublicationRequested";
+        return "ManuscriptRegistered";
     }
 }
 //>>> DDD / Domain Event
