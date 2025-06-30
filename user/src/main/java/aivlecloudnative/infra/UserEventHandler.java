@@ -1,5 +1,6 @@
 package aivlecloudnative.infra;
 
+import aivlecloudnative.domain.UserSignedUp;
 import aivlecloudnative.domain.UserSubscribed;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -11,6 +12,11 @@ public class UserEventHandler {
 
     public UserEventHandler(AbstractEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
+    }
+
+    @TransactionalEventListener
+    public void handle(UserSignedUp event) {
+        eventPublisher.publish("event-out", event, "UserSignedUp");
     }
 
     @TransactionalEventListener

@@ -48,16 +48,15 @@ public class UserController {
             return userService.requestSubscription(requestSubscriptionCommand);
     }
 
-//    @RequestMapping(value = "/users/request-content-access",
-//            method = RequestMethod.POST,
-//            produces = "application/json;charset=UTF-8")
-//    public User requestContentAccess(HttpServletRequest request, HttpServletResponse response,
-//        @RequestBody RequestContentAccessCommand requestContentAccessCommand) throws Exception {
-//            System.out.println("##### /user/requestContentAccess  called #####");
-////            User user = new User();
-////            user.requestContentAccess(requestContentAccessCommand);
-//////            userRepository.save(user);
-////            return user;
-//    }
+    @RequestMapping(value = "/users/request-content-access",
+            method = RequestMethod.POST,
+            produces = "application/json;charset=UTF-8")
+    public User requestContentAccess(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @Valid @RequestBody RequestContentAccessCommand requestContentAccessCommand) throws Exception {
+            System.out.println("##### /user/requestContentAccess  called #####");
+            return userService.requestContentAccess(requestContentAccessCommand);
+    }
 }
 //>>> Clean Arch / Inbound Adaptor

@@ -5,6 +5,7 @@ import java.util.*;
 import lombok.*;
 
 //<<< DDD / Domain Event
+@EqualsAndHashCode(callSuper = false)
 @Data
 @ToString
 public class UserSubscribed extends AbstractEvent {

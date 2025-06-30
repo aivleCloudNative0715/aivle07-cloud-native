@@ -29,7 +29,7 @@ public class UserServiceTest {
         // given
         Long invalidUserId = 999L;
         RequestSubscriptionCommand command = new RequestSubscriptionCommand();
-        command.setUser_id(invalidUserId);
+        command.setUserId(invalidUserId);
 
         Mockito.when(userRepository.findById(invalidUserId))
                 .thenReturn(Optional.empty());

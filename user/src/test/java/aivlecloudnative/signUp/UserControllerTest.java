@@ -72,7 +72,7 @@ class UserControllerTest {
     @DisplayName("구독 요청 성공 시 200 응답")
     void requestSubscription_should_return200_when_valid() throws Exception {
         RequestSubscriptionCommand command = new RequestSubscriptionCommand();
-        command.setUser_id(1L);
+        command.setUserId(1L);
 
         User dummy = new User();
         dummy.setHasActiveSubscription(true);

@@ -91,18 +91,18 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-stream</artifactId>
-			<version>4.1.3</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-plugin</artifactId>
+            <version>6.8.1</version>
+            <scope>compile</scope>
+        </dependency>
 
-		<!--		&lt;!&ndash; cucumber test &ndash;&gt;-->
+        <!--		&lt;!&ndash; cucumber test &ndash;&gt;-->
 <!--		<dependency>-->
 <!--			<groupId>io.cucumber</groupId>-->
 <!--			<artifactId>cucumber-java</artifactId>-->

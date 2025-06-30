@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 
@@ -31,7 +32,7 @@ public class User {
     private Long subscriptionDueDate;
 
     @ElementCollection
-    private List<Integer> myBookHistory;
+    private List<Long> myBookHistory;
 
     private Boolean isKt;
 
@@ -48,23 +49,18 @@ public class User {
         this.isKt = signUpCommand.getIsKt();
     }
 
-//    //>>> Clean Arch / Port Method
+    //>>> Clean Arch / Port Method
 
-//    //<<< Clean Arch / Port Method
-//    public void requestContentAccess(
-//        RequestContentAccessCommand requestContentAccessCommand
-//    ) {
-//        //implement business logic here:
-//
-//        AccessRequestedAsSubscriber accessRequestedAsSubscriber = new AccessRequestedAsSubscriber(
-//            this
-//        );
-//        accessRequestedAsSubscriber.publishAfterCommit();
-//        AccessRequestedWithPoints accessRequestedWithPoints = new AccessRequestedWithPoints(
-//            this
-//        );
-//        accessRequestedWithPoints.publishAfterCommit();
-//    }
+    //<<< Clean Arch / Port Method
+    public void addBookToHistory(Long bookId) {
+        if (this.myBookHistory == null) {
+            this.myBookHistory = new ArrayList<>();
+        }
+
+        if (!this.myBookHistory.contains(bookId)) {
+            this.myBookHistory.add(bookId);
+        }
+    }
 
     //>>> Clean Arch / Port Method
 

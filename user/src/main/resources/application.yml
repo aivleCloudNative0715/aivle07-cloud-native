@@ -10,7 +10,7 @@ spring:
 spring:
   config:
     activate:
-      on-profile: default  # ✅ 고쳐야 할 부분
+      on-profile: default
   jpa:
     properties:
       hibernate:
@@ -43,6 +43,7 @@ logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
+    aivlecloudnative.infra.OutboxPublisher: info
 
 server:
   port: 8082
@@ -52,7 +53,7 @@ server:
 spring:
   config:
     activate:
-      on-profile: docker  # ✅ 고쳐야 할 부분
+      on-profile: docker
   jpa:
     properties:
       hibernate:
