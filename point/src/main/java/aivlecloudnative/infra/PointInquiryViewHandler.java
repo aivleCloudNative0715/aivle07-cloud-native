@@ -1,63 +1,72 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.config.kafka.KafkaProcessor;
 import aivlecloudnative.domain.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Bean; 
+import java.util.function.Consumer; 
+
 
 @Service
 public class PointInquiryViewHandler {
 
-    //<<< DDD / CQRS
     @Autowired
     private PointInquiryRepository pointInquiryRepository;
 
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenPointsGranted_then_CREATE_1(
-        @Payload PointsGranted pointsGranted
-    ) {
-        try {
-            if (!pointsGranted.validate()) return;
+    @Bean
+    public Consumer<PointsGranted> whenPointsGranted() {
+        return pointsGranted -> {
+            try {
+                if (!pointsGranted.validate()) return;
 
-            // view 객체 생성
-            PointInquiry pointInquiry = new PointInquiry();
-            // view 객체에 이벤트의 Value 를 set 함
-            pointInquiry.setUserId(pointsGranted.getUserId());
-            pointInquiry.setCurrentPoints(pointsGranted.getCurrentPoints());
-            // view 레파지 토리에 save
-            pointInquiryRepository.save(pointInquiry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenPointsDeducted_then_UPDATE_1(
-        @Payload PointsDeducted pointsDeducted
-    ) {
-        try {
-            if (!pointsDeducted.validate()) return;
-            // view 객체 조회
-
-            List<PointInquiry> pointInquiryList = pointInquiryRepository.findByUserId(
-                pointsDeducted.getUserId()
-            );
-            for (PointInquiry pointInquiry : pointInquiryList) {
-                // view 객체에 이벤트의 eventDirectValue 를 set 함
-                pointInquiry.setCurrentPoints(
-                    pointsDeducted.getCurrentPoints()
+                System.out.println(
+                    "\n\n##### listener PointsGranted : " + pointsGranted.toJson() + "\n\n"
                 );
-                // view 레파지 토리에 save
+
+                // PointsGranted 이벤트 발생 시 새로운 PointInquiry 엔티티를 생성하거나 업데이트
+                // 여기서는 새로운 엔티티를 생성하는 로직으로 보입니다.
+                PointInquiry pointInquiry = new PointInquiry();
+                pointInquiry.setUserId(pointsGranted.getUserId());
+                pointInquiry.setPoints(pointsGranted.getPointsGrantedAmount()); // PointsGranted에 getPointsGrantedAmount()가 있다고 가정
+                pointInquiry.setTransactionType("GRANTED");
+
                 pointInquiryRepository.save(pointInquiry);
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        };
     }
-    //>>> DDD / CQRS
+
+    @Bean
+    public Consumer<PointsDeducted> whenPointsDeducted() {
+        return pointsDeducted -> {
+            try {
+                if (!pointsDeducted.validate()) return;
+
+                System.out.println(
+                    "\n\n##### listener PointsDeducted : " + pointsDeducted.toJson() + "\n\n"
+                );
+
+                // findByUserId는 List를 반환하므로, List로 받고 첫 번째 항목을 Optional로 변환
+                List<PointInquiry> pointInquiryList = pointInquiryRepository.findByUserId(pointsDeducted.getUserId());
+                Optional<PointInquiry> optionalPointInquiry = pointInquiryList.stream().findFirst();
+
+                optionalPointInquiry.ifPresent(pointInquiry -> {
+                    // PointsDeducted 클래스에서 getDeductedPoints()로 필드명을 변경했으므로, 해당 Getter를 사용합니다.
+                    pointInquiry.setPoints(pointInquiry.getPoints() - pointsDeducted.getDeductedPoints().intValue()); // Long -> Integer 변환
+                    pointInquiry.setTransactionType("DEDUCTED");
+
+                    pointInquiryRepository.save(pointInquiry);
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        };
+    }
 }

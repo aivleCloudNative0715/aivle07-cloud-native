@@ -1,10 +1,11 @@
 server:
-  port: 8080
+  port: 8080 # default 프로파일의 포트
 
 spring:
   application:
     name: point
----
+
+--- # default 프로파일 시작
 
 spring:
   profiles: default
@@ -18,7 +19,9 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: localhost:9092 # 로컬 Kafka 브로커 주소
+          autoAddPartitions: true # 필요한 경우 자동으로 파티션 추가
+          autoCreateTopics: true # 필요한 경우 자동으로 토픽 생성
         streams:
           binder:
             configuration:
@@ -27,29 +30,51 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      # Spring Cloud Stream 3.x 함수형 모델을 위한 설정
+      function:
+        # @Bean으로 정의된 모든 Consumer/Supplier/Function 메서드 이름을 여기에 콤마로 구분하여 나열합니다.
+        # 이 이름들은 PolicyHandler 및 PointInquiryViewHandler의 @Bean 메서드 이름과 정확히 일치해야 합니다.
+        definitions: processSubscriberSignedUp;processAccessRequestedWithPoints;processPointsGrantedEvent;processPointsDeductedEvent
       bindings:
-        event-in:
+        # PolicyHandler의 Consumer 함수 바인딩
+        # 함수 이름-in-0 (인바운드 Consumer)
+        processSubscriberSignedUp-in-0:
+          destination: subscribed_users # 이 토픽에서 SubscriberSignedUp 이벤트를 받음 (실제 토픽 이름으로 변경)
+          group: point # 컨슈머 그룹
+          contentType: application/json
+        processAccessRequestedWithPoints-in-0:
+          destination: access_requested_with_points # 이 토픽에서 AccessRequestedWithPoints 이벤트를 받음 (실제 토픽 이름으로 변경)
           group: point
-#<<< EDA / Topic Name
-          destination: aivlecloudnative
-#>>> EDA / Topic Name
           contentType: application/json
-        event-out:
-#<<< EDA / Topic Name
-          destination: aivlecloudnative
-#>>> EDA / Topic Name
+
+        # PointInquiryViewHandler의 Consumer 함수 바인딩
+        processPointsGrantedEvent-in-0:
+          destination: points_granted # 이 토픽에서 PointsGranted 이벤트를 받음 (실제 토픽 이름으로 변경)
+          group: point
           contentType: application/json
+        processPointsDeductedEvent-in-0:
+          destination: points_deducted # 이 토픽에서 PointsDeducted 이벤트를 받음 (실제 토픽 이름으로 변경)
+          group: point
+          contentType: application/json
+
+        # 만약 Point 도메인에서 이벤트를 발행하는 @Bean Supplier 함수 (예: PointsGranted, PointsDeducted)가 있다면 여기에 추가합니다.
+        # AbstractEvent.publishAfterCommit() 메서드가 내부적으로 Spring Cloud Stream을 통해 이벤트를 발행한다면
+        # 별도의 Supplier @Bean을 명시적으로 선언할 필요는 없을 수 있습니다.
+        # 하지만 만약 명시적으로 Supplier 함수를 통해 이벤트를 발행한다면 다음과 같이 추가합니다:
+        # Example:
+        # publishPointEvents-out-0: # Point에서 발행하는 이벤트 (예: PointsGranted, PointsDeducted)
+        #   destination: aivlecloudnative_outbound_topic # 아웃바운드 토픽 이름
+        #   contentType: application/json
 
 logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
 
+--- # docker 프로파일 시작
 
 server:
-  port: 8087
-
----
+  port: 8087 # docker 프로파일의 포트 (default와 다름)
 
 spring:
   profiles: docker
@@ -63,7 +88,9 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: my-kafka:9092
+          brokers: my-kafka:9092 # Docker 환경에서는 Kafka 브로커 주소가 달라질 수 있습니다.
+          autoAddPartitions: true
+          autoCreateTopics: true
         streams:
           binder:
             configuration:
@@ -72,13 +99,29 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      function:
+        definitions: processSubscriberSignedUp;processAccessRequestedWithPoints;processPointsGrantedEvent;processPointsDeductedEvent
       bindings:
-        event-in:
+        processSubscriberSignedUp-in-0:
+          destination: subscribed_users # Docker 환경에서도 동일한 토픽 이름 사용
           group: point
-          destination: aivlecloudnative
           contentType: application/json
-        event-out:
-          destination: aivlecloudnative
+        processAccessRequestedWithPoints-in-0:
+          destination: access_requested_with_points
+          group: point
           contentType: application/json
 
+        processPointsGrantedEvent-in-0:
+          destination: points_granted
+          group: point
+          contentType: application/json
+        processPointsDeductedEvent-in-0:
+          destination: points_deducted
+          group: point
+          contentType: application/json
 
+        # 만약 아웃바운드 이벤트 (예: publishAfterCommit)를 발행하는 @Bean Supplier 함수가 있다면 여기에 추가합니다.
+        # Example:
+        # publishPointEvents-out-0:
+        #   destination: aivlecloudnative_outbound_topic
+        #   contentType: application/json
