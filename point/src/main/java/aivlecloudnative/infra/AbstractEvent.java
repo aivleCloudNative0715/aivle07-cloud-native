@@ -1,16 +1,12 @@
 package aivlecloudnative.infra;
 
 import aivlecloudnative.PointApplication;
-import aivlecloudnative.config.kafka.KafkaProcessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.util.MimeTypeUtils;
+import org.springframework.context.ApplicationEventPublisher; 
 
 //<<< Clean Arch / Outbound Adaptor
 public class AbstractEvent {
@@ -28,25 +24,17 @@ public class AbstractEvent {
         this.timestamp = System.currentTimeMillis();
     }
 
+    // Spring Cloud Stream 3.x의 Supplier 함수를 통해 이벤트를 발행하도록 변경
     public void publish() {
-        /**
-         * spring streams 방식
-         */
-        KafkaProcessor processor = PointApplication.applicationContext.getBean(
-            KafkaProcessor.class
-        );
-        MessageChannel outputChannel = processor.outboundTopic();
+        // ApplicationContext에서 ApplicationEventPublisher를 가져와 이벤트를 발행합니다.
+        // Spring Cloud Stream은 ApplicationEvent를 자동으로 Kafka로 발행할 수 있습니다.
+        // 이를 위해서는 pom.xml에 spring-cloud-stream-binder-kafka-streams 또는 spring-cloud-stream-binder-kafka가 필요합니다.
+        // 그리고 application.yml에 spring.cloud.stream.bindings.<functionName>-out-0: destination: topicName 설정이 필요합니다.
 
-        outputChannel.send(
-            MessageBuilder
-                .withPayload(this)
-                .setHeader(
-                    MessageHeaders.CONTENT_TYPE,
-                    MimeTypeUtils.APPLICATION_JSON
-                )
-                .setHeader("type", getEventType())
-                .build()
+        ApplicationEventPublisher publisher = PointApplication.applicationContext.getBean(
+            ApplicationEventPublisher.class
         );
+        publisher.publishEvent(this); // 현재 이벤트를 Spring Application Event로 발행
     }
 
     public void publishAfterCommit() {
@@ -54,6 +42,7 @@ public class AbstractEvent {
             new TransactionSynchronizationAdapter() {
                 @Override
                 public void afterCompletion(int status) {
+                    // 트랜잭션 커밋 후에만 이벤트 발행 (이전과 동일한 로직)
                     AbstractEvent.this.publish();
                 }
             }
