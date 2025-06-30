@@ -7,31 +7,23 @@ import java.time.LocalDateTime;
 import lombok.*;
 
 //<<< DDD / Domain Event
+
 @Data
-@ToString
 @EqualsAndHashCode(callSuper = false)
 public class ManuscriptRegisterd extends AbstractEvent {
 
-    private Long id;
+    private Long manuscriptId; // 또는 id로 유지해도 무방
     private String authorId;
     private String title;
-    private String content;
-    private String status;
-    private LocalDateTime lastModifiedAt; // Date -> LocalDateTime
-    private String summary;
-    private String keywords;
+    private String status; // 초기 상태 (REGISTERED)
 
     public ManuscriptRegisterd(Manuscript aggregate) {
-
-        super(aggregate);
-        this.id = aggregate.getId();
+        super();
+        this.manuscriptId = aggregate.getId();
         this.authorId = aggregate.getAuthorId();
         this.title = aggregate.getTitle();
-        this.content = aggregate.getContent();
         this.status = aggregate.getStatus();
-        this.lastModifiedAt = aggregate.getLastModifiedAt();
-        this.summary = aggregate.getSummary();
-        this.keywords = aggregate.getKeywords();
+        // content, summary, keywords는 제거
     }
 
     public ManuscriptRegisterd() {

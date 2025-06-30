@@ -47,14 +47,8 @@ public abstract class AbstractEvent {
         this.timestamp = Instant.now().toEpochMilli();
     }
 
-    public AbstractEvent(Object aggregate) {
-        this(); 
-        BeanUtils.copyProperties(aggregate, this);
-    }
-
-
     public void publish() {
-        String destination = "manuscript-events"; 
+        String destination = "aivlecloudnative"; 
         if (streamBridge == null) {
             throw new IllegalStateException("StreamBridge is not initialized. Ensure AbstractEvent is a Spring @Component and context is fully loaded.");
         }
@@ -113,7 +107,7 @@ public abstract class AbstractEvent {
     }
 
     public String toJson() {
-        try {          
+        try {
             return OBJECT_MAPPER.writeValueAsString(this);
         } catch (JsonProcessingException e) {
             System.err.println("Error converting event to JSON for " + getEventType() + ": " + e.getMessage());

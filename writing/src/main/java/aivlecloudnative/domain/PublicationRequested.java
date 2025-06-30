@@ -13,7 +13,7 @@ import lombok.Data;
 @EqualsAndHashCode(callSuper = false)
 public class PublicationRequested extends AbstractEvent {
 
-    private Long manuscriptIdId;
+    private Long manuscriptId;
     private String title;
     private String content;
     private String summary;
@@ -21,8 +21,8 @@ public class PublicationRequested extends AbstractEvent {
     private String authorId;
 
     public PublicationRequested(Manuscript aggregate) {
-        super(aggregate);
-        this.manuscriptIdId = aggregate.getId();
+        super();
+        this.manuscriptId = aggregate.getId();
         this.authorId = aggregate.getAuthorId();
         this.title = aggregate.getTitle();
         this.content = aggregate.getContent();

@@ -18,12 +18,11 @@ public class ManuscriptList {
 
     @Id
     @GeneratedValue
-    private Long id;
-
     private Long manuscriptId;
+    
     private String manuscriptTitle;
     private String manuscriptContent;
     private String manuscriptStatus;
-    private LocalDateTime lastModifiedAt; 
-    private String authorId; // 오타 (autor -> author)
+    private LocalDateTime lastModifiedAt;
+    private String authorId;
 }
