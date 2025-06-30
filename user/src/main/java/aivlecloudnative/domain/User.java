@@ -42,16 +42,12 @@ public class User {
         );
     }
 
-    //<<< Clean Arch / Port Method
     public void signUp(SignUpCommand signUpCommand) {
         this.userName = signUpCommand.getUserName();
         this.email = signUpCommand.getEmail();
         this.isKt = signUpCommand.getIsKt();
     }
 
-    //>>> Clean Arch / Port Method
-
-    //<<< Clean Arch / Port Method
     public void addBookToHistory(Long bookId) {
         if (this.myBookHistory == null) {
             this.myBookHistory = new ArrayList<>();
@@ -61,33 +57,6 @@ public class User {
             this.myBookHistory.add(bookId);
         }
     }
-
-    //>>> Clean Arch / Port Method
-
-    //<<< Clean Arch / Port Method
-    public static void updateBookRead(BookViewed bookViewed) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        User user = new User();
-        repository().save(user);
-
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(bookViewed.get???()).ifPresent(user->{
-            
-            user // do something
-            repository().save(user);
-
-
-         });
-        */
-
-    }
-    //>>> Clean Arch / Port Method
 
 }
 //>>> DDD / Aggregate Root

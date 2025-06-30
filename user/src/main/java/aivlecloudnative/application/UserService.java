@@ -2,6 +2,7 @@ package aivlecloudnative.application;
 
 import aivlecloudnative.domain.AccessRequestedAsSubscriber;
 import aivlecloudnative.domain.AccessRequestedWithPoints;
+import aivlecloudnative.domain.BookViewed;
 import aivlecloudnative.domain.OutboxMessage;
 import aivlecloudnative.domain.OutboxMessageRepository;
 import aivlecloudnative.domain.RequestContentAccessCommand;
@@ -70,9 +71,17 @@ public class UserService {
                 : new AccessRequestedWithPoints(user, bookId);
 
         saveOutbox(domainEvent, domainEvent.getClass().getSimpleName());
-        user.addBookToHistory(bookId);
 
         return userRepository.save(user);
+    }
+
+    public void updateBookRead(BookViewed event) {
+        User user = userRepository.findById(event.getId())
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID입니다: " + event.getId()));
+
+        Long bookId = event.getId();
+        user.addBookToHistory(bookId);
+        userRepository.save(user);
     }
 
     private void saveOutbox(AbstractEvent event, String eventType) {
