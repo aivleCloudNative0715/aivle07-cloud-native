@@ -18,10 +18,24 @@ public class PointsGranted extends AbstractEvent {
 
     public PointsGranted(Point aggregate) {
         super(aggregate);
+        this.id = aggregate.getId();
+        this.userId = aggregate.getUserId();
+        this.currentPoints = aggregate.getCurrentPoints();
+        this.grantedPoints = 1000L; // 기본 지급 포인트
     }
 
     public PointsGranted() {
         super();
     }
+
+    public Long getUserId() {
+    return this.userId;
+    }
+
+    public Integer getCurrentPoints() {
+        return this.currentPoints;
+    }
+
+
 }
 //>>> DDD / Domain Event
