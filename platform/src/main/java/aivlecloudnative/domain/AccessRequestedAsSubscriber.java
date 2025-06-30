@@ -9,6 +9,6 @@ import lombok.EqualsAndHashCode;
 @ToString
 @EqualsAndHashCode(callSuper=false)
 public class AccessRequestedAsSubscriber extends AbstractEvent {
-    private Long id;
+    private Long userId;
     private Long bookId;
 }

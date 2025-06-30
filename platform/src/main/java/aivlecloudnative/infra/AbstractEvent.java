@@ -50,7 +50,7 @@ public class AbstractEvent {
         }
     }
 
-public void publishAfterCommit() {
+    public void publishAfterCommit() {
     TransactionSynchronizationManager.registerSynchronization(
         new TransactionSynchronization() {
             @Override
@@ -59,7 +59,7 @@ public void publishAfterCommit() {
             }
         }
     );
-}
+    }
 
     public String getEventType() {
         return eventType;
