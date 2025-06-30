@@ -16,6 +16,7 @@ import aivlecloudnative.infra.AbstractEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,8 +45,7 @@ public class UserService {
 
     @Transactional
     public User requestSubscription(RequestSubscriptionCommand cmd) {
-        User user = userRepository.findById(cmd.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID: " + cmd.getUserId()));
+        User user = findUserByIdOrThrow(cmd.getUserId());
 
         user.setHasActiveSubscription(true);
 
@@ -59,8 +59,7 @@ public class UserService {
         Long userId = command.getUserId();
         Long bookId = command.getBookId();
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID입니다: " + userId));
+        User user = findUserByIdOrThrow(userId);
 
         //TODO: bookId가 유효한지 확인
 
@@ -76,10 +75,9 @@ public class UserService {
     }
 
     public void updateBookRead(BookViewed event) {
-        User user = userRepository.findById(event.getId())
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID입니다: " + event.getId()));
+        User user = findUserByIdOrThrow(event.getUserId());
 
-        Long bookId = event.getId();
+        Long bookId = event.getBookId();
         user.addBookToHistory(bookId);
         userRepository.save(user);
     }
@@ -97,5 +95,22 @@ public class UserService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("이벤트 JSON 직렬화 실패", e);
         }
+    }
+
+    public List<Long> getContentHistory(Long id) {
+        User user = findUserByIdOrThrow(id);
+
+        return user.getMyBookHistory();
+    }
+
+    public User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID입니다: " + userId));
+    }
+
+    public boolean getSubscriptionStatus(Long id) {
+        User user = findUserByIdOrThrow(id);
+
+        return user.getHasActiveSubscription();
     }
 }
