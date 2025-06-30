@@ -27,7 +27,7 @@ public class UserService {
     }
 
     public User requestSubscription(RequestSubscriptionCommand command) {
-        Long userId = command.getUser_id();
+        Long userId = command.getUserId();
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID입니다: " + userId));

@@ -1,11 +1,10 @@
 package aivlecloudnative.domain;
 
-import java.time.LocalDate;
-import java.util.*;
 import lombok.Data;
 
 @Data
 public class RequestContentAccessCommand {
 
-    private Integer userId;
+    private Long userId;
+    private Long bookId;
 }

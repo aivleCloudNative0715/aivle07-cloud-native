@@ -1,24 +1,27 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.infra.AbstractEvent;
+import java.util.*;
 import lombok.*;
 
 //<<< DDD / Domain Event
 @Data
 @ToString
-public class SubscriberSignedUp extends AbstractEvent {
+public class UserSubscribed extends AbstractEvent {
 
     private Long userId;
-    private String email;
     private String userName;
+    private Boolean hasActiveSubscription;
     private String message;
-    private Boolean isKt;
+    private String email;
+    private Long subscriptionDueDate;
+    private List<Integer> myBookHistory;
 
-    public SubscriberSignedUp(User aggregate) {
+    public UserSubscribed(User aggregate) {
         super(aggregate);
     }
 
-    public SubscriberSignedUp() {
+    public UserSubscribed() {
         super();
     }
 }

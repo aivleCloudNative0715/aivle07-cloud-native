@@ -1,7 +1,6 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.UserApplication;
-import aivlecloudnative.infra.AbstractEventPublisher;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -50,17 +49,7 @@ public class User {
     }
 
 //    //>>> Clean Arch / Port Method
-//    //<<< Clean Arch / Port Method
-//    public void requestSubscription(
-//        RequestSubscriptionCommand requestSubscriptionCommand
-//    ) {
-//        //implement business logic here:
-//
-//        SubscriberSignedUp subscriberSignedUp = new SubscriberSignedUp(this);
-//        subscriberSignedUp.publishAfterCommit();
-//    }
-//
-//    //>>> Clean Arch / Port Method
+
 //    //<<< Clean Arch / Port Method
 //    public void requestContentAccess(
 //        RequestContentAccessCommand requestContentAccessCommand
