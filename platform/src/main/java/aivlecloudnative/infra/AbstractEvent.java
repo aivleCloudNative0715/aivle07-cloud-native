@@ -1,19 +1,25 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.PlatformApplication;
-import aivlecloudnative.config.kafka.KafkaProcessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+
 import org.springframework.beans.BeanUtils;
-import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.MimeTypeUtils;
+import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
 
 //<<< Clean Arch / Outbound Adaptor
+@Component
 public class AbstractEvent {
+
+    @Autowired
+    private StreamBridge streamBridge;
 
     String eventType;
     Long timestamp;
@@ -29,36 +35,31 @@ public class AbstractEvent {
     }
 
     public void publish() {
-        /**
-         * spring streams 방식
-         */
-        KafkaProcessor processor = PlatformApplication.applicationContext.getBean(
-            KafkaProcessor.class
-        );
-        MessageChannel outputChannel = processor.outboundTopic();
+        String destination = "aivlecloudnative"; // <<< 이벤트를 발행할 Kafka 토픽 이름 (application.yml과 일치)
 
-        outputChannel.send(
-            MessageBuilder
-                .withPayload(this)
-                .setHeader(
-                    MessageHeaders.CONTENT_TYPE,
-                    MimeTypeUtils.APPLICATION_JSON
-                )
-                .setHeader("type", getEventType())
-                .build()
-        );
+                try {
+            streamBridge.send(
+                destination,
+                MessageBuilder.withPayload(this.toJson()) // JSON 문자열로 페이로드 설정
+                    .setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
+                    .setHeader("type", getEventType()) // 'type' 헤더는 필수
+                    .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Error publishing event: " + getEventType(), e);
+        }
     }
 
-    public void publishAfterCommit() {
-        TransactionSynchronizationManager.registerSynchronization(
-            new TransactionSynchronizationAdapter() {
-                @Override
-                public void afterCompletion(int status) {
-                    AbstractEvent.this.publish();
-                }
+public void publishAfterCommit() {
+    TransactionSynchronizationManager.registerSynchronization(
+        new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                AbstractEvent.this.publish();
             }
-        );
-    }
+        }
+    );
+}
 
     public String getEventType() {
         return eventType;

@@ -11,5 +11,5 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 )
 public interface ManuscriptListRepository
     extends PagingAndSortingRepository<ManuscriptList, Long> {
-    List<ManuscriptList> findByAutorId(String autorId);
+    List<ManuscriptList> findByAutorId(String authorId); // author로 변경
 }

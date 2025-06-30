@@ -35,3 +35,6 @@ venv/
 *.bak
 *.sublime-workspace
 *.sublime-p*
+
+.env
+maven-repo/

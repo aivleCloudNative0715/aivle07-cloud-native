@@ -21,17 +21,17 @@ public class UserHateoasProcessor
             Link
                 .of(
                     model.getRequiredLink("self").getHref() +
-                    "/requestsubscription"
+                    "/request-subscription"
                 )
-                .withRel("requestsubscription")
+                .withRel("request-subscription")
         );
         model.add(
             Link
                 .of(
                     model.getRequiredLink("self").getHref() +
-                    "/requestcontentaccess"
+                    "/request-content-access"
                 )
-                .withRel("requestcontentaccess")
+                .withRel("request-content-access")
         );
 
         return model;

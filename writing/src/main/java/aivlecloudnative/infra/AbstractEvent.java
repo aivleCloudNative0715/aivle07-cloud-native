@@ -1,70 +1,100 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.WritingApplication;
-import aivlecloudnative.config.kafka.KafkaProcessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import org.springframework.beans.BeanUtils;
-import org.springframework.messaging.MessageChannel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.MimeTypeUtils;
 
+import java.time.Instant; 
+
+
 //<<< Clean Arch / Outbound Adaptor
-public class AbstractEvent {
+@Component
+@JsonInclude(JsonInclude.Include.NON_NULL) // JSON 직렬화 시 null 값 필드 제외
+@JsonIgnoreProperties(ignoreUnknown = true) // JSON 역직렬화 시 알 수 없는 필드 무시
+public abstract class AbstractEvent { 
 
-    String eventType;
-    Long timestamp;
+    private static StreamBridge streamBridge;
 
-    public AbstractEvent(Object aggregate) {
-        this();
-        BeanUtils.copyProperties(aggregate, this);
+    @Autowired
+    public static void setStreamBridge(StreamBridge streamBridge) {
+        AbstractEvent.streamBridge = streamBridge;
     }
+
+    private String eventType;
+    private Long timestamp;
+
+    // ObjectMapper는 한 번만 생성하여 재사용
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+        .registerModule(new JavaTimeModule());
+
 
     public AbstractEvent() {
         this.setEventType(this.getClass().getSimpleName());
-        this.timestamp = System.currentTimeMillis();
+        this.timestamp = Instant.now().toEpochMilli();
     }
 
-    public void publish() {
-        /**
-         * spring streams 방식
-         */
-        KafkaProcessor processor = WritingApplication.applicationContext.getBean(
-            KafkaProcessor.class
-        );
-        MessageChannel outputChannel = processor.outboundTopic();
+    public AbstractEvent(Object aggregate) {
+        this(); 
+        BeanUtils.copyProperties(aggregate, this);
+    }
 
-        outputChannel.send(
-            MessageBuilder
-                .withPayload(this)
-                .setHeader(
-                    MessageHeaders.CONTENT_TYPE,
-                    MimeTypeUtils.APPLICATION_JSON
-                )
-                .setHeader("type", getEventType())
-                .build()
-        );
+
+    public void publish() {
+        String destination = "manuscript-events"; 
+        if (streamBridge == null) {
+            throw new IllegalStateException("StreamBridge is not initialized. Ensure AbstractEvent is a Spring @Component and context is fully loaded.");
+        }
+
+        try {
+            streamBridge.send(
+                destination,
+                MessageBuilder.withPayload(this.toJson())
+                    .setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
+                    .setHeader("type", getEventType())
+                    .build()
+            );
+        } catch (Exception e) {
+
+            System.err.println("Error publishing event " + getEventType() + ": " + e.getMessage());
+            throw new RuntimeException("Failed to publish event: " + getEventType(), e);
+        }
     }
 
     public void publishAfterCommit() {
         TransactionSynchronizationManager.registerSynchronization(
-            new TransactionSynchronizationAdapter() {
+            new TransactionSynchronization() {
                 @Override
                 public void afterCompletion(int status) {
-                    AbstractEvent.this.publish();
+
+                    if (status == TransactionSynchronization.STATUS_COMMITTED) { 
+                        AbstractEvent.this.publish();
+                    } else {
+                        System.out.println("DEBUG - Event " + getEventType() + " not published due to transaction status: " + status);
+                    }
                 }
             }
         );
     }
 
+    // --- Getter & Setter ---
     public String getEventType() {
         return eventType;
     }
 
-    public void setEventType(String eventType) {
+    protected void setEventType(String eventType) {
         this.eventType = eventType;
     }
 
@@ -72,25 +102,22 @@ public class AbstractEvent {
         return timestamp;
     }
 
-    public void setTimestamp(Long timestamp) {
+    protected void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
     }
+
 
     public boolean validate() {
         return getEventType().equals(getClass().getSimpleName());
     }
 
     public String toJson() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = null;
-
-        try {
-            json = objectMapper.writeValueAsString(this);
+        try {          
+            return OBJECT_MAPPER.writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON format exception", e);
+            System.err.println("Error converting event to JSON for " + getEventType() + ": " + e.getMessage());
+            throw new RuntimeException("Failed to convert event to JSON string for " + getEventType(), e);
         }
-
-        return json;
     }
 }
 //>>> Clean Arch / Outbound Adaptor

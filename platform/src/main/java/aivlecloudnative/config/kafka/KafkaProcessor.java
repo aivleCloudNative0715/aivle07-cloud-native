@@ -1,17 +1,17 @@
-package aivlecloudnative.config.kafka;
+// package aivlecloudnative.config.kafka;
 
-import org.springframework.cloud.stream.annotation.Input;
-import org.springframework.cloud.stream.annotation.Output;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.SubscribableChannel;
+// import org.springframework.cloud.stream.annotation.Input;
+// import org.springframework.cloud.stream.annotation.Output;
+// import org.springframework.messaging.MessageChannel;
+// import org.springframework.messaging.SubscribableChannel;
 
-public interface KafkaProcessor {
-    String INPUT = "event-in";
-    String OUTPUT = "event-out";
+// public interface KafkaProcessor {
+//     String INPUT = "event-in";
+//     String OUTPUT = "event-out";
 
-    @Input(INPUT)
-    SubscribableChannel inboundTopic();
+//     @Input(INPUT)
+//     SubscribableChannel inboundTopic();
 
-    @Output(OUTPUT)
-    MessageChannel outboundTopic();
-}
+//     @Output(OUTPUT)
+//     MessageChannel outboundTopic();
+// }
