@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -64,7 +64,7 @@ public class Point {
          // Example 2:  finding and process
          // TODO: subscriberSignedUp.getUserId() 같이 적절한 getter 메서드 작성 필요
 
-        repository().findById(subscriberSignedUp.getId()).ifPresent(point->{
+        repository().findByUserId(subscriberSignedUp.getId()).ifPresent(point->{
 
             point.setCurrentPoints(point.getCurrentPoints() + 1000);
             repository().save(point);
@@ -81,11 +81,11 @@ public class Point {
     // TODO: 아래 메서드들이 PointsGranted, PointsDeducted 클래스에 없다면 추가해 주세요
 
     public Long getUserId() {
-        return userId;
+        return this.userId;
     }
 
     public Integer getCurrentPoints() {
-        return currentPoints;
+        return this.currentPoints;
     }
     
 
