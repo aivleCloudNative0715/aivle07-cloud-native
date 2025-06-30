@@ -4,7 +4,11 @@ server:
 ---
 
 spring:
-  profiles: default
+  application:
+    name: gateway
+  config:
+    activate:
+      on-profile: default
   cloud:
     gateway:
 #<<< API Gateway / Routes
@@ -41,7 +45,9 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins:
+            # allowedOrigins:
+            #   - "*"
+            allowedOriginPatterns: 
               - "*"
             allowedMethods:
               - "*"
@@ -53,32 +59,34 @@ spring:
 ---
 
 spring:
-  profiles: docker
+  config:
+    activate:
+      on-profile: docker
   cloud:
     gateway:
       routes:
         - id: user
-          uri: http://user:8080
+          uri: http://user:8082
           predicates:
             - Path=/users/**, 
         - id: author
-          uri: http://author:8080
+          uri: http://author:8083
           predicates:
             - Path=/authors/**, 
         - id: aiservice
-          uri: http://aiservice:8080
+          uri: http://aiservice:8084
           predicates:
             - Path=/bookWorks/**, 
         - id: platform
-          uri: http://platform:8080
+          uri: http://platform:8085
           predicates:
             - Path=/books/**, /bookViews/**, 
         - id: writing
-          uri: http://writing:8080
+          uri: http://writing:8086
           predicates:
             - Path=/manuscripts/**, 
         - id: point
-          uri: http://point:8080
+          uri: http://point:8087
           predicates:
             - Path=/points/**, 
         - id: frontend
@@ -88,7 +96,9 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins:
+            # allowedOrigins:
+            #   - "*"
+            allowedOriginPatterns: 
               - "*"
             allowedMethods:
               - "*"
@@ -96,5 +106,5 @@ spring:
               - "*"
             allowCredentials: true
 
-server:
-  port: 8080
+# server:
+#   port: 8080
