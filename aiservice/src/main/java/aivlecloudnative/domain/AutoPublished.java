@@ -18,6 +18,7 @@ public class AutoPublished extends AbstractEvent {
     private String category;
     private Integer price;
     private String status;
+    private String authorName;
 
     public AutoPublished() {
         super(); // AbstractEvent의 기본 생성자 호출

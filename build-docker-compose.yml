@@ -8,7 +8,7 @@ services:
     ports:
       - 2181:2181
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.3
     container_name: my-kafka
     depends_on:
       - zookeeper
@@ -52,12 +52,18 @@ services:
       - ./maven-repo:/root/.m2
       
   aiservice:
-    depends_on: 
+    depends_on:
       - kafka
-    image: adoptopenjdk/maven-openjdk11:latest
+    image: eclipse-temurin:21
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-    command: mvn spring-boot:run
+      - SPRING_GPT_BASE_URL=https://api.openai.com/v1
+      - SPRING_GPT_IMAGE_URL=https://api.openai.com/v1/images/generations
+      - SPRING_GPT_MODEL=gpt-4o-mini
+      - SPRING_GPT_IMAGE_MODEL=dall-e-3
+      # 이 부분을 변경합니다: Docker Compose의 환경 변수를 직접 전달
+      - SPRING_GPT_API_KEY=${GPT_API_KEY} # .env 파일의 값을 이 환경 변수로 전달
+    command: bash -c "apt-get update && apt-get install -y maven && mvn spring-boot:run"
     ports:
       - 8084:8084
     working_dir: /usr/src
@@ -106,4 +112,3 @@ services:
     volumes:
       - ./point:/usr/src
       - ./maven-repo:/root/.m2
-      
