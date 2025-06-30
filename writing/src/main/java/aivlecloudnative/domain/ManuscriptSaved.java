@@ -24,6 +24,14 @@ public class ManuscriptSaved extends AbstractEvent {
 
     public ManuscriptSaved(Manuscript aggregate) {
         super(aggregate);
+        this.id = aggregate.getId();
+        this.authorId = aggregate.getAuthorId(); 
+        this.title = aggregate.getTitle();
+        this.content = aggregate.getContent();
+        this.status = aggregate.getStatus();
+        this.lastModifiedAt = aggregate.getLastModifiedAt();
+        this.summary = aggregate.getSummary();
+        this.keywords = aggregate.getKeywords();        
     }
 
     public ManuscriptSaved() {

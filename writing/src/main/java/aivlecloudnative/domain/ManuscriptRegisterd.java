@@ -9,6 +9,7 @@ import lombok.*;
 //<<< DDD / Domain Event
 @Data
 @ToString
+@EqualsAndHashCode(callSuper = false)
 public class ManuscriptRegisterd extends AbstractEvent {
 
     private Long id;
@@ -21,7 +22,16 @@ public class ManuscriptRegisterd extends AbstractEvent {
     private String keywords;
 
     public ManuscriptRegisterd(Manuscript aggregate) {
+
         super(aggregate);
+        this.id = aggregate.getId();
+        this.authorId = aggregate.getAuthorId();
+        this.title = aggregate.getTitle();
+        this.content = aggregate.getContent();
+        this.status = aggregate.getStatus();
+        this.lastModifiedAt = aggregate.getLastModifiedAt();
+        this.summary = aggregate.getSummary();
+        this.keywords = aggregate.getKeywords();
     }
 
     public ManuscriptRegisterd() {

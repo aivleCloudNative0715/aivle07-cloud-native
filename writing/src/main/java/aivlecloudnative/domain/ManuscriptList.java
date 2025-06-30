@@ -25,5 +25,7 @@ public class ManuscriptList {
     private String manuscriptStatus;
     private String lastModifiedAt; 
     private String authorId; // 오타 (autor -> author)
+    // private String summary;
+    // private String keywords;
 
 }
