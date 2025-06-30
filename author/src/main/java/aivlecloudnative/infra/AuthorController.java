@@ -23,7 +23,7 @@ public class AuthorController {
     @RequestMapping(value = "/authors/applyauthor",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
-    public Author applyAuthor(HttpServletRequest request, HttpServletResponse response, 
+    public Author applyAuthor(HttpServletRequest request, HttpServletResponse response 
         ) throws Exception {
             System.out.println("##### /author/applyAuthor  called #####");
             Author author = new Author();
@@ -34,7 +34,7 @@ public class AuthorController {
     @RequestMapping(value = "/authors/judgeauthor",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
-    public Author judgeAuthor(HttpServletRequest request, HttpServletResponse response, 
+    public Author judgeAuthor(HttpServletRequest request, HttpServletResponse response
         ) throws Exception {
             System.out.println("##### /author/judgeAuthor  called #####");
             Author author = new Author();
