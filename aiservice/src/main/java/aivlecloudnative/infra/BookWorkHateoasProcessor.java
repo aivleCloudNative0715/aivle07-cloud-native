@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class BookWorkHateoasProcessor
-    implements RepresentationModelProcessor<EntityModel<BookWork>> {
+        implements RepresentationModelProcessor<EntityModel<BookWork>> {
 
     @Override
     public EntityModel<BookWork> process(EntityModel<BookWork> model) {

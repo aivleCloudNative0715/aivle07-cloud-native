@@ -1,13 +1,13 @@
 server:
-  port: 8080
+  port: 8080 # default 프로파일이 활성화되면 이 포트가 사용됩니다.
 
 spring:
   application:
     name: aiservice
----
-
-spring:
-  profiles: default
+  # --- 기본 프로파일 설정 ---
+  config:
+    activate:
+      on-profile: default
   jpa:
     properties:
       hibernate:
@@ -16,6 +16,8 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     stream:
+      function:
+        definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
       kafka:
         binder:
           brokers: localhost:9092
@@ -28,31 +30,43 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        event-in:
+        publicationRequestedConsumer-in-0:
+          destination: bookwork.publication.requested
           group: aiservice
-#<<< EDA / Topic Name
-          destination: aivlecloudnative
-#>>> EDA / Topic Name
           contentType: application/json
-        event-out:
-#<<< EDA / Topic Name
-          destination: aivlecloudnative
-#>>> EDA / Topic Name
+        publicationInfoCreationRequestedConsumer-in-0:
+          destination: bookwork.publication-info.creation-requested
+          group: aiservice
           contentType: application/json
+        # ⭐️ 이 부분의 destination을 위 publicationInfoCreationRequestedConsumer-in-0과 동일하게 수정했습니다.
+        event-out-0:
+          destination: bookwork.publication-info.creation-requested # <--- 이 부분을 수정!
+          contentType: application/json
+          producer:
+            headerMode: embeddedHeaders
+
+  # --- GPT API 설정 (default 프로파일 안에 포함) ---
+  gpt:
+    api-key: ${SPRING_GPT_API_KEY}
+    base-url: https://api.openai.com/v1/chat/completions
+    image-url: https://api.openai.com/v1/images/generations
+    model: gpt-4o-mini
+    image-model: dall-e-3
 
 logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
 
-
-server:
-  port: 8084
-
 ---
+# --- Docker 프로파일 설정 ---
+server:
+  port: 8084 # docker 프로파일이 활성화되면 이 포트가 사용됩니다.
 
 spring:
-  profiles: docker
+  config:
+    activate:
+      on-profile: docker
   jpa:
     properties:
       hibernate:
@@ -61,6 +75,8 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     stream:
+      function:
+        definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
       kafka:
         binder:
           brokers: my-kafka:9092
@@ -73,12 +89,33 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        event-in:
+        publicationRequestedConsumer-in-0:
+          destination: bookwork.publication.requested
           group: aiservice
-          destination: aivlecloudnative
           contentType: application/json
-        event-out:
-          destination: aivlecloudnative
+        publicationInfoCreationRequestedConsumer-in-0:
+          destination: bookwork.publication-info.creation-requested
+          group: aiservice
           contentType: application/json
+        # ⭐️ 이 부분의 destination을 위 publicationInfoCreationRequestedConsumer-in-0과 동일하게 수정했습니다.
+        event-out-0:
+          destination: bookwork.publication-info.creation-requested # <--- 이 부분을 수정!
+          contentType: application/json
+          producer:
+            headerMode: embeddedHeaders
 
+  # --- Docker 프로파일에도 GPT API 설정을 포함 ---
+  gpt:
+    api-key: ${SPRING_GPT_API_KEY}
+    base-url: https://api.openai.com/v1/chat/completions
+    image-url: https://api.openai.com/v1/images/generations
+    model: gpt-4o-mini
+    image-model: dall-e-3
 
+logging:
+  level:
+    root: INFO
+    org.hibernate.type: trace
+    org.springframework.cloud: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG # WebClient 로그
+    aivlecloudnative: DEBUG

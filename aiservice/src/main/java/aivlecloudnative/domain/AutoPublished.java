@@ -1,19 +1,16 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.domain.*;
-import aivlecloudnative.infra.AbstractEvent;
-import java.time.LocalDate;
-import java.util.*;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import aivlecloudnative.infra.AbstractEvent; // 올바른 AbstractEvent import
 
-//<<< DDD / Domain Event
 @Data
-@ToString
+@EqualsAndHashCode(callSuper = false) // AbstractEvent를 상속받는 경우
 public class AutoPublished extends AbstractEvent {
 
-    private Long id;
-    private String title;
+    private Long id; // BookWork의 ID
     private Long manuscriptId;
+    private String title;
     private String summary;
     private String keywords;
     private String coverImageUrl;
@@ -21,14 +18,9 @@ public class AutoPublished extends AbstractEvent {
     private String category;
     private Integer price;
     private String status;
-    private String summery;
-
-    public AutoPublished(BookWork aggregate) {
-        super(aggregate);
-    }
+    private String authorName;
 
     public AutoPublished() {
-        super();
+        super(); // AbstractEvent의 기본 생성자 호출
     }
 }
-//>>> DDD / Domain Event
