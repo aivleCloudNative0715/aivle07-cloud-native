@@ -86,7 +86,7 @@ public class Manuscript {
     }
 
     // <<< Clean Arch / Port Method
-    public void requestPublication(PublicationRequestCommand publicationRequestCommand) {
+    public void publicationRequest(PublicationRequestCommand publicationRequestCommand) {
 
         // 1. 현재 원고의 상태를 확. "SAVED" 또는 "REGISTERED" 상태여야만 출간 요청 가능
         if (!"SAVED".equals(this.status) && !"REGISTERED".equals(this.status)) {
@@ -109,7 +109,6 @@ public class Manuscript {
         manuscript.setContent(manuscriptRegistrationCommand.getContent());
         manuscript.setAuthorId(manuscriptRegistrationCommand.getAuthorId());
         manuscript.setStatus("REGISTERED"); // 원고 등록 시 초기 상태
-        manuscript.setCreatedAt(LocalDateTime.now());
         manuscript.setLastModifiedAt(LocalDateTime.now());
 
         // 생성된 원고 객체 반환

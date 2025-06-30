@@ -4,13 +4,14 @@ import aivlecloudnative.domain.*;
 import aivlecloudnative.infra.AbstractEvent;
 
 import java.time.LocalDateTime;
-import java.util.*;
-
-import lombok.*;
+import lombok.Data;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
 //<<< DDD / Domain Event
 @Data
 @ToString
+@EqualsAndHashCode(callSuper = false)
 public class ManuscriptSaved extends AbstractEvent {
 
     private Long id;

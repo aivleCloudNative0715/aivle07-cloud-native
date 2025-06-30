@@ -4,10 +4,10 @@ server:
 spring:
   application:
     name: writing
----
-
-spring:
-  profiles: default
+  # --- 기본 프로필 (default) 설정 ---
+  config:
+    activate:
+      on-profile: default
   jpa:
     properties:
       hibernate:
@@ -30,14 +30,10 @@ spring:
       bindings:
         event-in:
           group: writing
-#<<< EDA / Topic Name
-          destination: aivlecloudnative
-#>>> EDA / Topic Name
+          destination: aivlecloudnative #<<< EDA / Topic Name
           contentType: application/json
         event-out:
-#<<< EDA / Topic Name
-          destination: aivlecloudnative
-#>>> EDA / Topic Name
+          destination: aivlecloudnative #<<< EDA / Topic Name
           contentType: application/json
 
 logging:
@@ -46,13 +42,16 @@ logging:
     org.springframework.cloud: debug
 
 
-server:
-  port: 8086
+--- # --- 여기는 프로필 간의 구분선입니다. ---
 
----
+server:
+  port: 8086 # Docker
 
 spring:
-  profiles: docker
+  # --- Docker 프로필 설정 ---
+  config:
+    activate:
+      on-profile: docker # 'spring.profiles: docker'를 이처럼 변경합니다.
   jpa:
     properties:
       hibernate:
@@ -80,5 +79,3 @@ spring:
         event-out:
           destination: aivlecloudnative
           contentType: application/json
-
-

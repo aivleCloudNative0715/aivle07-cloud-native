@@ -6,6 +6,7 @@ import jakarta.persistence.Id;     // 변경: javax -> jakarta
 import jakarta.persistence.GeneratedValue; 
 import jakarta.persistence.GenerationType; 
 import jakarta.persistence.Column; 
+import java.time.LocalDateTime;
 
 import lombok.Data;
 
@@ -16,16 +17,13 @@ import lombok.Data;
 public class ManuscriptList {
 
     @Id
-    //@GeneratedValue(strategy=GenerationType.AUTO) 
+    @GeneratedValue
     private Long id;
 
     private Long manuscriptId;
     private String manuscriptTitle;
     private String manuscriptContent;
     private String manuscriptStatus;
-    private String lastModifiedAt; 
+    private LocalDateTime lastModifiedAt; 
     private String authorId; // 오타 (autor -> author)
-    // private String summary;
-    // private String keywords;
-
 }
