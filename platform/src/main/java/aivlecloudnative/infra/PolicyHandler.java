@@ -62,9 +62,10 @@ public class PolicyHandler {
             );
 
             Long bookId = accessRequestedAsSubscriber.getBookId();
+            Long userId = accessRequestedAsSubscriber.getUserId();
 
             bookRepository.findById(bookId).ifPresent(book -> {
-                book.increaseViewCount();
+                book.increaseViewCount(userId);
                 bookRepository.save(book);
             });
         };
@@ -78,9 +79,10 @@ public class PolicyHandler {
             );
 
             Long bookId = pointsDeducted.getBookId();
+            Long userId = pointsDeducted.getUserId();
 
             bookRepository.findById(bookId).ifPresent(book -> {
-                book.increaseViewCount();
+                book.increaseViewCount(userId);
                 bookRepository.save(book);
             });
         };

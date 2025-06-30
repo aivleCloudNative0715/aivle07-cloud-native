@@ -52,7 +52,7 @@ public class Book {
     }
 
     // bookView -> increaseViewCount로 이름 변경 (포인트,구독자 모두 여기로 접근)
-    public void increaseViewCount() {
+    public void increaseViewCount(Long userId) {
         if (this.viewCount == null) {
             this.viewCount = 1L;
         } else {
@@ -60,7 +60,7 @@ public class Book {
         }
 
         // 조회수 증가 후 BookViewed 이벤트 발행
-        BookViewed bookViewed = new BookViewed(this); // 현재 Book 객체(aggregate)를 인자로 전달
+        BookViewed bookViewed = new BookViewed(this, userId); // 현재 Book 객체(aggregate)를 인자로 전달
         bookViewed.publishAfterCommit(); // 트랜잭션 커밋 후 이벤트 발행 (AbstractEvent의 메서드)
     }
 

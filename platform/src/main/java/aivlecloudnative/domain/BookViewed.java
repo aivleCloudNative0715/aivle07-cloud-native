@@ -10,18 +10,22 @@ import lombok.*;
 public class BookViewed extends AbstractEvent {
 
     private Long id;
+    private Long bookId;
+    private Long userId;
     private String title;
     private Long viewCount;
     private String authorName;
     private String summary;
 
-    public BookViewed(Book aggregate) {
+    public BookViewed(Book aggregate, Long userId) {
         super(aggregate);
         this.id = aggregate.getId();
+        this.bookId = aggregate.getId();
         this.title = aggregate.getTitle();
         this.viewCount = aggregate.getViewCount();
         this.authorName = aggregate.getAuthorName();
         this.summary = aggregate.getSummary();
+        this.userId = userId;
     }
 
     public BookViewed() {
