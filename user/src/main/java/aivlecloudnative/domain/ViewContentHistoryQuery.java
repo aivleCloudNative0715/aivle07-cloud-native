@@ -3,7 +3,8 @@ package aivlecloudnative.domain;
 import lombok.Data;
 
 @Data
-public class ViewSubscriptionHistoryQuery {
+public class ViewContentHistoryQuery {
 
     private Long userId;
+
 }
