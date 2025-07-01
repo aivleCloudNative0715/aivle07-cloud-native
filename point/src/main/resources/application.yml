@@ -1,149 +1,160 @@
 server:
-  port: 8080 # default 프로파일의 포트
+    port: 8080
 
 spring:
-  application:
-    name: point
+    application:
+        name: point
 
---- # default 프로파일 시작
+---
 
 spring:
-  config:
-    activate:
-      on-profile: default
-  # H2 Console 설정 (기존과 동일)
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
-  cloud:
-    stream:
-      kafka:
-        binder:
-          brokers: localhost:9092 # 로컬 Kafka 브로커 주소
-          autoAddPartitions: true
-          autoCreateTopics: true
-        streams:
-          binder:
-            configuration:
-              default:
-                key:
-                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                value:
-                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-      function:
-        definitions: processSubscriberSignedUp;processAccessRequestedWithPoints;processPointsGrantedEvent;processPointsDeductedEvent
-      bindings:
-        # 인바운드 Consumer 바인딩 (기존과 동일)
-        processSubscriberSignedUp-in-0:
-          destination: aivlecloudnative # 사용자 서비스 토픽
-          group: point
-          contentType: application/json
-        processAccessRequestedWithPoints-in-0:
-          destination: access_requested_with_points
-          group: point
-          contentType: application/json
+    config:
+      activate:
+        on-profile: default
+    h2:
+        console:
+            enabled: true
+            path: /h2-console
+    datasource:
+        url: jdbc:h2:mem:testdb
+        username: sa
+        password: 
+        driver-class-name: org.h2.Driver
+    jpa:
+        properties:
+            hibernate:
+            show_sql: true
+            format_sql: true
+            implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
+    cloud:
+        stream:
+            kafka:
+                binder:
+                    brokers: localhost:9092
+                    autoAddPartitions: true
+                    autoCreateTopics: true
+                    consumer-properties:
+                        value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+                        spring.json.value.default.type: aivlecloudnative.domain.PointsDeducted
+                        spring.json.trusted.packages: "*"
+                        spring.json.use.type.headers: true
+                    streams:
+                        binder:
+                            configuration:
+                            default:
+                                key:
+                                    serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                                value:
+                                    serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+            function:
+                definition: processSubscriberSignedUp;processAccessRequestedWithPoints;processPointsGrantedEvent;processPointsDeductedEvent                
+            bindings:
+                processSubscriberSignedUp-in-0:
+                    destination: aivlecloudnative
+                    group: point
+                    contentType: application/json
+                processAccessRequestedWithPoints-in-0:
+                    destination: access_requested_with_points
+                    group: point
+                    contentType: application/json
 
-        processPointsGrantedEvent-in-0:
-          destination: points_granted
-          group: point
-          contentType: application/json
-        processPointsDeductedEvent-in-0:
-          destination: points_deducted
-          group: point
-          contentType: application/json
+                processPointsGrantedEvent-in-0:
+                    destination: points_granted
+                    group: point
+                    contentType: application/json
+                processPointsDeductedEvent-in-0:
+                    destination: points_deducted
+                    group: point-v2
+                    contentType: application/json
 
-        # 아웃바운드 바인딩 추가: Point 엔티티에서 발행하는 이벤트를 위한 바인딩
-        # AbstractEvent.publish() 메서드에서 이 바인딩 이름을 사용합니다.
-        pointsGranted-out-0: # PointsGranted 이벤트에 대응하는 아웃바운드 바인딩
-          destination: points_granted # 이 이벤트가 발행될 Kafka 토픽 이름
-          contentType: application/json
-        pointsDeducted-out-0: # PointsDeducted 이벤트에 대응하는 아웃바운드 바인딩
-          destination: points_deducted # 이 이벤트가 발행될 Kafka 토픽 이름
-          contentType: application/json
-
-
+                pointsGranted-out-0:
+                    destination: points_granted
+                    contentType: application/json
+                pointsDeducted-out-0:
+                    destination: points_deducted
+                    contentType: application/json
 logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
+    org.springframework.kafka.listener: debug
+    org.springframework.messaging: debug
 
---- # docker 프로파일 시작 (동일하게 바인딩 추가)
+---
 
 server:
-  port: 8087 # docker 프로파일의 포트
+  port: 8087
 
 spring:
-  config:
-    activate:
-      on-profile: docker
-  # H2 Console 설정 (Docker 프로파일, 기존과 동일)
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
-  cloud:
-    stream:
-      kafka:
-        binder:
-          brokers: my-kafka:9092 # Docker 환경에 맞는 Kafka 브로커 주소
-          autoAddPartitions: true
-          autoCreateTopics: true
-        streams:
-          binder:
-            configuration:
-              default:
-                key:
-                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                value:
-                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-      function:
-        definitions: processSubscriberSignedUp;processAccessRequestedWithPoints;processPointsGrantedEvent;processPointsDeductedEvent
-      bindings:
-        processSubscriberSignedUp-in-0:
-          destination: aivlecloudnative
-          group: point
-          contentType: application/json
-        processAccessRequestedWithPoints-in-0:
-          destination: access_requested_with_points
-          group: point
-          contentType: application/json
+    config:
+        activate:
+            on-profile: docker
+    h2:
+        console:
+            enabled: true
+            path: /h2-console
 
-        processPointsGrantedEvent-in-0:
-          destination: points_granted
-          group: point
-          contentType: application/json
-        processPointsDeductedEvent-in-0:
-          destination: points_deducted
-          group: point
-          contentType: application/json
+    datasource:
+        url: jdbc:h2:mem:testdb
+        username: sa
+        password:
+        driver-class-name: org.h2.Driver
+    jpa:
+        properties:
+            hibernate:
+                show_sql: true
+                format_sql: true
+                implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
+    cloud:
+        stream:
+            kafka:
+                binder:
+                    brokers: my-kafka:9092
+                    autoAddPartitions: true
+                    autoCreateTopics: true
+                    consumer-properties:
+                        value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+                        spring.json.value.default.type: aivlecloudnative.domain.PointsDeducted
+                        spring.json.trusted.packages: "*"
+                        spring.json.use.type.headers: true
+            streams:
+                binder:
+                    configuration:
+                        default:
+                            key:
+                                serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                            value:
+                                serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        function:
+            definition: processSubscriberSignedUp;processAccessRequestedWithPoints;processPointsGrantedEvent;processPointsDeductedEvent
+        bindings:
+            processSubscriberSignedUp-in-0:
+                destination: aivlecloudnative
+                group: point
+                contentType: application/json
+            processAccessRequestedWithPoints-in-0:
+                destination: access_requested_with_points
+                group: point
+                contentType: application/json
 
-        # 아웃바운드 바인딩 추가 (Docker 프로파일)
-        pointsGranted-out-0:
-          destination: points_granted
-          contentType: application/json
-        pointsDeducted-out-0:
-          destination: points_deducted
-          contentType: application/json
+            processPointsGrantedEvent-in-0:
+                destination: points_granted
+                group: point
+                contentType: application/json
+            processPointsDeductedEvent-in-0:
+                destination: points_deducted
+                group: point-v2
+                contentType: application/json
+
+            pointsGranted-out-0:
+                destination: points_granted
+                contentType: application/json
+            pointsDeducted-out-0:
+                destination: points_deducted
+                contentType: application/json
+
+
+
+
+      
+          
