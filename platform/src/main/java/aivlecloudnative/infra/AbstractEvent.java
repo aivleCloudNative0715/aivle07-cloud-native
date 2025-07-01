@@ -35,11 +35,21 @@ public class AbstractEvent {
     }
 
     public void publish() {
-        String destination = "aivlecloudnative"; // <<< 이벤트를 발행할 Kafka 토픽 이름 (application.yml과 일치)
+        String bindingName = "";
+        if (this.getEventType().equals("BookViewed")) { // BookViewed 이벤트인 경우
+            bindingName = "event-out-0"; // application.yml의 "event-out-0" 바인딩 사용
+        }
+        // else if (this.getEventType().equals("SomeOtherEvent")) {
+        //     bindingName = "someOtherEvent-out-0"; // 다른 이벤트라면 다른 바인딩 이름
+        // }
 
-                try {
+        if (bindingName.isEmpty()) {
+            throw new RuntimeException("No suitable binding found for event type: " + this.getEventType());
+        }
+
+        try {
             streamBridge.send(
-                destination,
+                bindingName, // <<< 동적으로 결정된 바인딩 이름 사용
                 MessageBuilder.withPayload(this.toJson()) // JSON 문자열로 페이로드 설정
                     .setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
                     .setHeader("type", getEventType()) // 'type' 헤더는 필수
@@ -51,14 +61,14 @@ public class AbstractEvent {
     }
 
     public void publishAfterCommit() {
-    TransactionSynchronizationManager.registerSynchronization(
-        new TransactionSynchronization() {
-            @Override
-            public void afterCompletion(int status) {
-                AbstractEvent.this.publish();
+        TransactionSynchronizationManager.registerSynchronization(
+            new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    AbstractEvent.this.publish();
+                }
             }
-        }
-    );
+        );
     }
 
     public String getEventType() {
