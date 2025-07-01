@@ -6,11 +6,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -27,6 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtProvider.validate(token)) {
                 Authentication auth = jwtProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
+            } else {
+                log.warn("Invalid JWT token: {}", token);
             }
         }
         chain.doFilter(req, res);

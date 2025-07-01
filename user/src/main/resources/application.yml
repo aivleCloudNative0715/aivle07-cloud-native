@@ -50,7 +50,7 @@ server:
 
 # TODO: docker profile에도 추가
 jwt:
-  secret: ${JWT_SECRET}
+  secret: "zM3p7tA9pWxQvYt3eXr0mLb9zD8g7Uu2r4T9xT7zN1sQwXv0vEx2eZr5aE7u5YgK"
 
 ---
 
