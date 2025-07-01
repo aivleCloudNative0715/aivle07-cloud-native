@@ -1,8 +1,6 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.AuthorApplication;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -32,10 +30,6 @@ public class Author {
         this.isApproved = null; // 지원 상태
     }
 
-    public static AuthorRepository repository() {
-        return AuthorApplication.applicationContext.getBean(AuthorRepository.class);
-    }
-
     public void apply() {
         this.isApproved = null;
     }
@@ -48,15 +42,5 @@ public class Author {
         this.isApproved = false;
     }
 
-    public void applyAuthor() {
-        AuthorApplied authorApplied = new AuthorApplied(this);
-        authorApplied.publishAfterCommit();
-    }
-
-    public void judgeAuthor() {
-        AuthorRejected authorRejected = new AuthorRejected(this);
-        authorRejected.publishAfterCommit();
-        AuthorAccepted authorAccepted = new AuthorAccepted(this);
-        authorAccepted.publishAfterCommit();
-    }
+    // 이벤트 발행 관련 메서드는 서비스 계층에서 처리하는 게 베스트!
 }
