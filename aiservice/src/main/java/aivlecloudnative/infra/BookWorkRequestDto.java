@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class BookWorkRequestDto {
-    // Manuscript ID를 일관되게 'manuscriptIdId'로 명명
-    private Long manuscriptIdId;
+    // Manuscript ID를 일관되게 'ManuscriptId'로 명명
+    private Long ManuscriptId;
     private String title;
     private String content; // ✨ PublicationRequested 및 BookWork 엔티티에 맞춰 'content' 필드 추가
     private String summary;

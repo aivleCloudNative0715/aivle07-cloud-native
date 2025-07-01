@@ -28,7 +28,8 @@ public class BookWorkController {
 
     // BookWork 등록 API
     @PostMapping
-    public ResponseEntity<BookWork> createBookWork(@RequestBody BookWork bookWork) { // @RequestBody는 BookWork 엔티티 자체를 받도록
+    public ResponseEntity<BookWork> createBookWork(@RequestBody BookWork bookWork) { // @RequestBody는 BookWork 엔티티 자체를
+                                                                                     // 받도록
         try {
             // BookWork 상태 초기화
             bookWork.setStatus("REQUESTED"); // 초기 상태 (PublicationRequested와 구분)
@@ -47,7 +48,7 @@ public class BookWorkController {
 
             if (!success) {
                 System.err.println("Failed to send PublicationInfoCreationRequested event for manuscriptId: "
-                        + savedBookWork.getManuscriptId()); // <<< getManuscriptIdId -> getManuscriptId
+                        + savedBookWork.getManuscriptId()); // <<< getManuscriptId -> getManuscriptId
             } else {
                 System.out.println("##### [Controller] PublicationInfoCreationRequested 이벤트 발행 완료: " + event.toJson());
             }
