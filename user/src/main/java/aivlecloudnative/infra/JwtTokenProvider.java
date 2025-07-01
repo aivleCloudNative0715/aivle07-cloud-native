@@ -58,4 +58,13 @@ public class JwtTokenProvider {
         // 필요하면 roles → GrantedAuthority 변환
         return new UsernamePasswordAuthenticationToken(userId, null, List.of());
     }
+
+    public long getExpiration(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey.getBytes())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getExpiration().getTime() - System.currentTimeMillis();
+    }
 }

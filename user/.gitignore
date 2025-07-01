@@ -10,6 +10,7 @@
 *~
 .#*
 .*.md.html
+.env
 .DS_Store
 .classpath
 .factorypath

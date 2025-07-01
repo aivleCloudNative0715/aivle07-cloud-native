@@ -1,5 +1,6 @@
         package aivlecloudnative.signUp;
 
+        import aivlecloudnative.application.TokenBlacklistService;
         import aivlecloudnative.application.UserService;
         import aivlecloudnative.domain.*;
         import aivlecloudnative.infra.JwtTokenProvider;
@@ -34,6 +35,9 @@
             @Mock
             private JwtTokenProvider jwtTokenProvider;
 
+            @Mock
+            private TokenBlacklistService tokenBlacklistService;
+
             private final ObjectMapper objectMapper = new ObjectMapper();
 
             private UserService userService;
@@ -45,7 +49,8 @@
                         outboxMessageRepository,
                         objectMapper,
                         passwordEncoder,
-                        jwtTokenProvider
+                        jwtTokenProvider,
+                        tokenBlacklistService
                 );
             }
 
@@ -136,6 +141,22 @@
                 when(passwordEncoder.matches(cmd.getPassword(), user.getPassword())).thenReturn(false);
 
                 assertThrows(IllegalArgumentException.class, () -> userService.login(cmd));
+            }
+
+            @Test
+            @DisplayName("로그아웃 시 토큰이 블랙리스트에 남은 만료시간으로 등록된다")
+            void logout_shouldBlacklistToken_withRemainingExpiration() {
+                // given
+                String token = "jwt.token.string";
+                long remainMs = 30 * 60 * 1000L; // 30분 남았다고 가정
+
+                when(jwtTokenProvider.getExpiration(token)).thenReturn(remainMs);
+
+                // when
+                userService.logout(token);
+
+                // then
+                verify(tokenBlacklistService).blacklist(token, remainMs);
             }
 
             @Test
