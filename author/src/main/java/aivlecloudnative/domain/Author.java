@@ -2,18 +2,16 @@ package aivlecloudnative.domain;
 
 import aivlecloudnative.AuthorApplication;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "Author_table")
 @Data
-//<<< DDD / Aggregate Root
+@NoArgsConstructor
+@AllArgsConstructor
 public class Author {
 
     @Id
@@ -21,43 +19,44 @@ public class Author {
     private Long id;
 
     private String authorEmail;
-
     private String authorName;
-
     private String bio;
-
     private String representativeWork;
-
     private String portfolio;
-
     private Boolean isApproved;
 
-    public static AuthorRepository repository() {
-        AuthorRepository authorRepository = AuthorApplication.applicationContext.getBean(
-            AuthorRepository.class
-        );
-        return authorRepository;
+    public Author(String authorName, String authorEmail, String portfolio) {
+        this.authorName = authorName;
+        this.authorEmail = authorEmail;
+        this.portfolio = portfolio;
+        this.isApproved = null; // 지원 상태
     }
 
-    //<<< Clean Arch / Port Method
-    public void applyAuthor() {
-        //implement business logic here:
+    public static AuthorRepository repository() {
+        return AuthorApplication.applicationContext.getBean(AuthorRepository.class);
+    }
 
+    public void apply() {
+        this.isApproved = null;
+    }
+
+    public void accept() {
+        this.isApproved = true;
+    }
+
+    public void reject() {
+        this.isApproved = false;
+    }
+
+    public void applyAuthor() {
         AuthorApplied authorApplied = new AuthorApplied(this);
         authorApplied.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
     public void judgeAuthor() {
-        //implement business logic here:
-
         AuthorRejected authorRejected = new AuthorRejected(this);
         authorRejected.publishAfterCommit();
         AuthorAccepted authorAccepted = new AuthorAccepted(this);
         authorAccepted.publishAfterCommit();
     }
-    //>>> Clean Arch / Port Method
-
 }
-//>>> DDD / Aggregate Root
