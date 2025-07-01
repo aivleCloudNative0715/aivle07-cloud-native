@@ -50,6 +50,7 @@ public class User {
         this.userName = signUpCommand.getUserName();
         this.email = signUpCommand.getEmail();
         this.isKt = signUpCommand.getIsKt();
+        this.hasActiveSubscription = false;
     }
 
     public void addBookToHistory(Long bookId) {
