@@ -2,12 +2,12 @@ package aivlecloudnative.infra;
 
 import aivlecloudnative.domain.AutoPublished;
 import aivlecloudnative.domain.AccessRequestedAsSubscriber;
+import aivlecloudnative.domain.AccessRequestedWithPoints;
 import aivlecloudnative.domain.Book;
 import aivlecloudnative.domain.BookRepository;
 import aivlecloudnative.domain.BookView;
 import aivlecloudnative.domain.BookViewed;
 import aivlecloudnative.domain.BookViewRepository;
-import aivlecloudnative.domain.PointsDeducted;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -121,30 +121,30 @@ public class PolicyHandler {
     }
 
     /**
-     * 포인트 서버에서 발행하는 포인트 차감됨 이벤트를 구독하여 도서 열람 기록을 처리
+     * 변경된 로직: 사용자 관리 서버에서 발행하는 포인트로 열람신청함 이벤트를 구독하여 도서 열람 기록을 처리합니다.
      */
     @Bean
-    public Consumer<String> pointsDeductedEventsIn() {
+    public Consumer<String> accessRequestedWithPointsEventsIn() {
         return message -> {
             try {
-                System.out.println("##### Received Raw Message : " + message);
+                System.out.println("##### Received AccessRequestedWithPoints Event : " + message);
 
                 JsonNode jsonNode = objectMapper.readTree(message);
                 String eventType = jsonNode.get("eventType").asText();
 
-                if (!"PointsDeducted".equals(eventType)) {
-                    System.out.println("##### Skipping event, type mismatch: Expected PointsDeducted, Got " + eventType);
+                if (!"AccessRequestedWithPoints".equals(eventType)) { // 이벤트 타입 검증
+                    System.out.println("##### Skipping event, type mismatch: Expected AccessRequestedWithPoints, Got " + eventType);
                     return;
                 }
 
-                PointsDeducted event = objectMapper.treeToValue(jsonNode, PointsDeducted.class);
+                AccessRequestedWithPoints event = objectMapper.treeToValue(jsonNode, AccessRequestedWithPoints.class);
 
-                System.out.println("##### Transformed PointsDeducted Event: " + event.getEventType() + " - User ID: " + event.getUserId() + ", Book ID: " + event.getBookId());
+                System.out.println("##### Transformed AccessRequestedWithPoints Event: " + event.getEventType() + " - User ID: " + event.getUserId() + ", Book ID: " + event.getBookId());
 
                 processBookView(event.getBookId(), event.getUserId());
 
             } catch (Exception e) {
-                System.err.println("##### Error processing PointsDeducted event: " + e.getMessage());
+                System.err.println("##### Error processing AccessRequestedWithPoints event: " + e.getMessage());
                 e.printStackTrace();
             }
         };

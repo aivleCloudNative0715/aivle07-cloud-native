@@ -16,7 +16,7 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      definition: autoPublishedEventsIn;accessRequestedAsSubscriberEventsIn;pointsDeductedEventsIn
+      definition: autoPublishedEventsIn;accessRequestedAsSubscriberEventsIn;accessRequestedWithPointsEventsIn
     stream:
       kafka:
         binder:
@@ -44,10 +44,10 @@ spring:
           contentType: application/json
           consumer:
             maxAttempts: 3
-        # 포인트 차감됨 이벤트 구독 (포인트 -> 서재 플랫폼)
-        pointsDeductedEventsIn-in-0:
+        # 변경: 포인트로 알람신청됨 이벤트 구독 (사용자 관리 -> 서재 플랫폼)
+        accessRequestedWithPointsEventsIn-in-0:
           destination: aivlecloudnative
-          group: platform-book-view-point-deducted-group
+          group: platform-book-view-points-request-group
           contentType: application/json
           consumer:
             maxAttempts: 3
@@ -81,7 +81,7 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      definition: autoPublishedEventsIn;accessRequestedAsSubscriberEventsIn;pointsDeductedEventsIn
+      definition: autoPublishedEventsIn;accessRequestedAsSubscriberEventsIn;accessRequestedWithPointsEventsIn
     stream:
       kafka:
         binder:
@@ -109,10 +109,10 @@ spring:
           contentType: application/json
           consumer:
             maxAttempts: 3
-        # 포인트 차감됨 이벤트 구독 (포인트 -> 서재 플랫폼)
-        pointsDeductedEventsIn-in-0:
+        # 변경: 포인트로 알람신청됨 이벤트 구독 (사용자 관리 -> 서재 플랫폼)
+        accessRequestedWithPointsEventsIn-in-0:
           destination: aivlecloudnative
-          group: platform-book-view-point-deducted-group
+          group: platform-book-view-points-request-group
           contentType: application/json
           consumer:
             maxAttempts: 3
