@@ -1,7 +1,7 @@
 package aivlecloudnative.domain;
 
 import java.util.List;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository; 
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(
@@ -9,6 +9,6 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
     path = "publicationStatuses"
 )
 public interface PublicationStatusRepository
-    extends PagingAndSortingRepository<PublicationStatus, Long> {
+    extends JpaRepository<PublicationStatus, Long> {   // <<== 여기!
     List<PublicationStatus> findByManuscriptId(Long manuscriptId);
 }
