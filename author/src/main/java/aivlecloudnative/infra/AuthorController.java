@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 
 //<<< Clean Arch / Inbound Adaptor
 
@@ -23,7 +23,7 @@ public class AuthorController {
     @RequestMapping(value = "/authors/applyauthor",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
-    public Author applyAuthor(HttpServletRequest request, HttpServletResponse response, 
+    public Author applyAuthor(HttpServletRequest request, HttpServletResponse response 
         ) throws Exception {
             System.out.println("##### /author/applyAuthor  called #####");
             Author author = new Author();
@@ -34,7 +34,7 @@ public class AuthorController {
     @RequestMapping(value = "/authors/judgeauthor",
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
-    public Author judgeAuthor(HttpServletRequest request, HttpServletResponse response, 
+    public Author judgeAuthor(HttpServletRequest request, HttpServletResponse response
         ) throws Exception {
             System.out.println("##### /author/judgeAuthor  called #####");
             Author author = new Author();
