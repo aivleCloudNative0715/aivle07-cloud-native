@@ -4,9 +4,7 @@ import aivlecloudnative.config.kafka.KafkaProcessor;
 import aivlecloudnative.domain.*;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.naming.NameParser;
-import javax.naming.NameParser;
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -24,3 +22,4 @@ public class PolicyHandler {
     public void whatever(@Payload String eventString) {}
 }
 //>>> Clean Arch / Inbound Adaptor
+
