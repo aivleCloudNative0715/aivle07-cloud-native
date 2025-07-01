@@ -19,10 +19,12 @@ public class Book {
     private String coverImageUrl;
     private String ebookUrl;
     private Double price;
-    private Long viewCount; // 신규 등록 시 0으로 초기화
+    private Long viewCount; // 전체 유저의 총 조회수
+    private Boolean isBestseller; // 베스트셀러 여부
 
     public Book() {
         this.viewCount = 0L; // 초기화
+        this.isBestseller = false; // 신규 등록 시 false로 초기화
     }
 
 }

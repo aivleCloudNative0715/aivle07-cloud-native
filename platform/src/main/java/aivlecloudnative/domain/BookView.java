@@ -1,47 +1,29 @@
 package aivlecloudnative.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "BookView_table")
+@Table(name = "book_view", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"userId", "bookId"})
+})
 @Data
-@NoArgsConstructor
 //<<< DDD / Aggregate Root
 public class BookView {
 
     @Id
-    private Long bookId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id; // BookView의 고유 ID
 
-    private String title;
+    private Long bookId; // 어떤 책을 열람했는지 (Book 엔티티의 ID)
+    private String userId; // 누가 열람했는지 (사용자 ID)
+    private Long viewCount; // 특정 유저가 이 책을 열람한 횟수
 
-    private String authorName;
+    private LocalDateTime firstViewedAt; // 첫 열람 시간
+    private LocalDateTime lastViewedAt; // 마지막 열람 시간
 
-    private String summary;
-
-    private String category;
-
-    private Long viewCount;
-
-    private Boolean isbestseller;
-
-    // BookViewed 이벤트를 받아서 BookView를 업데이트하는 헬퍼 메서드
-    public void updateFrom(BookViewed event) {
-        this.bookId = event.getId(); // BookViewed 이벤트의 id는 Book의 id
-        this.title = event.getTitle();
-        this.viewCount = event.getViewCount();
-        this.authorName = event.getAuthorName();
-        this.summary = event.getSummary();
-        
-        // 조회수 3회 이상이면 베스트셀러로 간주
-        if (event.getViewCount() >= 3) {
-            this.isbestseller = true;
-        } else {
-            this.isbestseller = false;
-        }
+    public BookView() {
     }
 }
 //>>> DDD / Aggregate Root

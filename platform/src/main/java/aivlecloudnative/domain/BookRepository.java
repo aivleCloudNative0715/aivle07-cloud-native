@@ -1,10 +1,17 @@
 package aivlecloudnative.domain;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.stereotype.Repository;
 
+import java.util.List;
 
-//<<< PoEAA / Repository
-@RepositoryRestResource(collectionResourceRel = "books", path = "books")
+@Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
+    // isBestseller가 true인 도서를 조회하는 메서드
+    List<Book> findByIsBestseller(Boolean isBestseller);
+
+    // isBestseller가 true인 도서를 페이징하여 조회하는 메서드 (정렬 포함 가능)
+    Page<Book> findByIsBestseller(Boolean isBestseller, Pageable pageable);
 }
