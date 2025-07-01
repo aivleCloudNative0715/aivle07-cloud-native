@@ -1,12 +1,10 @@
-# server:
-#   port: 8080
+server:
+  port: 8085
 
 spring:
   application:
     name: platform
----
-
-spring:
+  # --- 기본 프로필 (default) 설정 ---
   config:
     activate:
       on-profile: default
@@ -17,54 +15,61 @@ spring:
         format_sql: true
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
+    function:
+      definition: autoPublishedEventsIn;accessRequestedAsSubscriberEventsIn;pointsDeductedEventsIn
     stream:
       kafka:
         binder:
           brokers: localhost:9092
-        stream:
-          function:
-            definition: consumerAutoPublished;consumerAccessRequested;consumerPointsDeducted;consumerBookViewed
-          bindings:
-            consumerAutoPublished-in-0:
-              destination: bookwork.auto-published # <<< aiservice가 발행하는 토픽 이름으로 변경!
-              group: platform
-              contentType: application/json
-              consumer:
-                auto-offset-reset: earliest
-            consumerAccessRequested-in-0:
-              destination: bookwork.access-requested # <<< 사용자 관리에서 오는 토픽 이름 (예시, 팀과 협의)
-              group: platform
-              contentType: application/json
-              consumer:
-                auto-offset-reset: earliest
-            consumerPointsDeducted-in-0:
-              destination: bookwork.points-deducted # <<< 포인트 서비스에서 오는 토픽 이름 (예시, 팀과 협의)
-              group: platform
-              contentType: application/json
-              consumer:
-                auto-offset-reset: earliest
-            consumerBookViewed-in-0:
-              destination: bookwork.book-viewed # <<< platform 내부에서 발행하는 토픽 이름 (예시, 팀과 협의)
-              group: platform
-              contentType: application/json
-              consumer:
-                auto-offset-reset: earliest
+        streams:
+          binder:
+            configuration:
+              default:
+                key:
+                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                value:
+                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      bindings:
+        # 자동 출간됨 이벤트 구독 (AI 서비스 -> 서재 플랫폼)
+        autoPublishedEventsIn-in-0:
+          destination: aivlecloudnative
+          group: platform-new-book-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
+        # 구독자로 알람신청됨 이벤트 구독 (사용자 관리 -> 서재 플랫폼)
+        accessRequestedAsSubscriberEventsIn-in-0:
+          destination: aivlecloudnative
+          group: platform-book-view-subscriber-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
+        # 포인트 차감됨 이벤트 구독 (포인트 -> 서재 플랫폼)
+        pointsDeductedEventsIn-in-0:
+          destination: aivlecloudnative
+          group: platform-book-view-point-deducted-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
+        # 도서 열람됨 이벤트 발행 (서재 플랫폼 -> 사용자 관리)
+        bookViewed-out-0:
+          destination: aivlecloudnative
+          producer:
+            headerMode: headers
+            partitionCount: 1
 
 logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
 
-api:
-  url:
-    platform: localhost:8085
+---
 
 server:
   port: 8085
 
----
-
 spring:
+  # --- Docker 프로필 설정 ---
   config:
     activate:
       on-profile: docker
@@ -75,10 +80,12 @@ spring:
         format_sql: true
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
+    function:
+      definition: autoPublishedEventsIn;accessRequestedAsSubscriberEventsIn;pointsDeductedEventsIn
     stream:
       kafka:
         binder:
-          brokers: my-kafka:9092 # Docker 환경에서는 Kubernetes Service 이름을 사용 (예: my-kafka)
+          brokers: my-kafka:9092
         streams:
           binder:
             configuration:
@@ -87,34 +94,31 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-          function:
-            definition: consumerAutoPublished;consumerAccessRequested;consumerPointsDeducted;consumerBookViewed
-          bindings:
-            consumerAutoPublished-in-0:
-              destination: bookwork.auto-published # <<< aiservice가 발행하는 토픽 이름으로 변경!
-              group: platform
-              contentType: application/json
-              consumer:
-                auto-offset-reset: earliest
-            consumerAccessRequested-in-0:
-              destination: bookwork.access-requested # <<< 사용자 관리에서 오는 토픽 이름 (예시, 팀과 협의)
-              group: platform
-              contentType: application/json
-              consumer:
-                auto-offset-reset: earliest
-            consumerPointsDeducted-in-0:
-              destination: bookwork.points-deducted # <<< 포인트 서비스에서 오는 토픽 이름 (예시, 팀과 협의)
-              group: platform
-              contentType: application/json
-              consumer:
-                auto-offset-reset: earliest
-            consumerBookViewed-in-0:
-              destination: bookwork.book-viewed # <<< platform 내부에서 발행하는 토픽 이름 (예시, 팀과 협의)
-              group: platform
-              contentType: application/json
-              consumer:
-                auto-offset-reset: earliest
-
-api:
-  url:
-    platform: platform:8085 # Docker 환경에서는 컨테이너 이름을 사용 (예: platform)
+      bindings:
+        # 자동 출간됨 이벤트 구독 (AI 서비스 -> 서재 플랫폼)
+        autoPublishedEventsIn-in-0:
+          destination: aivlecloudnative
+          group: platform-new-book-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
+        # 구독자로 알람신청됨 이벤트 구독 (사용자 관리 -> 서재 플랫폼)
+        accessRequestedAsSubscriberEventsIn-in-0:
+          destination: aivlecloudnative
+          group: platform-book-view-subscriber-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
+        # 포인트 차감됨 이벤트 구독 (포인트 -> 서재 플랫폼)
+        pointsDeductedEventsIn-in-0:
+          destination: aivlecloudnative
+          group: platform-book-view-point-deducted-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
+        # 도서 열람됨 이벤트 발행 (서재 플랫폼 -> 사용자 관리)
+        bookViewed-out-0:
+          destination: aivlecloudnative
+          producer:
+            headerMode: headers
+            partitionCount: 1

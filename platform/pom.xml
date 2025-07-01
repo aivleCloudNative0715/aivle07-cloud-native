@@ -5,8 +5,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.5</version> <!-- Spring Boot 3.x 버전 -->
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>3.2.12</version>
+		<relativePath/>
 	</parent>
 	<groupId>aivlecloudnative</groupId>
 	<artifactId>platform</artifactId>
@@ -15,10 +15,8 @@
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
-		<java.version>21</java.version> <!-- Java 버전 21 -->
-		<spring-cloud.version>2023.0.3</spring-cloud.version> <!-- Spring Cloud 버전 업그레이드 -->
-		<!-- <spring-cloud-stream.version>Germantown.SR1</spring-cloud-stream.version> (제거) -->
-		<!-- <cucumber.version>6.8.1</cucumber.version> (제거) -->
+		<java.version>21</java.version>
+		<spring-cloud.version>2023.0.3</spring-cloud.version>
 	</properties>
 
 	<dependencies>
@@ -43,19 +41,12 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.30</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
-		<!-- 1. spring-cloud-starter-sleuth 제거 -->
-		<!-- <dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-sleuth</artifactId>
-		</dependency> -->
-
 		<!-- kafka streams -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
@@ -71,26 +62,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- 2. cucumber test 관련 의존성 제거 -->
-		<!-- <dependency>
-			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-java</artifactId>
-			<version>${cucumber.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-junit</artifactId>
-			<version>${cucumber.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-spring</artifactId>
-			<version>${cucumber.version}</version>
-			<scope>test</scope>
-		</dependency> -->
 	</dependencies>
 
 	<dependencyManagement>
@@ -102,14 +73,6 @@
 			<type>pom</type>
 			<scope>import</scope>
 			</dependency>
-			<!-- 3. spring-cloud-stream-dependencies 버전 제거 -->
-			<!-- <dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-stream-dependencies</artifactId>
-			<version>${spring-cloud-stream.version}</version>
-			<type>pom</type>
-			<scope>import</scope>
-			</dependency> -->
 		</dependencies>
 	</dependencyManagement>
 

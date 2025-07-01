@@ -1,109 +1,65 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.domain.AccessRequestedAsSubscriber;
 import aivlecloudnative.domain.AutoPublished;
 import aivlecloudnative.domain.Book;
 import aivlecloudnative.domain.BookRepository;
-import aivlecloudnative.domain.BookView;
-import aivlecloudnative.domain.BookViewRepository;
-import aivlecloudnative.domain.BookViewed;
-import aivlecloudnative.domain.PointsDeducted;
-
-import jakarta.transaction.Transactional;
-
-import java.util.function.Consumer;
+// import aivlecloudnative.domain.BookViewRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.function.Consumer;
 
 //<<< Clean Arch / Inbound Adaptor
-@Service
+@Component
 @Transactional
 public class PolicyHandler {
 
     @Autowired
     BookRepository bookRepository;
-
+    // @Autowired
+    // BookViewRepository bookViewRepository; // <-- 이 필드는 아직 구현되지 않았습니다.
     @Autowired
-    BookViewRepository bookViewRepository;
+    StreamBridge streamBridge;
 
-    // @StreamListener(KafkaProcessor.INPUT)
-    // public void whatever(@Payload String eventString) {}
-
+    /**
+     * AI 서비스에서 발행하는 자동 출간됨 이벤트를 구독하여 신규 도서를 등록
+     */
     @Bean
-    public Consumer<AutoPublished> consumerAutoPublished() {
-        return autoPublished -> { // @Payload 어노테이션 없이 파라미터 사용
-            System.out.println(
-                "\n\n##### listener RegisterNewBook : " + autoPublished + "\n\n"
-            );
-            Book newBook = Book.registerNewBook(autoPublished);
-            bookRepository.save(newBook); // <<< Book.java에서 저장을 제거했으므로, 여기서 명시적으로 저장합니다.
+    public Consumer<String> autoPublishedEventsIn() {
+        return message -> {
+            try {
+                System.out.println("##### Received AutoPublished Event : " + message);
 
-            BookView newBookView = new BookView();
-            newBookView.setBookId(newBook.getId());
-            newBookView.setTitle(newBook.getTitle());
-            newBookView.setAuthorName(newBook.getAuthorName());
-            newBookView.setSummary(newBook.getSummary());
-            newBookView.setCategory(newBook.getCategory());
-            newBookView.setViewCount(0L);
-            newBookView.setIsbestseller(false);
-            bookViewRepository.save(newBookView); // BookView 저장
-        };
-    }
+                // 1. JSON 메시지를 AutoPublished 이벤트 객체로 역직렬화
+                AutoPublished autoPublished = AutoPublished.fromJson(message, AutoPublished.class);
 
-    @Bean
-    public Consumer<AccessRequestedAsSubscriber> consumerAccessRequested() {
-        return accessRequestedAsSubscriber -> {
-            System.out.println(
-                "\n\n##### listener BookView : " +
-                accessRequestedAsSubscriber +
-                "\n\n"
-            );
+                System.out.println("##### Transformed AutoPublished Event: " + autoPublished.getEventType() + " - AI Service ID: " + autoPublished.getId());
 
-            Long bookId = accessRequestedAsSubscriber.getBookId();
-            Long userId = accessRequestedAsSubscriber.getUserId();
+                // 2. AutoPublished 이벤트 데이터를 사용하여 Book 엔티티 생성
+                Book newBook = new Book();
+                newBook.setTitle(autoPublished.getTitle());
+                newBook.setSummary(autoPublished.getSummary());
+                newBook.setAuthorName(autoPublished.getAuthorName());
+                newBook.setCategory(autoPublished.getCategory());
+                newBook.setCoverImageUrl(autoPublished.getCoverImageUrl());
+                newBook.setEbookUrl(autoPublished.getEbookUrl());
+                newBook.setPrice(autoPublished.getPrice());
+                // viewCount는 Book 생성자에서 0L으로 자동 초기화됩니다.
 
-            bookRepository.findById(bookId).ifPresent(book -> {
-                book.increaseViewCount(userId);
-                bookRepository.save(book);
-            });
-        };
-    }
+                // 3. Book 엔티티를 데이터베이스에 저장
+                // save() 메서드 호출 시, @GeneratedValue에 따라 DB에서 새로운 ID가 할당
+                bookRepository.save(newBook);
 
-    @Bean
-    public Consumer<PointsDeducted> consumerPointsDeducted() {
-        return pointsDeducted -> {
-            System.out.println(
-                "\n\n##### listener BookView : " + pointsDeducted + "\n\n"
-            );
+                System.out.println("##### New Book registered successfully: " + newBook.getTitle() + " (Book ID: " + newBook.getId() + ")");
 
-            Long bookId = pointsDeducted.getBookId();
-            Long userId = pointsDeducted.getUserId();
-
-            bookRepository.findById(bookId).ifPresent(book -> {
-                book.increaseViewCount(userId);
-                bookRepository.save(book);
-            });
-        };
-    }
-
-    @Bean
-    public Consumer<BookViewed> consumerBookViewed() {
-        return bookViewed -> {
-            System.out.println("\n\n##### Listener BookViewed (for Read Model Update) : " + bookViewed.toJson() + "\n\n");
-
-            bookViewRepository.findById(bookViewed.getId()).ifPresentOrElse(
-                bookView -> {
-                    bookView.updateFrom(bookViewed);
-                    bookViewRepository.save(bookView);
-                },
-                () -> {
-                    BookView newBookView = new BookView();
-                    newBookView.updateFrom(bookViewed);
-                    bookViewRepository.save(newBookView);
-                }
-            );
+            } catch (Exception e) {
+                System.err.println("##### Error processing AutoPublished event: " + e.getMessage());
+                e.printStackTrace();
+                // 에러 처리 로직
+            }
         };
     }
 }
