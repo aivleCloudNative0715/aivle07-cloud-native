@@ -48,9 +48,11 @@ public class UserService {
         String hashedPassword = passwordEncoder.encode(cmd.getPassword());
         user.setPassword(hashedPassword);
 
-        saveOutbox(new UserSignedUp(user), "UserSignedUp");
+        User savedUser = userRepository.save(user);
 
-        return userRepository.save(user);
+        saveOutbox(new UserSignedUp(savedUser), "UserSignedUp");
+
+        return savedUser;
     }
 
     public LoginResponse login(LoginCommand cmd) {
@@ -94,9 +96,9 @@ public class UserService {
 
         //TODO: bookId가 유효한지 확인
 
-        boolean isKT = user.getIsKt();
+        boolean subscribed = user.getHasActiveSubscription();
 
-        AbstractEvent domainEvent = isKT
+        AbstractEvent domainEvent = subscribed
                 ? new AccessRequestedAsSubscriber(user, bookId)
                 : new AccessRequestedWithPoints(user, bookId);
 

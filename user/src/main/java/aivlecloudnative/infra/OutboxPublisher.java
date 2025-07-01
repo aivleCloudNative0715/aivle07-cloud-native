@@ -40,7 +40,7 @@ public class OutboxPublisher {
                 } else {
                     msg.setStatus(OutboxMessage.PublishStatus.FAILED);
                 }
-                log.info("✅ OutboxPublisher 스케줄러 실행됨. 메시지 개수: {}", messages.size());
+                log.info("✅ OutboxPublisher 스케줄러 실행됨.");
             } catch (Exception e) {
                 msg.setStatus(OutboxMessage.PublishStatus.FAILED);
                 log.error("Outbox publish failed: {}", e.getMessage(), e);
