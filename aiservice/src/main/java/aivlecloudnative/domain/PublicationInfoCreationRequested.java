@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class PublicationInfoCreationRequested extends AbstractEvent {
 
     private Long id; // BookWork의 ID를 그대로 사용합니다.
-    private Long manuscriptIdId;
+    private Long manuscriptId;
     private String title;
     private String content;
     private String summary;
@@ -33,7 +33,7 @@ public class PublicationInfoCreationRequested extends AbstractEvent {
     public PublicationInfoCreationRequested(BookWork bookWork) {
         super(); // AbstractEvent의 생성자 호출 (이벤트 생성 시간 등을 설정)
         this.id = bookWork.getId(); // BookWork의 ID를 이벤트의 ID로 사용
-        this.manuscriptIdId = bookWork.getManuscriptIdId();
+        this.manuscriptId = bookWork.getManuscriptId();
         this.title = bookWork.getTitle();
         this.content = bookWork.getContent();
         this.summary = bookWork.getSummary();
@@ -42,8 +42,7 @@ public class PublicationInfoCreationRequested extends AbstractEvent {
         // coverImageUrl, ebookUrl, category, price는 이 시점에서는 null로 유지됩니다.
     }
 
-    // 이벤트를 JSON 문자열로 변환하는 메서드 (기존에 있다면 유지)
-    // 이 메서드는 AbstractEvent에 이미 정의되어 있을 수도 있으니, 중복이라면 제거해도 됩니다.
+    @Override // AbstractEvent에 toJson()이 있으므로 override 지시자 추가
     public String toJson() {
         ObjectMapper objectMapper = new ObjectMapper();
         try {

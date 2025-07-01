@@ -10,7 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+
+import lombok.Data;
 
 @Service
 public class AIServiceSystem {
@@ -51,6 +52,8 @@ public class AIServiceSystem {
         private String ebookUrl;
         private String category;
         private Integer price;
+        private String aiGeneratedSummary;
+        private String aiGeneratedKeywords;
     }
 
     // --- OpenAI Chat Completion API 요청/응답 모델 (동일) ---
@@ -115,7 +118,6 @@ public class AIServiceSystem {
     }
 
     // 최종 GPT API 호출 메서드 (PolicyHandler에서 호출)
-    // ✨ manuscriptIdId 매개변수 추가 (ebookUrl 생성을 위함)
     public AIResponse callGPTApi(Long manuscriptIdId, String title, String summary, String keywords, String authorName,
             String content) {
         System.out.println("### Calling AI services for book work processing...");

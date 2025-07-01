@@ -1,5 +1,5 @@
 server:
-  port: 8080 # default 프로파일이 활성화되면 이 포트가 사용됩니다.
+  port: 8084 # default 프로파일이 활성화되면 이 포트가 사용됩니다.
 
 spring:
   application:
