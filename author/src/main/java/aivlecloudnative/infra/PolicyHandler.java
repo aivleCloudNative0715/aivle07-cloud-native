@@ -1,25 +1,26 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.config.kafka.KafkaProcessor;
 import aivlecloudnative.domain.*;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
-//<<< Clean Arch / Inbound Adaptor
-@Service
-@Transactional
+import java.util.function.Consumer;
+
+@Component
 public class PolicyHandler {
 
-    @Autowired
-    AuthorRepository authorRepository;
+    private final AuthorRepository authorRepository;
 
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whatever(@Payload String eventString) {}
+    public PolicyHandler(AuthorRepository authorRepository) {
+        this.authorRepository = authorRepository;
+    }
+
+    // Kafka에서 String 메시지(이벤트) 받는 Consumer 함수
+    @Bean
+    public Consumer<String> whatever() {
+        return eventString -> {
+            // 이벤트 처리 로직 (로그 찍기 예시)
+            System.out.println("Received event: " + eventString);
+        };
+    }
 }
-//>>> Clean Arch / Inbound Adaptor
-
