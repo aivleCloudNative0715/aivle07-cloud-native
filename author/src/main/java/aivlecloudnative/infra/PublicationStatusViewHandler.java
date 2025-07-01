@@ -1,65 +1,50 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.config.kafka.KafkaProcessor;
 import aivlecloudnative.domain.*;
-import java.io.IOException;
+import org.springframework.stereotype.Component;
 import java.util.List;
-import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Service;
+import java.util.function.Consumer;
 
-@Service
+@Component
 public class PublicationStatusViewHandler {
 
-    //<<< DDD / CQRS
-    @Autowired
-    private PublicationStatusRepository publicationStatusRepository;
+    private final PublicationStatusRepository publicationStatusRepository;
 
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenPublicationInfoCreationRequested_then_CREATE_1(
-        @Payload PublicationInfoCreationRequested publicationInfoCreationRequested
-    ) {
-        try {
-            if (!publicationInfoCreationRequested.validate()) return;
-
-            // view 객체 생성
-            PublicationStatus publicationStatus = new PublicationStatus();
-            // view 객체에 이벤트의 Value 를 set 함
-            publicationStatus.setManuscriptId(
-                publicationInfoCreationRequested.getManuscriptId()
-            );
-            publicationStatus.setStatus(
-                publicationInfoCreationRequested.getStatus()
-            );
-            // view 레파지 토리에 save
-            publicationStatusRepository.save(publicationStatus);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public PublicationStatusViewHandler(PublicationStatusRepository publicationStatusRepository) {
+        this.publicationStatusRepository = publicationStatusRepository;
     }
 
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenAutoPublished_then_UPDATE_1(
-        @Payload AutoPublished autoPublished
-    ) {
-        try {
-            if (!autoPublished.validate()) return;
-            // view 객체 조회
-
-            List<PublicationStatus> publicationStatusList = publicationStatusRepository.findByManuscriptId(
-                autoPublished.getManuscriptId()
-            );
-            for (PublicationStatus publicationStatus : publicationStatusList) {
-                // view 객체에 이벤트의 eventDirectValue 를 set 함
-                publicationStatus.setStatus(autoPublished.getStatus());
-                // view 레파지 토리에 save
+    // 1. PublicationInfoCreationRequested 이벤트 수신
+    @org.springframework.context.annotation.Bean
+    public Consumer<PublicationInfoCreationRequested> publicationInfoCreationRequestedHandler() {
+        return publicationInfoCreationRequested -> {
+            try {
+                if (!publicationInfoCreationRequested.validate()) return;
+                PublicationStatus publicationStatus = new PublicationStatus();
+                publicationStatus.setManuscriptId(publicationInfoCreationRequested.getManuscriptId());
+                publicationStatus.setStatus(publicationInfoCreationRequested.getStatus());
                 publicationStatusRepository.save(publicationStatus);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        };
     }
-    //>>> DDD / CQRS
+
+    // 2. AutoPublished 이벤트 수신
+    @org.springframework.context.annotation.Bean
+    public Consumer<AutoPublished> autoPublishedHandler() {
+        return autoPublished -> {
+            try {
+                if (!autoPublished.validate()) return;
+                List<PublicationStatus> publicationStatusList =
+                        publicationStatusRepository.findByManuscriptId(autoPublished.getManuscriptId());
+                for (PublicationStatus publicationStatus : publicationStatusList) {
+                    publicationStatus.setStatus(autoPublished.getStatus());
+                    publicationStatusRepository.save(publicationStatus);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        };
+    }
 }
