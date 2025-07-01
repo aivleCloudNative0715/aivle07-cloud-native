@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.3.1.RELEASE</version>
+		<version>3.2.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>aivlecloudnative</groupId>
@@ -22,6 +22,35 @@
 	</properties>
 
 	<dependencies>
+		<!-- 기본 Spring Boot 의존성 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+
+		<!-- KafkaTemplate 사용을 위한 Kafka 의존성 -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<dependency>
+  			<groupId>com.fasterxml.jackson.core</groupId>
+  			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+        	<groupId>jakarta.servlet</groupId>
+        	<artifactId>jakarta.servlet-api</artifactId>
+        	<version>6.0.0</version>
+        	<scope>provided</scope>
+    	</dependency>
+    	<dependency>
+       	 	<groupId>jakarta.transaction</groupId>
+        	<artifactId>jakarta.transaction-api</artifactId>
+        	<version>2.0.0</version>
+    	</dependency>
+	
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -54,7 +83,6 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-sleuth</artifactId>
 		</dependency>
-
 		<!-- kafka streams -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
@@ -121,3 +149,4 @@
 	</build>
 
 </project>
+
