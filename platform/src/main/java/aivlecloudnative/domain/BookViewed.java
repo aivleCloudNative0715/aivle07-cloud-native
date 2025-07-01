@@ -1,35 +1,41 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.infra.AbstractEvent;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 //<<< DDD / Domain Event
 @Data
-@ToString
-@EqualsAndHashCode(callSuper=false) // AbstractEvent의 필드를 포함하므로 equals/hashCode 생성 시 부모 필드도 고려
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class BookViewed extends AbstractEvent {
-
-    private Long id;
     private Long bookId;
-    private Long userId;
     private String title;
-    private Long viewCount;
     private String authorName;
     private String summary;
+    private String category;
+    private String coverImageUrl;
+    private Double price;
+    private Long totalViewCount; // Book 엔티티의 viewCount
+    private Long personalViewCount; // BookView 엔티티의 viewCount
+    private String userId; // 어떤 사용자가 열람했는지 정보도 포함하는 것이 좋습니다.
 
-    public BookViewed(Book aggregate, Long userId) {
-        super(aggregate);
-        this.id = aggregate.getId();
-        this.bookId = aggregate.getId();
-        this.title = aggregate.getTitle();
-        this.viewCount = aggregate.getViewCount();
-        this.authorName = aggregate.getAuthorName();
-        this.summary = aggregate.getSummary();
-        this.userId = userId;
-    }
-
-    public BookViewed() {
+    public BookViewed(
+            Long bookId, String title, String authorName, String summary,
+            String category, String coverImageUrl, Double price,
+            Long totalViewCount, Long personalViewCount, String userId) {
         super();
+        this.bookId = bookId;
+        this.title = title;
+        this.authorName = authorName;
+        this.summary = summary;
+        this.category = category;
+        this.coverImageUrl = coverImageUrl;
+        this.price = price;
+        this.totalViewCount = totalViewCount;
+        this.personalViewCount = personalViewCount;
+        this.userId = userId;
     }
 }
 //>>> DDD / Domain Event
