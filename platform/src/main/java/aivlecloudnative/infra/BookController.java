@@ -23,5 +23,11 @@ public class BookController {
         // BookRepository를 통해 Book 애그리거트를 조회
         return bookRepository.findById(id).orElse(null);
     }
+
+    // 모든 도서 정보 조회 API (페이징 지원)
+    @GetMapping
+    public Page<Book> getAllBooks(Pageable pageable) {
+        return bookRepository.findAll(pageable);
+    }
 }
 //>>> Clean Arch / Inbound Adaptor
