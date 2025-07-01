@@ -1,37 +1,31 @@
 package aivlecloudnative.domain;
 
-import jakarta.persistence.*; // 또는 jakarta.persistence.*
-// lombok 관련 임포트는 모두 제거하거나 주석 처리합니다.
+import jakarta.persistence.*; // JPA 관련 임포트
 
 @Entity
-@Table(name = "PointInquiry_table")
-// @Data // <-- 이 어노테이션 제거 또는 주석 처리
-// @NoArgsConstructor // <-- 이 어노테이션 제거 또는 주석 처리
-// @AllArgsConstructor // <-- 이 어노테이션 제거 또는 주석 처리
+@Table(name = "PointInquiryTable") // 테이블 이름을 명확히 지정하는 것이 좋습니다.
 public class PointInquiry {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO) // 또는 GenerationType.IDENTITY
+    @GeneratedValue(strategy = GenerationType.AUTO) // ID 자동 생성 전략
     private Long id;
+
     private Long userId;
+
     private Integer points;
-    private String transactionType; // GRANTED, DEDUCTED 등
 
-    // --- 수동으로 생성자 추가 ---
-    // 기본 생성자 (JPA 엔티티에 필수)
-    public PointInquiry() {}
+    // TransactionType 필드를 String으로 변경하고 @Enumerated(EnumType.STRING) 추가
+    // @Enumerated(EnumType.STRING) // Enum의 이름을 문자열로 DB에 저장하도록 지정
+    private String transactionType; // <-- 타입을 TransactionType enum에서 String으로 변경!
 
-    // 모든 필드를 포함하는 생성자 (선택 사항, 필요하다면 추가)
-    public PointInquiry(Long id, Long userId, Integer points, String transactionType) {
-        this.id = id;
-        this.userId = userId;
-        this.points = points;
-        this.transactionType = transactionType;
+    // private LocalDateTime transactionDate; // 필요시 주석 해제
+
+    public PointInquiry() {
+        // 기본 생성자
     }
-    // --- End 생성자 ---
 
+    // --- Getters and Setters ---
 
-    // --- 수동으로 Getter/Setter 추가 ---
     public Long getId() {
         return id;
     }
@@ -56,12 +50,20 @@ public class PointInquiry {
         this.points = points;
     }
 
+    // setTransactionType 메서드의 매개변수도 String으로 변경합니다.
     public String getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(String transactionType) {
+    public void setTransactionType(String transactionType) { // <-- 매개변수 타입을 String으로 변경
         this.transactionType = transactionType;
     }
-    // --- End Getter/Setter ---
+
+    // public LocalDateTime getTransactionDate() {
+    //     return transactionDate;
+    // }
+    //
+    // public void setTransactionDate(LocalDateTime transactionDate) {
+    //     this.transactionDate = transactionDate;
+    // }
 }

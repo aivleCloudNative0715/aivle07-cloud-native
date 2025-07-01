@@ -1,19 +1,10 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.domain.*;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.Optional; // Optional 임포트 추가 (findByUserId 때문)
 
-//<<< PoEAA / Repository
 @Repository
-@RepositoryRestResource(collectionResourceRel = "points", path = "points")
-public interface PointRepository
-    extends PagingAndSortingRepository<Point, Long> {
-        Optional<Point> findByUserId(Long userId);
-    }
+public interface PointRepository extends JpaRepository<Point, Long> {
+    Optional<Point> findByUserId(Long userId); // PolicyHandler에서 사용되므로 필요
+}

@@ -1,55 +1,78 @@
-package aivlecloudnative.infra;
+package aivlecloudnative.infra; // <-- 이 패키지 선언이 정확해야 합니다.
 
-import aivlecloudnative.domain.*;
-import java.util.Optional;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import aivlecloudnative.domain.Point;
+import aivlecloudnative.domain.PointRepository;
+import aivlecloudnative.domain.PointsDeducted; // PointsDeducted 이벤트 임포트
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException; // ResponseStatusException 임포트
-import org.springframework.http.HttpStatus; // HttpStatus 임포트
-import org.springframework.transaction.annotation.Transactional; // Spring의 @Transactional 임포트
-
-// 추가: PointDeductionCommand 임포트 (이미 있었지만 다시 확인)
-import aivlecloudnative.domain.PointDeductionCommand; 
+import org.springframework.transaction.annotation.Transactional; // @Transactional 임포트 추가
+import java.util.Optional;
 
 @RestController
-// @RequestMapping(value="/points") // 이 어노테이션은 현재 없으므로 주석 처리된 상태 유지
-@Transactional // Spring의 Transactional 사용
+@RequestMapping("/points")
 public class PointController {
 
     @Autowired
-    PointRepository pointRepository;
+    PointRepository pointRepository; // Point 엔티티의 CRUD를 담당하는 리포지토리 자동 주입
 
-    @RequestMapping(
-        value = "/points/{id}/pointdeduction",
-        method = RequestMethod.PUT,
-        consumes = "application/json;charset=UTF-8",
-        produces = "application/json;charset=UTF-8"
-    )
-    public Point pointDeduction(
-        @PathVariable(value = "id") Long id,
-        @RequestBody PointDeductionCommand command, // PointDeductionCommand를 @RequestBody로 받음
-        HttpServletRequest request,
-        HttpServletResponse response
-    ) throws Exception {
+    /**
+     * 포인트 차감 API
+     * PUT /points/{pointId}/pointdeduction
+     * @param pointId 차감할 포인트 엔티티의 ID
+     * @param pointsToDeduct 차감할 포인트 양
+     * @return 업데이트된 Point 엔티티 또는 오류 응답
+     */
+    @PutMapping("/{pointId}/pointdeduction")
+    @Transactional // 트랜잭션 관리
+    public ResponseEntity<?> pointDeduction(
+        @PathVariable Long pointId,
+        @RequestParam Integer pointsToDeduct // 요청 파라미터로 차감할 포인트 양 받기
+    ) {
         System.out.println("##### /point/pointDeduction called #####");
-        
-        // findById는 Optional을 반환하므로 .orElseThrow()를 사용하여 Point 객체를 가져옵니다.
-        // HttpStatus.NOT_FOUND를 사용하여 404 응답을 보낼 수 있습니다.
-        Point point = pointRepository.findById(id)
-                                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Point not found for id: " + id));
 
-        // point.pointDeduction() 메서드는 Integer deductionAmount를 인자로 받으므로,
-        // command 객체에서 해당 금액을 추출하여 전달해야 합니다.
-        // PointDeductionCommand 클래스에 getAmount() 또는 getDeductionAmount()와 같은 메서드가 있다고 가정합니다.
-        // 실제 PointDeductionCommand 클래스에 정의된 필드에 맞는 getter를 사용해야 합니다.
-        // 예를 들어 PointDeductionCommand에 private Integer amount; 필드가 있다면 command.getAmount() 사용
-        // 또는 private Integer deductionAmount; 필드가 있다면 command.getDeductionAmount() 사용
-        point.pointDeduction(command.getAmount()); // <-- PointDeductionCommand에 getAmount()가 있다고 가정
+        try {
+            System.out.println("##### Debug: Inside try block. Starting point entity lookup.");
+            // 1. Point 엔티티 조회
+            Optional<Point> optionalPoint = pointRepository.findById(pointId);
+            if (!optionalPoint.isPresent()) {
+                System.err.println("##### Error: Point with ID " + pointId + " not found.");
+                return new ResponseEntity<>("Point not found", HttpStatus.NOT_FOUND);
+            }
+            Point point = optionalPoint.get();
+            System.out.println("##### Debug: Point entity found. Current points: " + point.getCurrentPoints());
 
-        // pointRepository.save(point); // Point 클래스 내부에서 publishAfterCommit()이 호출되면서 저장될 것으로 예상되므로, 일반적으로 컨트롤러에서 save를 직접 호출하지 않습니다.
-                                         // 만약 도메인 이벤트 발행과 별도로 직접 저장이 필요하면 남겨두세요.
-        return point;
+            // 2. 포인트 차감 로직
+            if (point.getCurrentPoints() < pointsToDeduct) {
+                System.err.println("##### Error: Insufficient points for deduction. Current: " + point.getCurrentPoints() + ", Attempted deduction: " + pointsToDeduct);
+                return new ResponseEntity<>("Insufficient points", HttpStatus.BAD_REQUEST);
+            }
+            System.out.println("##### Debug: Points sufficient. Applying deduction.");
+
+            point.setCurrentPoints(point.getCurrentPoints() - pointsToDeduct);
+            pointRepository.save(point); // 변경된 포인트 저장
+            System.out.println("##### Point Deduction successful. User ID: " + point.getUserId() + ", New points: " + point.getCurrentPoints() + "\n");
+            System.out.println("##### Debug: Point entity saved. Preparing event.");
+
+            // 3. PointsDeducted 이벤트 발행
+            PointsDeducted pointsDeducted = new PointsDeducted(point);
+            pointsDeducted.setUserId(point.getUserId());
+            pointsDeducted.setDeductedPoints(Long.valueOf(pointsToDeduct));
+            pointsDeducted.setCurrentPoints(point.getCurrentPoints());
+            System.out.println("##### Debug: PointsDeducted event created. Publishing event.");
+            pointsDeducted.publishAfterCommit(); // 트랜잭션 커밋 후 이벤트 발행
+
+            System.out.println("##### Debug: publishAfterCommit called. Returning response.");
+            return new ResponseEntity<>(point, HttpStatus.OK);
+
+        } catch (Exception e) {
+            System.err.println("##### Error during point deduction (Caught in Controller): " + e.getMessage());
+            e.printStackTrace(); // 스택 트레이스도 함께 출력
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
+
+    // 다른 API 엔드포인트가 있다면 여기에 추가
+    // 예: 포인트 조회, 포인트 지급 등
 }
