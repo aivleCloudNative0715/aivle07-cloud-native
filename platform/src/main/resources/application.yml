@@ -7,7 +7,6 @@ spring:
 ---
 
 spring:
-  # profiles: default
   config:
     activate:
       on-profile: default
@@ -58,15 +57,14 @@ logging:
 
 api:
   url:
-    platform: localhost:8085 # <<< 이전 단계에서 8080으로 통일하기로 했으므로 수정
+    platform: localhost:8085
 
 server:
-  port: 8085 # <<< 8085 대신 8080으로 통일합니다.
+  port: 8085
 
 ---
 
 spring:
-  # profiles: docker
   config:
     activate:
       on-profile: docker
