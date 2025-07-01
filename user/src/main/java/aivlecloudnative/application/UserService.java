@@ -76,7 +76,6 @@ public class UserService {
         tokenBlacklistService.blacklist(token, exp);
     }
 
-    @Transactional
     public User requestSubscription(RequestSubscriptionCommand cmd) {
         User user = findUserByIdOrThrow(cmd.getUserId());
 
@@ -107,6 +106,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
     public void updateBookRead(BookViewed event) {
         User user = findUserByIdOrThrow(event.getUserId());
 

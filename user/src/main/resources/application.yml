@@ -22,9 +22,13 @@ spring:
         format_sql: true
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
+    function:
+      definition: updateBookRead
     stream:
+      default:
+        contentType: application/json
       bindings:
-        event-in:
+        updateBookRead-in-0:
           destination: aivlecloudnative
           group: user
           contentType: application/json
@@ -72,9 +76,11 @@ spring:
         format_sql: true
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
+    function:
+      definition: updateBookRead
     stream:
       bindings:
-        event-in:
+        updateBookRead-in-0:
           destination: aivlecloudnative
           group: user
           contentType: application/json

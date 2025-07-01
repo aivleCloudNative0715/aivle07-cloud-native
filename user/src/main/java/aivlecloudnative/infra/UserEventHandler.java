@@ -1,6 +1,8 @@
 package aivlecloudnative.infra;
 
 import aivlecloudnative.application.AbstractEventPublisher;
+import aivlecloudnative.domain.AccessRequestedAsSubscriber;
+import aivlecloudnative.domain.AccessRequestedWithPoints;
 import aivlecloudnative.domain.UserSignedUp;
 import aivlecloudnative.domain.UserSubscribed;
 import org.springframework.stereotype.Component;
@@ -23,5 +25,15 @@ public class UserEventHandler {
     @TransactionalEventListener
     public void handle(UserSubscribed event) {
         eventPublisher.publish("event-out", event, "UserSubscribed");
+    }
+
+    @TransactionalEventListener
+    public void handle(AccessRequestedWithPoints event) {
+        eventPublisher.publish("event-out", event, "AccessRequestedWithPoints");
+    }
+
+    @TransactionalEventListener
+    public void handle(AccessRequestedAsSubscriber event) {
+        eventPublisher.publish("event-out", event, "AccessRequestedAsSubscriber");
     }
 }

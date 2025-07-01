@@ -34,7 +34,7 @@ public class User {
     private Long subscriptionDueDate;
 
     @ElementCollection
-    private List<Long> myBookHistory;
+    private List<Long> myBookHistory = new ArrayList<>();
 
     private Boolean isKt;
 
@@ -54,10 +54,6 @@ public class User {
     }
 
     public void addBookToHistory(Long bookId) {
-        if (this.myBookHistory == null) {
-            this.myBookHistory = new ArrayList<>();
-        }
-
         if (!this.myBookHistory.contains(bookId)) {
             this.myBookHistory.add(bookId);
         }
