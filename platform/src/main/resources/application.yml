@@ -22,38 +22,34 @@ spring:
       kafka:
         binder:
           brokers: localhost:9092
-        streams:
-          binder:
-            configuration:
-              default:
-                key:
-                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                value:
-                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-      # <<< 이 부분을 변경합니다. >>>
-      function: # <<< 이 섹션을 추가
-        definition: consumerAutoPublished;consumerAccessRequested;consumerPointsDeducted;consumerBookViewed # 정의할 모든 Consumer 함수 이름 나열
-      bindings:
-        # event-in: # <<< 제거
-        consumerAutoPublished-in-0: # <<< 새로운 바인딩 이름
-          destination: aivlecloudnative
-          group: platform
-          contentType: application/json
-        consumerAccessRequested-in-0: # <<< 새로운 바인딩 이름
-          destination: aivlecloudnative
-          group: platform
-          contentType: application/json
-        consumerPointsDeducted-in-0: # <<< 새로운 바인딩 이름
-          destination: aivlecloudnative
-          group: platform
-          contentType: application/json
-        consumerBookViewed-in-0: # <<< 새로운 바인딩 이름
-          destination: aivlecloudnative
-          group: platform
-          contentType: application/json
-        # event-out: # <<< 제거
-        #   destination: aivlecloudnative
-        #   contentType: application/json
+        stream:
+          function:
+            definition: consumerAutoPublished;consumerAccessRequested;consumerPointsDeducted;consumerBookViewed
+          bindings:
+            consumerAutoPublished-in-0:
+              destination: bookwork.auto-published # <<< aiservice가 발행하는 토픽 이름으로 변경!
+              group: platform
+              contentType: application/json
+              consumer:
+                auto-offset-reset: earliest
+            consumerAccessRequested-in-0:
+              destination: bookwork.access-requested # <<< 사용자 관리에서 오는 토픽 이름 (예시, 팀과 협의)
+              group: platform
+              contentType: application/json
+              consumer:
+                auto-offset-reset: earliest
+            consumerPointsDeducted-in-0:
+              destination: bookwork.points-deducted # <<< 포인트 서비스에서 오는 토픽 이름 (예시, 팀과 협의)
+              group: platform
+              contentType: application/json
+              consumer:
+                auto-offset-reset: earliest
+            consumerBookViewed-in-0:
+              destination: bookwork.book-viewed # <<< platform 내부에서 발행하는 토픽 이름 (예시, 팀과 협의)
+              group: platform
+              contentType: application/json
+              consumer:
+                auto-offset-reset: earliest
 
 logging:
   level:
@@ -93,26 +89,34 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-      function: # <<< 이 섹션을 추가
-        definition: consumerAutoPublished;consumerAccessRequested;consumerPointsDeducted;consumerBookViewed
-      bindings:
-        consumerAutoPublished-in-0:
-          destination: aivlecloudnative
-          group: platform
-          contentType: application/json
-        consumerAccessRequested-in-0:
-          destination: aivlecloudnative
-          group: platform
-          contentType: application/json
-        consumerPointsDeducted-in-0:
-          destination: aivlecloudnative
-          group: platform
-          contentType: application/json
-        consumerBookViewed-in-0:
-          destination: aivlecloudnative
-          group: platform
-          contentType: application/json
+          function:
+            definition: consumerAutoPublished;consumerAccessRequested;consumerPointsDeducted;consumerBookViewed
+          bindings:
+            consumerAutoPublished-in-0:
+              destination: bookwork.auto-published # <<< aiservice가 발행하는 토픽 이름으로 변경!
+              group: platform
+              contentType: application/json
+              consumer:
+                auto-offset-reset: earliest
+            consumerAccessRequested-in-0:
+              destination: bookwork.access-requested # <<< 사용자 관리에서 오는 토픽 이름 (예시, 팀과 협의)
+              group: platform
+              contentType: application/json
+              consumer:
+                auto-offset-reset: earliest
+            consumerPointsDeducted-in-0:
+              destination: bookwork.points-deducted # <<< 포인트 서비스에서 오는 토픽 이름 (예시, 팀과 협의)
+              group: platform
+              contentType: application/json
+              consumer:
+                auto-offset-reset: earliest
+            consumerBookViewed-in-0:
+              destination: bookwork.book-viewed # <<< platform 내부에서 발행하는 토픽 이름 (예시, 팀과 협의)
+              group: platform
+              contentType: application/json
+              consumer:
+                auto-offset-reset: earliest
 
 api:
   url:
-    platform: platform:8080 # Docker 환경에서는 컨테이너 이름을 사용 (예: platform)
+    platform: platform:8085 # Docker 환경에서는 컨테이너 이름을 사용 (예: platform)
