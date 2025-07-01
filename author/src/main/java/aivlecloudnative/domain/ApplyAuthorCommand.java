@@ -5,4 +5,8 @@ import java.util.*;
 import lombok.Data;
 
 @Data
-public class ApplyAuthorCommand {}
+public class ApplyAuthorCommand {
+    private String authorName;
+    private String authorEmail;
+    private String portfolio;
+}
