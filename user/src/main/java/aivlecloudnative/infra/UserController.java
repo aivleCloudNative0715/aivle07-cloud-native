@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 //<<< Clean Arch / Inbound Adaptor
@@ -27,6 +28,14 @@ public class UserController {
     @PostMapping("/login")
     public LoginResponse login(@RequestBody @Valid LoginCommand cmd) {
         return userService.login(cmd);
+    }
+
+    /* ---------- 로그아웃 ---------- */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);   // "Bearer " 제거
+        userService.logout(token);
+        return ResponseEntity.ok().build();
     }
 
     /* ---------- 구독 신청 ---------- */

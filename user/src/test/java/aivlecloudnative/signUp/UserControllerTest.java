@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.mockito.Mockito.never;
 
 import aivlecloudnative.application.UserService;
 import aivlecloudnative.domain.LoginCommand;
@@ -96,6 +97,33 @@ class UserControllerTest {
                 .andExpect(content().json(objectMapper.writeValueAsString(response)));
 
         Mockito.verify(userService).login(any(LoginCommand.class));
+    }
+
+    // -----------------------------
+    // ✅ 로그아웃 테스트
+    // -----------------------------
+
+    @Test
+    @DisplayName("로그아웃 성공 시 200 응답")
+    void logout_should_return200_when_validToken() throws Exception {
+        String token = "Bearer mock.jwt.token";
+
+        mockMvc.perform(post("/users/logout")
+                        .header("Authorization", token))
+                .andExpect(status().isOk());
+
+        // 실제 토큰 값만 전달되었는지 검증
+        Mockito.verify(userService).logout("mock.jwt.token");
+    }
+
+    @Test
+    @DisplayName("로그아웃 실패 시 400 응답 (Authorization 헤더 누락)")
+    void logout_should_return400_when_noAuthHeader() throws Exception {
+        mockMvc.perform(post("/users/logout"))
+                .andExpect(status().isBadRequest()); // 또는 401로 처리하는 경우엔 isUnauthorized()
+
+        // logout() 호출이 없어야 함
+        Mockito.verify(userService, never()).logout(any());
     }
 
     // -----------------------------

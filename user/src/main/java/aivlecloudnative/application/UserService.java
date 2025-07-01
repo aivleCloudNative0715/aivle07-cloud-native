@@ -34,6 +34,7 @@ public class UserService {
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Transactional
     public User signUp(SignUpCommand cmd) {
@@ -65,6 +66,12 @@ public class UserService {
 
         // ✅ 토큰 + 사용자 정보 응답
         return new LoginResponse(token, "Bearer", user.getId(), user.getEmail());
+    }
+
+    @Transactional
+    public void logout(String token) {
+        long exp = jwtTokenProvider.getExpiration(token); // 남은 만료 시간(ms)
+        tokenBlacklistService.blacklist(token, exp);
     }
 
     @Transactional

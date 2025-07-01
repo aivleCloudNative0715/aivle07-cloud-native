@@ -1,5 +1,6 @@
 package aivlecloudnative.config.kafka;
 
+import aivlecloudnative.application.TokenBlacklistService;
 import aivlecloudnative.infra.JwtAuthenticationFilter;
 import aivlecloudnative.infra.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -38,7 +40,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint((req, res, e) ->
                                 res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
 
-        http.addFilterBefore(new JwtAuthenticationFilter(jwtProvider),
+        http.addFilterBefore(new JwtAuthenticationFilter(jwtProvider, tokenBlacklistService),
                 UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
