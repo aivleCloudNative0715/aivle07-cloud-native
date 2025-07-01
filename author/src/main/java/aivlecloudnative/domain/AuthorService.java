@@ -1,3 +1,9 @@
+import aivlecloudnative.domain.Author;
+import org.springframework.stereotype.Service;
+import aivlecloudnative.domain.AuthorRepository;
+import aivlecloudnative.domain.ApplyAuthorCommand;
+import aivlecloudnative.domain.JudgeAuthorCommand;
+
 @Service
 public class AuthorService {
 
@@ -26,3 +32,4 @@ public class AuthorService {
         authorRepository.save(author);
     }
 }
+
