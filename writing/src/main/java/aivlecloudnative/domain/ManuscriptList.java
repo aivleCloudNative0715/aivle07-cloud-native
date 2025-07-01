@@ -3,29 +3,38 @@ package aivlecloudnative.domain;
 import jakarta.persistence.Entity; // 변경: javax -> jakarta
 import jakarta.persistence.Table;  // 변경: javax -> jakarta
 import jakarta.persistence.Id;     // 변경: javax -> jakarta
-import jakarta.persistence.GeneratedValue; 
-import jakarta.persistence.GenerationType; 
-import jakarta.persistence.Column; 
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import java.time.LocalDateTime;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 //<<< EDA / CQRS
 @Entity
 @Table(name = "ManuscriptList_table")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ManuscriptList {
 
     @Id
-    //@GeneratedValue(strategy=GenerationType.AUTO) 
-    private Long id;
-
     private Long manuscriptId;
-    private String manuscriptTitle;
-    private String manuscriptContent;
-    private String manuscriptStatus;
-    private String lastModifiedAt; 
-    private String authorId; // 오타 (autor -> author)
-    // private String summary;
-    // private String keywords;
 
+    @Column(nullable = false)
+    private String authorId;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
+    private String keywords;
+    private String summary;
+
+    private String status;
+    private LocalDateTime lastModifiedAt;
 }

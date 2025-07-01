@@ -1,41 +1,39 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.domain.*;
 import aivlecloudnative.infra.AbstractEvent;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.*;
 
 //<<< DDD / Domain Event
-@Data
-@ToString
-@EqualsAndHashCode(callSuper = false)
-public class ManuscriptRegisterd extends AbstractEvent {
 
-    private Long id;
+@Data
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+public class ManuscriptRegistered extends AbstractEvent {
+
+    private Long manuscriptId;
     private String authorId;
     private String title;
     private String content;
-    private String status;
-    private LocalDateTime lastModifiedAt; // Date -> LocalDateTime
     private String summary;
     private String keywords;
+    private String status;
+    private LocalDateTime lastModifiedAt;
 
-    public ManuscriptRegisterd(Manuscript aggregate) {
-
-        super(aggregate);
-        this.id = aggregate.getId();
+    public ManuscriptRegistered(Manuscript aggregate) {
+        super();
+        this.manuscriptId = aggregate.getId();
         this.authorId = aggregate.getAuthorId();
         this.title = aggregate.getTitle();
         this.content = aggregate.getContent();
-        this.status = aggregate.getStatus();
-        this.lastModifiedAt = aggregate.getLastModifiedAt();
         this.summary = aggregate.getSummary();
         this.keywords = aggregate.getKeywords();
+        this.status = aggregate.getStatus();
+        this.lastModifiedAt = aggregate.getLastModifiedAt();
     }
-
-    public ManuscriptRegisterd() {
-        super();
+    @Override
+    public String getEventType() {
+        return "ManuscriptRegistered";
     }
 }
 //>>> DDD / Domain Event
