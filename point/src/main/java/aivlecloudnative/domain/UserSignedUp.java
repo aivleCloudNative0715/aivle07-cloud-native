@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // 추가
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserSignedUp extends AbstractEvent {
-    private String userId;
+    private Long userId;
     private String email;
     private String userName;
     private String message;

@@ -183,7 +183,7 @@ public class PolicyHandler {
                 AccessRequestedWithPoints accessRequest = objectMapper.treeToValue(jsonNode, AccessRequestedWithPoints.class);
                 log.info("##### Transformed AccessRequestedWithPoints Event: {}", accessRequest);
 
-                final String userId = accessRequest.getUserId();
+                final Long userId = accessRequest.getUserId();
                 final String bookId = accessRequest.getBookId();
 
                 Mono.fromCallable(() -> {

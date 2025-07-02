@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PointsDeducted extends AbstractEvent {
     private Long id;
-    private String userId;
+    private Long userId;
     private String bookId;
     private Long deductedPoints;
     private Long currentPoints;

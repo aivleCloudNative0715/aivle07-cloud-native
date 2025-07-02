@@ -25,7 +25,7 @@ public class PointController {
 
     // userId로 유저의 포인트 조회하는 API
     @GetMapping("/{userId}")
-    public ResponseEntity<PointQueryResponse> getPointByUserId(@PathVariable String userId) {
+    public ResponseEntity<PointQueryResponse> getPointByUserId(@PathVariable Long userId) {
         log.info("Attempting to retrieve points for userId: {}", userId);
 
         return pointRepository.findByUserId(userId)

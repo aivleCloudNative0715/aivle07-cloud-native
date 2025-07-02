@@ -12,6 +12,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AccessRequestedWithPoints extends AbstractEvent {
-    private String userId;
+    private Long userId;
     private String bookId;
 }
