@@ -14,6 +14,7 @@ public class UserSignedUp extends AbstractEvent {
     private String userName;
     private String message;
     private Boolean isKt;
+    private Boolean isAuthor;
 
     public UserSignedUp(User aggregate) {
         super(aggregate);
@@ -23,6 +24,7 @@ public class UserSignedUp extends AbstractEvent {
         this.email = aggregate.getEmail();
         this.userName = aggregate.getUserName();
         this.isKt = aggregate.getIsKt();
+        this.isAuthor = aggregate.getIsAuthor();
     }
 
     public UserSignedUp() {

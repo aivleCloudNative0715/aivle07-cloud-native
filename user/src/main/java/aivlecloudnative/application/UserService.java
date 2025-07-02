@@ -2,6 +2,7 @@ package aivlecloudnative.application;
 
 import aivlecloudnative.domain.AccessRequestedAsSubscriber;
 import aivlecloudnative.domain.AccessRequestedWithPoints;
+import aivlecloudnative.domain.AuthorAccepted;
 import aivlecloudnative.domain.BookViewed;
 import aivlecloudnative.domain.LoginCommand;
 import aivlecloudnative.domain.LoginResponse;
@@ -67,7 +68,13 @@ public class UserService {
         String token = jwtTokenProvider.createToken(user.getId(), List.of("ROLE_USER"));
 
         // ✅ 토큰 + 사용자 정보 응답
-        return new LoginResponse(token, "Bearer", user.getId(), user.getEmail());
+        return new LoginResponse(
+                token,
+                "Bearer",
+                user.getId(),
+                user.getEmail(),
+                user.getIsAuthor()
+        );
     }
 
     @Transactional
@@ -145,5 +152,8 @@ public class UserService {
         User user = findUserByIdOrThrow(id);
 
         return user.getHasActiveSubscription();
+    }
+
+    public void authorApproved(AuthorAccepted authorAccepted) {
     }
 }

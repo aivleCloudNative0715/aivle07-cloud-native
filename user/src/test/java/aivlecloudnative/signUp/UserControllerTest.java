@@ -85,7 +85,13 @@ class UserControllerTest {
         cmd.setEmail("user@example.com");
         cmd.setPassword("1234");
 
-        LoginResponse response = new LoginResponse("mock-token", "Bearer", 1L, "user@example.com");
+        LoginResponse response = new LoginResponse(
+                "mock-token",
+                "Bearer",
+                1L,
+                "user@example.com",
+                false
+        );
 
         Mockito.when(userService.login(any(LoginCommand.class)))
                 .thenReturn(response);

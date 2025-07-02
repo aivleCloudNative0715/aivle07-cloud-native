@@ -40,6 +40,8 @@ public class User {
 
     private String password;
 
+    private Boolean isAuthor;
+
     public static UserRepository repository() {
         return UserApplication.applicationContext.getBean(
             UserRepository.class
@@ -51,6 +53,7 @@ public class User {
         this.email = signUpCommand.getEmail();
         this.isKt = signUpCommand.getIsKt();
         this.hasActiveSubscription = false;
+        this.isAuthor = false;
     }
 
     public void addBookToHistory(Long bookId) {
