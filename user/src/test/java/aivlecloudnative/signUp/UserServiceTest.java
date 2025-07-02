@@ -76,13 +76,21 @@ public class UserServiceTest {
 
         when(userRepository.existsByEmail(any())).thenReturn(false);
         when(passwordEncoder.encode(cmd.getPassword())).thenReturn("encoded1234");
-        when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(userRepository.save(any())).thenAnswer(i -> {
+            User u = i.getArgument(0);
+            u.setId(1L); // id 설정 필요 시
+            return u;
+        });
 
-        User saved = userService.signUp(cmd);
+        SignUpResponse response = userService.signUp(cmd);
 
-        Assertions.assertEquals("encoded1234", saved.getPassword());
+        Assertions.assertEquals("user@example.com", response.email());
+        Assertions.assertEquals("홍길동", response.username());
+        Assertions.assertEquals(1L, response.userId());
+
         verify(outboxMessageRepository).save(any(OutboxMessage.class));
     }
+
 
     @Test
     @DisplayName("로그인 성공 시 JWT 포함 LoginResponse 반환")
@@ -102,16 +110,15 @@ public class UserServiceTest {
 
         when(userRepository.findByEmail(cmd.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
-        when(jwtTokenProvider.createToken(eq(user.getId()), any())).thenReturn(fakeToken);
+        when(jwtTokenProvider.createToken(eq(user.getId()), eq(user.getEmail()), eq(false), eq(false)))
+                .thenReturn(fakeToken);
 
         LoginResponse response = userService.login(cmd);
 
         Assertions.assertEquals(fakeToken, response.accessToken());
         Assertions.assertEquals("Bearer", response.tokenType());
-        Assertions.assertEquals(user.getId(), response.userId());
-        Assertions.assertEquals(user.getEmail(), response.email());
 
-        verify(jwtTokenProvider).createToken(eq(user.getId()), any());
+        verify(jwtTokenProvider.createToken(eq(user.getId()), eq(user.getEmail()), eq(false), eq(false)));
     }
 
     @Test
@@ -252,7 +259,7 @@ public class UserServiceTest {
         user.setId(1L);
         user.setIsAuthor(false);
 
-        AuthorAccepted event = new AuthorAccepted(1L);
+        AuthorAccepted event = new AuthorAccepted(1L, 2L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 

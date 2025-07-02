@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import AppHeader from "../components/AppHeader";
 import { useAuth } from "../context/AuthContext";
+import AuthorApplyModal from "../pages/AuthorApplyModal";
 
 export default function MyPage() {
     const { user } = useAuth();
@@ -10,9 +11,12 @@ export default function MyPage() {
     const [error, setError] = useState(null);
     const API_BASE = process.env.REACT_APP_API_URL;
     const [subscribing, setSubscribing] = useState(false);
+    const [showAuthorModal, setShowAuthorModal] = useState(false);
+    const [applyingAuthor, setApplyingAuthor] = useState(false);
+    const [authorStatus, setAuthorStatus] = useState(null); // 작가 신청 상태
 
     const handleSubscribe = async () => {
-        if (subscribing) return;           // 중복 클릭 방지
+        if (subscribing) return;
         setSubscribing(true);
 
         try {
@@ -27,10 +31,8 @@ export default function MyPage() {
 
             if (!res.ok) throw new Error("구독 신청 실패");
 
-            // 성공 시 최신 사용자 정보로 덮어쓰기 (옵션)
-            const updated = await res.json();      // { id, email, isAuthor, hasActiveSubscription, ... }
+            const updated = await res.json();
             setDetail((prev) => ({ ...prev, subscribed: updated.hasActiveSubscription }));
-
 
             alert("구독 신청이 완료되었습니다!");
 
@@ -42,6 +44,36 @@ export default function MyPage() {
         }
     };
 
+    const handleSubmitAuthorApply = async ({ bio, portfolio, representativeWork }) => {
+        setApplyingAuthor(true);
+        try {
+            const res = await fetch(`${API_BASE}/authors/apply`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.token}`,
+                },
+                body: JSON.stringify({
+                    authorEmail: user.email,
+                    authorName: user.username,
+                    bio,
+                    representativeWork,
+                    portfolio,
+                }),
+            });
+
+            if (!res.ok) throw new Error("작가 신청 실패");
+
+            alert("✅ 작가 신청이 완료되었습니다!");
+            window.location.reload();
+        } catch (e) {
+            alert(e.message || "❌ 신청 중 오류 발생");
+        } finally {
+            setApplyingAuthor(false);
+        }
+    };
+
+
     useEffect(() => {
         if (!user || !user.token) return;
 
@@ -49,18 +81,35 @@ export default function MyPage() {
 
         (async () => {
             try {
-                const res = await fetch(`${API_BASE}/users/${user.userId}`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `${user.tokenType ?? "Bearer"} ${user.token}`,
-                    },
-                    signal: controller.signal,
-                });
+                const [userRes, authorRes] = await Promise.all([
+                    fetch(`${API_BASE}/users/${user.userId}`, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `${user.tokenType ?? "Bearer"} ${user.token}`,
+                        },
+                        signal: controller.signal,
+                    }),
+                    fetch(`${API_BASE}/authors/my-data`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${user.token}`,
+                        },
+                        signal: controller.signal,
+                    }),
+                ]);
 
-                if (!res.ok) throw new Error("사용자 정보를 불러올 수 없습니다.");
-                const data = await res.json();
-                setDetail(data);
+                if (!userRes.ok) throw new Error("사용자 정보를 불러올 수 없습니다.");
+                const userData = await userRes.json();
+                setDetail(userData);
+
+                if (authorRes.ok) {
+                    const authorData = await authorRes.json();
+                    setAuthorStatus(authorData.status); // APPLIED, ACCEPTED, REJECTED
+                } else {
+                    setAuthorStatus(null); // 신청 이력 없음
+                }
+
             } catch (e) {
                 if (e.name !== "AbortError") setError(e.message);
             } finally {
@@ -70,6 +119,8 @@ export default function MyPage() {
 
         return () => controller.abort();
     }, [API_BASE, user]);
+
+
 
     if (!user) {
         return (
@@ -140,11 +191,25 @@ export default function MyPage() {
                         <p><strong>📧 이메일:</strong> {email}</p>
                         {/*TODO: 작가 신청 버튼 연동 & 새로고침 필요*/}
                         <div className="flex items-center justify-between">
-                            <p><strong>✍️ 작가 여부:</strong> {detail.isAuthor ? "작가입니다" : "아직 아닙니다"}</p>
-                            {!detail.isAuthor && (
-                                <button className="ml-2 px-3 py-1 bg-green-600 text-white text-sm rounded-md">
-                                    작가 신청
-                                </button>
+                            <p><strong>✍️ 작가 여부:</strong> {authorStatus === "ACCEPTED" ? "작가입니다" : "아직 아닙니다"}</p>
+
+                            {(authorStatus === null || authorStatus === "REJECTED") && (
+                                <>
+                                    <button
+                                        className="ml-2 px-3 py-1 bg-green-600 text-white text-sm rounded-md"
+                                        onClick={() => setShowAuthorModal(true)}
+                                    >
+                                        작가 신청
+                                    </button>
+
+                                    {showAuthorModal && (
+                                        <AuthorApplyModal
+                                            onClose={() => setShowAuthorModal(false)}
+                                            onSubmit={handleSubmitAuthorApply}
+                                            isSubmitting={applyingAuthor}
+                                        />
+                                    )}
+                                </>
                             )}
                         </div>
 

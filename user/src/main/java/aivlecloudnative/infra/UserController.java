@@ -20,7 +20,7 @@ public class UserController {
 
     /* ---------- 회원가입 ---------- */
     @PostMapping("/signup")
-    public User signUp(@RequestBody @Valid SignUpCommand cmd) {
+    public SignUpResponse signUp(@RequestBody @Valid SignUpCommand cmd) {
         return userService.signUp(cmd);
     }
 

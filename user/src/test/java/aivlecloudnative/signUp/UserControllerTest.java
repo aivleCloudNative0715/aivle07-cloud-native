@@ -89,10 +89,8 @@ class UserControllerTest {
         LoginResponse response = new LoginResponse(
                 "mock-token",
                 "Bearer",
-                1L,
-                "user@example.com",
-                false,
-                false
+                "test"
+
         );
 
         Mockito.when(userService.login(any(LoginCommand.class)))
