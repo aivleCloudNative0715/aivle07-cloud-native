@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import AppHeader from "@/components/AppHeader";
+import { Button } from "../components/ui/button";
+import AppHeader from "../components/AppHeader";
 
-export default function AllBooksPage({ isLoggedIn, isAuthor }) {
+export default function AllBooksPage({ isLoggedIn = false, isAuthor = false }) {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -36,7 +36,9 @@ export default function AllBooksPage({ isLoggedIn, isAuthor }) {
                     />
 
                     {isAuthor && (
-                        <Button className="ml-4" onClick={() => navigate("/manuscript")}>원고 등록</Button>
+                        <Button className="ml-4" onClick={() => navigate("/manuscript")}>
+                            원고 등록
+                        </Button>
                     )}
                 </div>
 

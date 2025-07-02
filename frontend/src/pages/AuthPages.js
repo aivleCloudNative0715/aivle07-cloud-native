@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { motion } from "framer-motion";
+import BackButton from "../components/ui/backButton";
 
 export function LoginPage() {
     const [email, setEmail] = useState("");
@@ -19,7 +20,8 @@ export function LoginPage() {
             animate={{ opacity: 1, y: 0 }}
         >
             <Card className="shadow-lg">
-                <CardHeader>
+                <CardHeader className="flex flex-col gap-2">
+                    <BackButton />
                     <h1 className="text-xl font-bold">로그인</h1>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
@@ -66,7 +68,8 @@ export function SignUpPage() {
             animate={{ opacity: 1, y: 0 }}
         >
             <Card className="shadow-lg">
-                <CardHeader>
+                <CardHeader className="flex flex-col gap-2">
+                    <BackButton />
                     <h1 className="text-xl font-bold">회원가입</h1>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">

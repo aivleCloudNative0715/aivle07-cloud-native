@@ -1,7 +1,5 @@
-// src/components/ui/input.js
-
 import React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "lib/utils";
 
 /**
  * Input 컴포넌트 - 기본 텍스트 입력 필드

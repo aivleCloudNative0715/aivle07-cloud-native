@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import AppHeader from "@/components/AppHeader";
+import { Button } from "../components/ui/button";
+import AppHeader from "../components/AppHeader";
 
 export default function MainPage({ isLoggedIn }) {
     const navigate = useNavigate();
@@ -30,13 +30,6 @@ export default function MainPage({ isLoggedIn }) {
                         <Button onClick={() => navigate("/books")}>전체 책 보기</Button>
                     </div>
                 </section>
-
-                {!isLoggedIn && (
-                    <div className="flex justify-center gap-4">
-                        <Button variant="ghost" onClick={() => navigate("/login")}>로그인</Button>
-                        <Button variant="ghost" onClick={() => navigate("/signup")}>회원가입</Button>
-                    </div>
-                )}
             </main>
         </div>
     );

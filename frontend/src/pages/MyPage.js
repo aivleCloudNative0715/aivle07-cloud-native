@@ -1,5 +1,5 @@
 import React from "react";
-import AppHeader from "@/components/AppHeader";
+import AppHeader from "../components/AppHeader";
 
 export default function MyPage() {
     // TODO: 실제 사용자 정보는 API 또는 context에서 불러오세요

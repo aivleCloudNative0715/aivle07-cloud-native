@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
 import { Loader2, CheckCircle2, UploadCloud } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -15,13 +15,12 @@ import { motion } from "framer-motion";
 export default function ManuscriptEditor() {
     const [title, setTitle] = useState("");
     const [body, setBody] = useState("");
-    const [file, setFile] = useState<File | null>(null);
-    const [status, setStatus] = useState<
-    "idle" | "saving" | "saved" | "publishing" | "published"
-    >("idle");
+    const [file, setFile] = useState(null);
+    // "idle" | "saving" | "saved" | "publishing" | "published"
+    const [status, setStatus] = useState("idle");
 
     /** 파일 선택 */
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e) => {
         if (e.target.files?.[0]) {
             setFile(e.target.files[0]);
         }
