@@ -1,10 +1,5 @@
-import aivlecloudnative.domain.Author;
-import aivlecloudnative.domain.AuthorRepository;
-import aivlecloudnative.domain.ApplyAuthorCommand;
-import aivlecloudnative.domain.JudgeAuthorCommand;
-import aivlecloudnative.domain.AuthorApplied;
-import aivlecloudnative.domain.AuthorAccepted;
-import aivlecloudnative.domain.AuthorRejected;
+package aivlecloudnative.domain;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
