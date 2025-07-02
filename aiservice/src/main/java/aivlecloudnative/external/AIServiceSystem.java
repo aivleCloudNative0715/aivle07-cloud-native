@@ -125,26 +125,33 @@ public class AIServiceSystem {
     /**
      * AI API 호출 메서드: DALL-E 이미지 생성 -> 카테고리/가격 산정 순으로 진행
      * PolicyHandler에서 호출될 예정
-     * 
+     *
      * @param ManuscriptId 원고 ID
      * @param title        도서 제목
      * @param summary      도서 요약
      * @param keywords     도서 키워드
+     * @param authorId     저자 ID (새로 추가됨)
      * @param authorName   저자 이름
      * @param content      도서 상세 내용
      * @return AIResponse AI 서비스 결과 (표지 URL, 전자책 URL, 카테고리, 가격)
      */
-    public AIResponse callGPTApi(Long ManuscriptId, String title, String summary, String keywords, String authorName,
+    public AIResponse callGPTApi(
+            Long ManuscriptId,
+            String title,
+            String summary,
+            String keywords,
+            String authorId, // <--- authorId 파라미터 추가
+            String authorName,
             String content) {
+
         System.out.println("### AI 서비스 호출 시작...");
 
         AIResponse finalResponse = new AIResponse();
 
         // 1. **DALL-E를 사용하여 표지 이미지 생성 (전달받은 summary를 기반으로)**
-        // 요약 생성 단계는 제거하고, 전달받은 summary 값을 바로 사용합니다.
         String coverPrompt = String.format(
                 "\"%s\" 제목을 표지 상단에 넣고, 아래 요약에 어울리는 배경을 가진 책 앞표지 이미지를 만들어줘. 요약: %s. 키워드: %s. 상세 내용: %s",
-                title, summary, keywords, content); // 전달받은 summary 사용
+                title, summary, keywords, content);
 
         String coverImageUrl = callImageGenerationApi(coverPrompt);
         finalResponse.setCoverImageUrl(coverImageUrl);
@@ -155,9 +162,9 @@ public class AIServiceSystem {
         System.out.println("### 생성된 전자책 URL: " + finalResponse.getEbookUrl());
 
         // 3. **카테고리 및 가격 산정 (GPT Chat Completion API 사용)**
-        // 전달받은 summary를 카테고리/가격 산정 프롬프트에 그대로 활용합니다.
         String chatPrompt = String.format(
-                "제목: \"%s\", 요약: \"%s\", 키워드: \"%s\", 저자: \"%s\", 상세 내용: \"%s\"\n" +
+                "제목: \"%s\", 요약: \"%s\", 키워드: \"%s\", 저자 ID: \"%s\", 저자: \"%s\", 상세 내용: \"%s\"\n" + // <--- 저자 ID 프롬프트에
+                                                                                                    // 추가
                         "이 책에 대해 다음을 분석하고 응답은 JSON 형식으로만 줘:\n" +
                         "1. 가장 적합한 카테고리를 다음 중 하나로 선택해줘: 소설, 기술, 역사, 자기계발, 어린이, 문학, SF, 기타\n" +
                         "2. 이 전자책의 예상 가격을 한국 원화(KRW)로 10000원 단위로 알려줘. (예: 25000). 책의 내용, 분량(상세 내용 기준), 일반적인 전자책 시장 가격을 고려해줘.\n"
@@ -168,7 +175,7 @@ public class AIServiceSystem {
                         "   \"price\": 예상 가격 (숫자만)\n" +
                         "}\n" +
                         "```",
-                title, summary, keywords, authorName, content); // 전달받은 summary 사용
+                title, summary, keywords, authorId, authorName, content); // <--- authorId 파라미터 전달
 
         ChatCompletionResponse chatResponse = callChatCompletionApi(chatPrompt);
         if (chatResponse != null && chatResponse.getChoices() != null && !chatResponse.getChoices().isEmpty()) {
@@ -204,7 +211,7 @@ public class AIServiceSystem {
 
     /**
      * GPT Chat Completion API를 호출하는 내부 메서드
-     * 
+     *
      * @param prompt 사용자 프롬프트
      * @return ChatCompletionResponse GPT 응답 DTO
      */
@@ -224,7 +231,7 @@ public class AIServiceSystem {
 
     /**
      * DALL-E 3 Image Generation API를 호출하는 내부 메서드
-     * 
+     *
      * @param prompt 이미지 생성 프롬프트
      * @return String 생성된 이미지 URL (실패 시 플레이스홀더 URL)
      */

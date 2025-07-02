@@ -20,6 +20,7 @@ public class AutoPublished extends AbstractEvent {
     private Long manuscriptId;
     private String summary;
     private String keywords;
+    private String authorId; // <--- 이 부분을 추가합니다!
     private String authorName;
 
     private String coverImageUrl;
@@ -31,6 +32,8 @@ public class AutoPublished extends AbstractEvent {
 
     public AutoPublished(BookWork aggregate) {
         super();
-        BeanUtils.copyProperties(aggregate, this); // BookWork의 필드를 AutoPublished로 복사
+        // BookWork 객체의 모든 필드가 AutoPublished 객체의 동일한 이름의 필드로 복사됩니다.
+        // 이제 BookWork에 authorId가 있다면, AutoPublished의 authorId로 자동 복사됩니다.
+        BeanUtils.copyProperties(aggregate, this);
     }
 }

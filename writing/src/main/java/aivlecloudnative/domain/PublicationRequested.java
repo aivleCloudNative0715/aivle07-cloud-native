@@ -5,22 +5,24 @@ import aivlecloudnative.infra.AbstractEvent;
 import java.time.LocalDate;
 import java.util.*;
 import lombok.*;
+import lombok.Data;
 
 //<<< DDD / Domain Event
 @Data
 @ToString
+@EqualsAndHashCode(callSuper = false)
 public class PublicationRequested extends AbstractEvent {
 
-    private Long manuscriptIdId;
+    private Long manuscriptId;
     private String title;
     private String content;
     private String summary;
     private String keywords;
-    private String authorName;
+    private String authorId;
 
     public PublicationRequested(Manuscript aggregate) {
-        super(aggregate);
-        this.manuscriptIdId = aggregate.getManuscriptIdId();
+        super();
+        this.manuscriptId = aggregate.getId();
         this.authorId = aggregate.getAuthorId();
         this.title = aggregate.getTitle();
         this.content = aggregate.getContent();
@@ -30,6 +32,11 @@ public class PublicationRequested extends AbstractEvent {
 
     public PublicationRequested() {
         super();
+    }
+
+    @Override
+    public String getEventType() {
+        return "PublicationRequested";
     }
 }
 //>>> DDD / Domain Event

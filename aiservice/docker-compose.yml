@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Zookeeper 서비스 (Kafka의 의존성)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper # 호스트명 설정
+    ports:
+      - "2181:2181" # 호스트와 컨테이너 포트 매핑
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  # Kafka 서비스
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka # 호스트명 설정
+    ports:
+      - "9092:9092" # 호스트의 9092 포트를 컨테이너의 9092 포트에 연결 (외부 접근용)
+      # 내부 서비스들이 컨테이너 이름을 통해 접근할 포트: 29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # Zookeeper 연결 주소 (컨테이너 이름 사용)
+      # 내부 리스너 (컨테이너 간 통신): PLAINTEXT://kafka:29092 (컨테이너 이름:포트)
+      # 외부 리스너 (호스트에서 접근): PLAINTEXT_HOST://localhost:9092 (호스트 IP:매핑된 포트)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT # 브로커 간 통신에 사용할 리스너 이름
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    depends_on:
+      - zookeeper # Zookeeper가 먼저 시작되어야 함
+
+  # aiservice 애플리케이션 서비스
+  aiservice:
+    build:
+      context: . # 현재 디렉토리 (aiservice 폴더)에서 Dockerfile을 찾습니다.
+      dockerfile: Dockerfile # aiservice 폴더 내 Dockerfile을 사용합니다.
+    ports:
+      - "8084:8084" # 호스트의 8084 포트를 컨테이너의 8084 포트에 연결합니다.
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker # Docker 프로파일 활성화
+      # OpenAI API 키는 호스트 환경 변수에서 가져옵니다. (필수)
+      - SPRING_GPT_API_KEY=${SPRING_GPT_API_KEY}
+      # Kafka 브로커 주소를 Docker Compose 서비스 이름으로 지정합니다.
+      # 이 compose 파일 내에 정의된 Kafka 서비스의 'hostname' (kafka)를 사용합니다.
+      # KAFKA_ADVERTISED_LISTENERS의 PLAINTEXT://kafka:29092에 해당하는 포트를 사용합니다.
+      - SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS=kafka:29092
+    depends_on:
+      - kafka # Kafka가 먼저 시작되어야 함
