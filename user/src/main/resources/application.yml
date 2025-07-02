@@ -23,15 +23,21 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      definition: updateBookRead
+      definition: updateBookRead;authorApproved
     stream:
       default:
         contentType: application/json
       bindings:
         updateBookRead-in-0:
           destination: aivlecloudnative
-          group: user
+          group: user-update-book
           contentType: application/json
+
+        authorApproved-in-0:
+          destination: aivlecloudnative
+          group: user-author-approved
+          contentType: application/json
+
         event-out:
           destination: aivlecloudnative
           contentType: application/json
@@ -49,9 +55,9 @@ spring:
 
 logging:
   level:
-    org.hibernate.type: trace
+    org.hibernate: info
     org.springframework.cloud: debug
-    aivlecloudnative.infra.OutboxPublisher: info
+    aivlecloudnative.infra.OutboxPublisher: warn
 
 server:
   port: 8082
@@ -77,13 +83,21 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      definition: updateBookRead
+      definition: updateBookRead;authorApproved
     stream:
+      default:
+        contentType: application/json
       bindings:
         updateBookRead-in-0:
           destination: aivlecloudnative
-          group: user
+          group: user-update-book
           contentType: application/json
+
+        authorApproved-in-0:
+          destination: aivlecloudnative
+          group: user-author-approved
+          contentType: application/json
+
         event-out:
           destination: aivlecloudnative
           contentType: application/json

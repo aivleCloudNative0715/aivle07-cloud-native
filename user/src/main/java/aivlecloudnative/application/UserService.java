@@ -12,6 +12,7 @@ import aivlecloudnative.domain.RequestContentAccessCommand;
 import aivlecloudnative.domain.RequestSubscriptionCommand;
 import aivlecloudnative.domain.SignUpCommand;
 import aivlecloudnative.domain.User;
+import aivlecloudnative.domain.UserInfoResponse;
 import aivlecloudnative.domain.UserRepository;
 import aivlecloudnative.domain.UserSignedUp;
 import aivlecloudnative.domain.UserSubscribed;
@@ -154,6 +155,25 @@ public class UserService {
         return user.getHasActiveSubscription();
     }
 
+    @Transactional
     public void authorApproved(AuthorAccepted authorAccepted) {
+        Long userId = authorAccepted.getId();
+
+        User user = findUserByIdOrThrow(userId);
+        user.setIsAuthor(true);
+
+        // 변경사항 저장 (JPA 엔티티이므로 트랜잭션 내에서 dirty checking으로 자동 반영됨)
+    }
+
+    public UserInfoResponse getUserInfo(Long id) {
+        User user = findUserByIdOrThrow(id);
+        return new UserInfoResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getIsKt(),
+                user.getIsAuthor(),
+                user.getHasActiveSubscription(),
+                user.getMyBookHistory()
+        );
     }
 }

@@ -27,7 +27,7 @@ public class User {
 
     private String userName;
 
-    private Boolean hasActiveSubscription;
+    private Boolean hasActiveSubscription = false;
 
     private String message;
 
@@ -40,7 +40,7 @@ public class User {
 
     private String password;
 
-    private Boolean isAuthor;
+    private Boolean isAuthor = false;
 
     public static UserRepository repository() {
         return UserApplication.applicationContext.getBean(
@@ -52,8 +52,6 @@ public class User {
         this.userName = signUpCommand.getUserName();
         this.email = signUpCommand.getEmail();
         this.isKt = signUpCommand.getIsKt();
-        this.hasActiveSubscription = false;
-        this.isAuthor = false;
     }
 
     public void addBookToHistory(Long bookId) {
