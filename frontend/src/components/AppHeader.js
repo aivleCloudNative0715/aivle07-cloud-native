@@ -2,19 +2,24 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import BackButton from "../components/ui/backButton";
+import { useAuth } from "../context/AuthContext";
 
-export default function AppHeader({ isLoggedIn, isAuthor }) {
+export default function AppHeader() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { isLoggedIn, isAuthor, logout } = useAuth();
 
-    const showBackButton = location.pathname !== "/"; // 메인 페이지가 아닌 경우만 표시
+    const showBackButton = location.pathname !== "/";
+
+    const handleLogout = () => {
+        logout();
+        navigate("/");
+    };
 
     return (
         <header className="flex bg-sky-950 text-white justify-between items-center px-6 py-4 shadow-md border-b">
             <div className="flex items-center gap-4">
-                {showBackButton && (
-                    <BackButton />
-                )}
+                {showBackButton && <BackButton />}
                 <h1
                     className="text-xl font-bold cursor-pointer"
                     onClick={() => navigate("/")}
@@ -30,6 +35,7 @@ export default function AppHeader({ isLoggedIn, isAuthor }) {
                         {isAuthor && (
                             <Button onClick={() => navigate("/manuscript")}>원고 등록</Button>
                         )}
+                        <Button variant="ghost" onClick={handleLogout}>로그아웃</Button>
                     </>
                 ) : (
                     <>
@@ -39,5 +45,6 @@ export default function AppHeader({ isLoggedIn, isAuthor }) {
                 )}
             </div>
         </header>
+
     );
 }

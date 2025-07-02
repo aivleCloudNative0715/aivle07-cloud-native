@@ -1,26 +1,31 @@
 import React from "react";
 import AppHeader from "../components/AppHeader";
+import { useAuth } from "../context/AuthContext"; // ✅ 추가
 
 export default function MyPage() {
-    // TODO: 실제 사용자 정보는 API 또는 context에서 불러오세요
+    const { user } = useAuth(); // ✅ Context에서 로그인 사용자 정보 불러오기
+
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <p>로그인이 필요합니다.</p>
+            </div>
+        );
+    }
+
+    // 임시 하드코딩 예시 대신 실제 user 정보
     const userInfo = {
-        username: "jenny",
-        email: "jenny@example.com",
-        isKt: true,
-        subscribed: false,
-        pointHistory: [
-            { id: 1, description: "책 구매", amount: -300 },
-            { id: 2, description: "가입 포인트", amount: 500 },
-        ],
-        viewedBooks: [
-            { id: 1, title: "열람한 책 1" },
-            { id: 2, title: "열람한 책 2" },
-        ],
+        username: user.username || "익명 사용자",
+        email: user.email,
+        isKt: user.isKt,
+        subscribed: user.subscribed ?? false,
+        pointHistory: user.pointHistory || [],
+        viewedBooks: user.viewedBooks || [],
     };
 
     return (
         <div className="min-h-screen flex flex-col">
-            <AppHeader isLoggedIn={true} isAuthor={false} />
+            <AppHeader /> {/* ✅ props 제거 */}
 
             <main className="container mx-auto px-6 py-8">
                 <h2 className="text-2xl font-bold mb-4">📌 마이페이지</h2>
@@ -40,8 +45,8 @@ export default function MyPage() {
                 <div className="mb-6">
                     <h3 className="text-xl font-semibold mb-2">📘 열람한 책</h3>
                     <ul className="list-disc list-inside">
-                        {userInfo.viewedBooks.map((book) => (
-                            <li key={book.id}>{book.title}</li>
+                        {userInfo.viewedBooks.map((book, i) => (
+                            <li key={i}>{book.title}</li>
                         ))}
                     </ul>
                 </div>
@@ -49,8 +54,8 @@ export default function MyPage() {
                 <div>
                     <h3 className="text-xl font-semibold mb-2">💰 포인트 내역</h3>
                     <ul className="list-disc list-inside">
-                        {userInfo.pointHistory.map((item) => (
-                            <li key={item.id}>
+                        {userInfo.pointHistory.map((item, i) => (
+                            <li key={i}>
                                 {item.description}: {item.amount}P
                             </li>
                         ))}

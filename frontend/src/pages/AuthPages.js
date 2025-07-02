@@ -4,13 +4,23 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { motion } from "framer-motion";
 import BackButton from "../components/ui/backButton";
+import {useAuth} from "../context/AuthContext";
+import {useNavigate} from "react-router-dom";
 
 export function LoginPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState("example@gamil.com");
+    const [password, setPassword] = useState("1234");
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
     const handleLogin = async () => {
-        console.log("Logging in with", email, password);
+        const { success, data } = await login(email, password);
+        console.log(data)
+        if (success) {
+            navigate("/"); // 로그인 후 홈으로 이동
+        } else {
+            alert("로그인 실패. 이메일/비밀번호를 확인해주세요.");
+        }
     };
 
     return (
@@ -20,8 +30,8 @@ export function LoginPage() {
             animate={{ opacity: 1, y: 0 }}
         >
             <Card className="shadow-lg">
+                <BackButton />
                 <CardHeader className="flex flex-col gap-2">
-                    <BackButton />
                     <h1 className="text-xl font-bold">로그인</h1>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
@@ -45,20 +55,29 @@ export function LoginPage() {
 }
 
 export function SignUpPage() {
-    const [email, setEmail] = useState("");
-    const [userName, setUserName] = useState("");
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState("example@gamil.com");
+    const [userName, setUserName] = useState("홍길동");
+    const [password, setPassword] = useState("1234");
     const [isKt, setIsKt] = useState(false);
+    const { signUp, login } = useAuth();
+    const navigate = useNavigate();
 
     const handleSignUp = async () => {
-        const userData = {
+        const { success, data } = await signUp({
             email,
             userName,
             password,
             isKt,
-            myBookHistory: [],
-        };
-        console.log("Registering", userData);
+        });
+
+        if (success) {
+            await new Promise((res) => setTimeout(res, 500));
+
+            alert("회원가입 성공!");
+            navigate("/");
+        } else {
+            alert("회원가입 실패. 입력 정보를 다시 확인해주세요.");
+        }
     };
 
     return (
@@ -68,8 +87,8 @@ export function SignUpPage() {
             animate={{ opacity: 1, y: 0 }}
         >
             <Card className="shadow-lg">
+                <BackButton />
                 <CardHeader className="flex flex-col gap-2">
-                    <BackButton />
                     <h1 className="text-xl font-bold">회원가입</h1>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
@@ -78,6 +97,7 @@ export function SignUpPage() {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        default
                     />
                     <Input
                         placeholder="사용자 이름 입력"
@@ -90,7 +110,6 @@ export function SignUpPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-
                     <div className="flex items-center gap-2 text-sm">
                         <input
                             id="isKtCheckbox"
@@ -100,7 +119,6 @@ export function SignUpPage() {
                         />
                         <label htmlFor="isKtCheckbox">KT 회원 여부</label>
                     </div>
-
                     <Button onClick={handleSignUp}>회원가입</Button>
                 </CardContent>
             </Card>

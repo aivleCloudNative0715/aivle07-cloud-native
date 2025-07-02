@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./button";
 
-export default function BackButton({ className = "mx-6", label = "← 뒤로가기" }) {
+export default function BackButton({ className = "m-1", label = "← 뒤로가기" }) {
     const navigate = useNavigate();
 
     return (

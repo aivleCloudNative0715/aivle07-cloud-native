@@ -11,20 +11,18 @@ import BookDetail from "./pages/BookDetail";
 
 function App() {
     return (
-        <AuthProvider>
-            <Router>
-                <Routes>
-                    <Route path="/" element={<MainPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignUpPage />} />
-                    <Route path="/mypage" element={<MyPage />} />
-                    <Route path="/manuscript" element={<ManuscriptEditor />} />
-                    <Route path="/books" element={<AllBooksPage />} />
-                    <Route path="/book/:id" element={<BookDetail />} />
-                </Routes>
-            </Router>
-        </AuthProvider>
-    );
+        <Router>
+            <Routes>
+                <Route path="/" element={<MainPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignUpPage />} />
+                <Route path="/mypage" element={<MyPage />} />
+                <Route path="/manuscript" element={<ManuscriptEditor />} />
+                <Route path="/books" element={<AllBooksPage />} />
+                <Route path="/book/:id" element={<BookDetail />} />
+            </Routes>
+        </Router>
+);
 }
 
 export default App;
