@@ -22,16 +22,19 @@ export function AuthProvider({ children }) {
                 body: JSON.stringify({ email, password, isKt, userName }),
             });
 
-            if (!response.ok) throw new Error("회원가입 실패");
+            if (!response.ok) {
+                const errorText = await response.text();
+                return { success: false, errorCode: response.status, message: errorText };
+            }
 
             const data = await response.json();
-
             return { success: true, data };
         } catch (error) {
             console.error("SignUp error:", error);
-            return { success: false, data: null };
+            return { success: false, errorCode: 500, message: "서버 오류" };
         }
     };
+
 
     // ✅ 로그인 함수
     const login = async (email, password) => {
@@ -56,6 +59,7 @@ export function AuthProvider({ children }) {
                 userId: data.userId,
                 email: data.email,
                 isAuthor: data.isAuthor || false,
+                isAdmin: data.isAdmin || false,
             };
 
             setUser(userInfo);
@@ -89,6 +93,7 @@ export function AuthProvider({ children }) {
         user,
         isLoggedIn: !!user,
         isAuthor: user?.isAuthor || false,
+        isAdmin: user?.isAdmin || false,
         token: user?.token || null,
         login,
         logout,

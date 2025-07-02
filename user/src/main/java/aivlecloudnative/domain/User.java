@@ -42,6 +42,8 @@ public class User {
 
     private Boolean isAuthor = false;
 
+    private Boolean isAdmin = false;
+
     public static UserRepository repository() {
         return UserApplication.applicationContext.getBean(
             UserRepository.class
