@@ -63,7 +63,7 @@ export function SignUpPage() {
     const navigate = useNavigate();
 
     const handleSignUp = async () => {
-        const { success, data } = await signUp({
+        const { success, errorCode, message } = await signUp({
             email,
             userName,
             password,
@@ -72,11 +72,14 @@ export function SignUpPage() {
 
         if (success) {
             await new Promise((res) => setTimeout(res, 500));
-
             alert("회원가입 성공!");
             navigate("/");
         } else {
-            alert("회원가입 실패. 입력 정보를 다시 확인해주세요.");
+            if (errorCode === 401) {
+                alert("이미 가입된 이메일입니다.");
+            } else {
+                alert("회원가입 실패. 입력 정보를 다시 확인해주세요.");
+            }
         }
     };
 

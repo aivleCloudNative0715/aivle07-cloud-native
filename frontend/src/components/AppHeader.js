@@ -7,9 +7,11 @@ import { useAuth } from "../context/AuthContext";
 export default function AppHeader() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { isLoggedIn, isAuthor, logout } = useAuth();
+    const { isLoggedIn, isAuthor, isAdmin, logout } = useAuth();
 
     const showBackButton = location.pathname !== "/";
+    const hideManuscriptButton = location.pathname.startsWith("/manuscriptList");
+    const hideAuthors = location.pathname.startsWith("/admin");
 
     const handleLogout = () => {
         logout();
@@ -32,10 +34,22 @@ export default function AppHeader() {
                 {isLoggedIn ? (
                     <>
                         <Button onClick={() => navigate("/mypage")}>마이페이지</Button>
-                        {isAuthor && (
-                            <Button onClick={() => navigate("/manuscript")}>원고 등록</Button>
+
+                        {isAuthor && !hideManuscriptButton && (
+                            <Button onClick={() => navigate("/manuscriptList")}>
+                                원고 조회
+                            </Button>
                         )}
-                        <Button variant="ghost" onClick={handleLogout}>로그아웃</Button>
+
+                        {isAdmin && !hideAuthors && (
+                            <Button onClick={() => navigate("/admin/authors")}>
+                                작가 조회
+                            </Button>
+                        )}
+
+                        <Button variant="ghost" onClick={handleLogout}>
+                            로그아웃
+                        </Button>
                     </>
                 ) : (
                     <>
@@ -45,6 +59,5 @@ export default function AppHeader() {
                 )}
             </div>
         </header>
-
     );
 }

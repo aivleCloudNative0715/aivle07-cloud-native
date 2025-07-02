@@ -5,5 +5,6 @@ public record LoginResponse(
         String tokenType,
         Long userId,
         String email,
-        boolean isAuthor
+        boolean isAuthor,
+        boolean isAdmin
 ) {}

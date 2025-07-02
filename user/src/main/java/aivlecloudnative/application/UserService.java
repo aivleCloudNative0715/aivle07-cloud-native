@@ -74,7 +74,8 @@ public class UserService {
                 "Bearer",
                 user.getId(),
                 user.getEmail(),
-                user.getIsAuthor()
+                user.getIsAuthor(),
+                user.getIsAdmin()
         );
     }
 
@@ -170,6 +171,7 @@ public class UserService {
         return new UserInfoResponse(
                 user.getId(),
                 user.getEmail(),
+                user.getUserName(),
                 user.getIsKt(),
                 user.getIsAuthor(),
                 user.getHasActiveSubscription(),
