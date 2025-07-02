@@ -7,6 +7,8 @@ import aivlecloudnative.domain.Point;
 import aivlecloudnative.domain.PointRepository;
 import aivlecloudnative.domain.PointsGranted;
 import aivlecloudnative.domain.UserSignedUp;
+import aivlecloudnative.domain.AccessRequestedWithPoints;
+import aivlecloudnative.domain.PointsDeducted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +20,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.function.Function;
-import java.util.Optional;
 
 @Configuration
 public class PolicyHandler {
@@ -29,9 +30,8 @@ public class PolicyHandler {
 
     public PolicyHandler(PointRepository pointRepository, BookInfoRepository bookInfoRepository) {
         this.pointRepository = pointRepository;
-        this.bookInfoRepository = bookInfoRepository; // 초기화
+        this.bookInfoRepository = bookInfoRepository;
     }
-
 
     @Bean
     public Function<Flux<Message<UserSignedUp>>, Flux<Message<PointsGranted>>> userSignedUpSubscriber() {
@@ -40,31 +40,26 @@ public class PolicyHandler {
                     UserSignedUp userSignedUp = message.getPayload();
                     log.info("Received UserSignedUp event: {}", userSignedUp);
 
-                    // JPA 호출은 블로킹 작업이므로, 별도의 스케줄러에서 실행하여 비동기 스트림을 방해하지 않도록 함
                     return Mono.fromCallable(() -> pointRepository.findByUserId(userSignedUp.getUserId()))
-                            .subscribeOn(Schedulers.boundedElastic()) // 블로킹 호출을 위한 스케줄러 지정
+                            .subscribeOn(Schedulers.boundedElastic())
                             .flatMap(optionalPoint -> {
                                 if (optionalPoint.isPresent()) {
                                     Point existingPoint = optionalPoint.get();
                                     log.warn("User {} already has points (ID: {}). Skipping initial grant.",
                                             userSignedUp.getUserId(), existingPoint.getId());
-                                    // 이미 포인트가 있는 경우, 빈 Mono를 반환하여 이벤트를 발행하지 않음
                                     return Mono.empty();
                                 } else {
-                                    // 신규 사용자에게 포인트 지급
                                     Point newPoint = Point.createInitialPoint(userSignedUp.getUserId(), userSignedUp.getIsKT());
-                                    pointRepository.save(newPoint); // DB에 포인트 정보 저장
+                                    pointRepository.save(newPoint);
                                     log.info("Granted {} points to user {} (Initial Point ID: {})",
                                             newPoint.getCurrentPoints(), newPoint.getUserId(), newPoint.getId());
 
-                                    // PointsGranted 이벤트 생성
                                     PointsGranted pointsGrantedEvent = new PointsGranted();
                                     pointsGrantedEvent.setId(newPoint.getId());
                                     pointsGrantedEvent.setUserId(newPoint.getUserId());
                                     pointsGrantedEvent.setCurrentPoints(newPoint.getCurrentPoints());
                                     pointsGrantedEvent.setGrantedPoints(newPoint.getIsKTmember() ? 5000L : 1000L);
 
-                                    // Spring Cloud Stream이 반환된 Mono<Message<PointsGranted>>를 감지하고 발행합니다.
                                     return Mono.just(MessageBuilder.withPayload(pointsGrantedEvent)
                                             .setHeader("type", "PointsGranted")
                                             .build());
@@ -74,41 +69,100 @@ public class PolicyHandler {
     }
 
     @Bean
+    public Function<Flux<Message<PointsGranted>>, Flux<Message<PointsGranted>>> pointsGrantedPublisher() {
+        return flux -> flux;
+    }
+
+    @Bean
     public Function<Flux<Message<NewBookRegistered>>, Mono<Void>> newBookRegisteredSubscriber() {
         return newBookRegisteredMessageFlux -> newBookRegisteredMessageFlux
                 .flatMap(message -> {
                     NewBookRegistered newBookRegistered = message.getPayload();
                     log.info("Received NewBookRegistered event: {}", newBookRegistered);
 
-                    // 1. 도서 정보 저장 로직
-                    // 이미 해당 bookId로 도서 정보가 있는지 확인 (중복 저장 방지)
                     return Mono.fromCallable(() -> bookInfoRepository.findByBookId(newBookRegistered.getBookId()))
-                            .subscribeOn(Schedulers.boundedElastic()) // 블로킹 호출을 위한 스케줄러 지정
+                            .subscribeOn(Schedulers.boundedElastic())
                             .flatMap(optionalBookInfo -> {
                                 if (optionalBookInfo.isPresent()) {
                                     BookInfo existingBookInfo = optionalBookInfo.get();
                                     log.warn("Book {} (ID: {}) already exists in BookInfo DB. Skipping.",
                                             newBookRegistered.getBookId(), existingBookInfo.getId());
-                                    return Mono.empty(); // 이미 있으면 빈 Mono 반환
+                                    return Mono.empty();
                                 } else {
-                                    // 신규 도서 정보 저장
                                     BookInfo bookInfo = BookInfo.builder()
                                             .bookId(newBookRegistered.getBookId())
-                                            .price(newBookRegistered.getPrice()) // 이벤트에서 price 필드 사용
-                                            // 필요한 다른 필드도 여기서 매핑
+                                            .price(newBookRegistered.getPrice())
                                             .build();
-                                    bookInfoRepository.save(bookInfo); // DB에 도서 정보 저장
+                                    bookInfoRepository.save(bookInfo);
                                     log.info("Saved new book info: {} with price {}",
                                             bookInfo.getBookId(), bookInfo.getPrice());
-                                    return Mono.empty(); // 이 이벤트는 추가 이벤트를 발행하지 않으므로 빈 Mono 반환
+                                    return Mono.empty();
                                 }
                             });
                 })
-                .then(); // 모든 Flux 요소 처리가 완료되면 Mono<Void>로 변환
+                .then();
     }
 
     @Bean
-    public Function<Flux<Message<PointsGranted>>, Flux<Message<PointsGranted>>> pointsGrantedPublisher() {
+    public Function<Flux<Message<AccessRequestedWithPoints>>, Flux<Message<PointsDeducted>>> accessRequestedWithPointsSubscriber() {
+        return accessRequestedMessageFlux -> accessRequestedMessageFlux
+                .flatMap(message -> {
+                    AccessRequestedWithPoints accessRequest = message.getPayload();
+                    log.info("Received AccessRequestedWithPoints event: {}", accessRequest);
+
+                    final String userId = accessRequest.getUserId();
+                    final String bookId = accessRequest.getBookId();
+
+                    return Mono.fromCallable(() -> bookInfoRepository.findByBookId(bookId))
+                            .subscribeOn(Schedulers.boundedElastic())
+                            .flatMap(optionalBookInfo -> {
+                                if (optionalBookInfo.isEmpty()) {
+                                    log.warn("BookInfo for bookId {} not found. Cannot deduct points.", bookId);
+                                    return Mono.empty();
+                                }
+                                Long requiredPoints = optionalBookInfo.get().getPrice();
+
+                                return Mono.fromCallable(() -> pointRepository.findByUserId(userId))
+                                        .subscribeOn(Schedulers.boundedElastic())
+                                        .flatMap(optionalPoint -> {
+                                            if (optionalPoint.isEmpty()) {
+                                                log.warn("Points for userId {} not found. Cannot deduct points.", userId);
+                                                return Mono.empty();
+                                            }
+
+                                            Point userPoint = optionalPoint.get();
+                                            if (userPoint.getCurrentPoints() < requiredPoints) {
+                                                log.warn("User {} has insufficient points ({} current, {} required) for book {}.",
+                                                        userId, userPoint.getCurrentPoints(), requiredPoints, bookId);
+                                                return Mono.error(new InsufficientPointsException("Insufficient points for user " + userId));
+                                            }
+
+                                            userPoint.setCurrentPoints(userPoint.getCurrentPoints() - requiredPoints);
+                                            pointRepository.save(userPoint);
+                                            log.info("Deducted {} points from user {} for book {}. Remaining points: {}",
+                                                    requiredPoints, userId, bookId, userPoint.getCurrentPoints());
+
+                                            PointsDeducted pointsDeductedEvent = new PointsDeducted();
+                                            pointsDeductedEvent.setId(userPoint.getId());
+                                            pointsDeductedEvent.setUserId(userId);
+                                            pointsDeductedEvent.setBookId(bookId);
+                                            pointsDeductedEvent.setDeductedPoints(requiredPoints);
+                                            pointsDeductedEvent.setCurrentPoints(userPoint.getCurrentPoints());
+
+                                            return Mono.just(MessageBuilder.withPayload(pointsDeductedEvent)
+                                                    .setHeader("type", "PointsDeducted")
+                                                    .build());
+                                        })
+                                        .onErrorResume(InsufficientPointsException.class, e -> {
+                                            log.error("Point deduction failed for user {} and book {}: {}", userId, bookId, e.getMessage());
+                                            return Mono.empty();
+                                        });
+                            });
+                });
+    }
+
+    @Bean
+    public Function<Flux<Message<PointsDeducted>>, Flux<Message<PointsDeducted>>> pointsDeductedPublisher() {
         return flux -> flux;
     }
 }

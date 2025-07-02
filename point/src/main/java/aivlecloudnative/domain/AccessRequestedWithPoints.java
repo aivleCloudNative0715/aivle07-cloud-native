@@ -1,13 +1,14 @@
 package aivlecloudnative.domain;
-import aivlecloudnative.domain.*;
+
 import aivlecloudnative.infra.AbstractEvent;
-import java.util.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
+@Getter
+@Setter
 @ToString
-@EqualsAndHashCode(callSuper = false)
 public class AccessRequestedWithPoints extends AbstractEvent {
-
-    private Long id;
+    private String userId;
+    private String bookId; // 열람을 요청한 도서의 ID
 }
