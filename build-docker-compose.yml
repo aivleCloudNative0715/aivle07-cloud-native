@@ -26,7 +26,7 @@ services:
   user:
     depends_on:
       - kafka
-    image: laylaoh/user:latest
+    image: laylaoh/user:20250702
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     env_file:

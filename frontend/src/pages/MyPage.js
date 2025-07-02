@@ -31,7 +31,10 @@ export default function MyPage() {
             const updated = await res.json();      // { id, email, isAuthor, hasActiveSubscription, ... }
             setDetail((prev) => ({ ...prev, subscribed: updated.hasActiveSubscription }));
 
+
             alert("구독 신청이 완료되었습니다!");
+
+            window.location.reload();
         } catch (e) {
             alert(e.message || "구독 신청 중 오류가 발생했습니다.");
         } finally {

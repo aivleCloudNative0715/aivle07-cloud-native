@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Getter;
 import lombok.Setter;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -19,7 +18,7 @@ public abstract class AbstractEvent {
     private String eventId;
 
     // 이벤트 발생 시간 (ISO 8601 형식으로 직렬화/역직렬화 권장)
-    private LocalDateTime timestamp;
+    private Long timestamp;
 
     // 이벤트 타입 (구체적인 이벤트 클래스 이름 또는 특정 이벤트 유형 식별자)
     // 이 필드를 통해 consumer에서 어떤 종류의 이벤트인지 식별 가능
@@ -27,7 +26,7 @@ public abstract class AbstractEvent {
 
     public AbstractEvent() {
         this.eventId = UUID.randomUUID().toString(); // 이벤트 생성 시 고유 ID 자동 할당
-        this.timestamp = LocalDateTime.now();       // 현재 시간 자동 할당
+        this.timestamp = System.currentTimeMillis();       // 현재 시간 자동 할당
         this.eventType = this.getClass().getSimpleName(); // 이벤트 클래스 이름을 기본 이벤트 타입으로 설정
     }
 

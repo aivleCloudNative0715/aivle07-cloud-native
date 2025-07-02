@@ -1,22 +1,43 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import AppHeader from "../components/AppHeader";
 
 export default function AllBooksPage({ isLoggedIn = false, isAuthor = false }) {
     const navigate = useNavigate();
+
+    const [books, setBooks] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const books = [
-        { id: 1, title: "책 제목 1" },
-        { id: 2, title: "책 제목 2" },
-        { id: 3, title: "책 제목 3" },
-        { id: 4, title: "책 제목 4" },
-        { id: 5, title: "책 제목 5" },
-    ];
+    const API_BASE = process.env.REACT_APP_API_URL;
 
-    const filteredBooks = books.filter((book) =>
-        book.title.toLowerCase().includes(searchQuery.toLowerCase())
+    // 📡 fetch 사용
+    const fetchBooks = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${API_BASE}/books?page=0&size=200`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setBooks(data.content);
+        } catch (err) {
+            setError(err.message || "네트워크 오류");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchBooks();
+    }, []);
+
+    const filteredBooks = books.filter((b) =>
+        b.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -42,6 +63,10 @@ export default function AllBooksPage({ isLoggedIn = false, isAuthor = false }) {
                     )}
                 </div>
 
+                {loading && <p>로딩 중...</p>}
+                {error && <p className="text-red-500">{error}</p>}
+                {!loading && !error && filteredBooks.length === 0 && <p>도서가 없습니다.</p>}
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {filteredBooks.map((book) => (
                         <div
@@ -49,7 +74,14 @@ export default function AllBooksPage({ isLoggedIn = false, isAuthor = false }) {
                             className="bg-white border shadow rounded-md p-4 hover:shadow-md cursor-pointer"
                             onClick={() => navigate(`/book/${book.id}`)}
                         >
-                            <div className="w-full h-40 bg-gray-200 mb-2" />
+                            <div
+                                className="w-full h-40 bg-gray-200 mb-2"
+                                style={{
+                                    backgroundImage: `url(${book.coverImageUrl})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                }}
+                            />
                             <div className="text-sm font-semibold text-center">{book.title}</div>
                         </div>
                     ))}
