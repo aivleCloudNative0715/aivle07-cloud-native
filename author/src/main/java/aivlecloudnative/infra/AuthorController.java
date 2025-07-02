@@ -1,46 +1,39 @@
 package aivlecloudnative.infra;
 
 import aivlecloudnative.domain.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import java.util.Optional;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 
-//<<< Clean Arch / Inbound Adaptor
+import java.util.List;
 
 @RestController
 @Transactional
+@RequestMapping("/author-api") // 경로를 변경하여 충돌 방지!
 public class AuthorController {
-    @Autowired
-    AuthorRepository authorRepository;
 
-    @RequestMapping(value = "/authors/applyauthor",
-            method = RequestMethod.POST,
-            produces = "application/json;charset=UTF-8")
-    public Author applyAuthor(HttpServletRequest request, HttpServletResponse response
-        ) throws Exception {
-            System.out.println("##### /author/applyAuthor  called #####");
-            Author author = new Author();
-            // author.applyAuthor(); // <-- 삭제
-            authorRepository.save(author);
-            return author;
+    private final AuthorService authorService;
+
+    @Autowired
+    public AuthorController(AuthorService authorService) {
+        this.authorService = authorService;
     }
 
-    @RequestMapping(value = "/authors/judgeauthor",
-            method = RequestMethod.POST,
-            produces = "application/json;charset=UTF-8")
-    public Author judgeAuthor(HttpServletRequest request, HttpServletResponse response
-        ) throws Exception {
-            System.out.println("##### /author/judgeAuthor  called #####");
-            Author author = new Author();
-            // author.judgeAuthor(); // <-- 삭제
-            authorRepository.save(author);
-            return author;
+    // 작가 신청
+    @PostMapping("/apply")
+    public Author applyAuthor(@RequestBody ApplyAuthorCommand command) {
+        return authorService.applyAuthor(command);
+    }
+
+    // 작가 심사(승인/거부)
+    @PostMapping("/judge")
+    public Author judgeAuthor(@RequestBody JudgeAuthorCommand command) {
+        return authorService.judgeAuthor(command);
+    }
+
+    // 작가 전체 목록 조회
+    @GetMapping
+    public List<Author> getAuthors() {
+        return authorService.getAuthors();
     }
 }
-//>>> Clean Arch / Inbound Adaptor

@@ -30,16 +30,19 @@ public class Author {
         this.isApproved = null; // 지원 상태
     }
 
-    public void apply() {
+    public Author apply() {
         this.isApproved = null;
+        return this;   // <<=== 반환값 추가
     }
 
-    public void accept() {
+    public Author accept() {
         this.isApproved = true;
+        return this;   // <<=== 반환값 추가
     }
 
-    public void reject() {
+    public Author reject() {
         this.isApproved = false;
+        return this;   // <<=== 반환값 추가
     }
 
     // 이벤트 발행 관련 메서드는 서비스 계층에서 처리하는 게 베스트!
