@@ -78,6 +78,7 @@ public class ManuscriptListViewHandler {
         manuscriptList.setAuthorId(event.getAuthorId());
         manuscriptList.setTitle(event.getTitle());
         manuscriptList.setContent(event.getContent());
+        manuscriptList.setAuthorName(event.getAuthorName());
         manuscriptList.setSummary(event.getSummary());
         manuscriptList.setKeywords(event.getKeywords());
         manuscriptList.setStatus(event.getStatus());

@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import aivlecloudnative.domain.ManuscriptRegistrationCommand;
+
 @Service
 @Transactional
 public class ManuscriptService {
@@ -22,6 +24,7 @@ public class ManuscriptService {
         Manuscript newManuscript = Manuscript.createNew(
             command.getAuthorId(),
             command.getTitle(),
+            command.getAuthorName(), // <-- 순서유의
             command.getContent(),
             command.getSummary(), // <-- 추가
             command.getKeywords() // <-- 추가
@@ -31,6 +34,7 @@ public class ManuscriptService {
     }
 
     // 기존 원고 수정 유스케이스
+    // 이때는 authorName을 사용하지 않는 쪽으로
     public Manuscript saveManuscript(Long id, ManuscriptSaveCommand command) {
 
         // 1. 기존 원고를 먼저 찾아서 existingManuscript 변수에 할당

@@ -33,8 +33,8 @@ public class BookWork {
     private Integer price;
     private String status;
     private LocalDateTime createdDate;
-    private LocalDateTime lastModifiedDate; // <-- 이 필드를 추가합니다!
-    private String failReason; // <-- 이 필드를 추가합니다!
+    private LocalDateTime lastModifiedDate;
+    private String failReason;
 
     // BookWork 객체를 생성하는 팩토리 메서드 (PublicationRequested 이벤트를 기반으로)
     public static BookWork createRequestedBookWork(PublicationRequested publicationRequested) {

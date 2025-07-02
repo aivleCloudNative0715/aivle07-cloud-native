@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.springframework.beans.BeanUtils;
 
@@ -40,7 +41,10 @@ public abstract class AbstractEvent {
         .registerModule(new JavaTimeModule());
 
     private Long id;
+
+    @JsonIgnore
     private String eventType;
+
     private LocalDateTime timestamp = LocalDateTime.now();
 
 

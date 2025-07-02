@@ -17,6 +17,7 @@ public class PublicationRequested extends AbstractEvent {
     private String title;
     private String content;
     private String summary;
+    private String authorName;
     private String keywords;
     private String authorId;
 
@@ -26,6 +27,7 @@ public class PublicationRequested extends AbstractEvent {
         this.authorId = aggregate.getAuthorId();
         this.title = aggregate.getTitle();
         this.content = aggregate.getContent();
+        this.authorName = aggregate.getAuthorName();
         this.summary = aggregate.getSummary();
         this.keywords = aggregate.getKeywords();
     }
