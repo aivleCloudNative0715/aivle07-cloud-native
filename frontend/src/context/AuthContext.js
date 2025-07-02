@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
             console.log(data);
 
             const userInfo = {
-                token: data.token,
+                token: data.accessToken,
                 tokenType: data.tokenType,
                 userId: data.userId,
                 email: data.email,

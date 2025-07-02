@@ -170,6 +170,7 @@ public class UserService {
         return new UserInfoResponse(
                 user.getId(),
                 user.getEmail(),
+                user.getUserName(),
                 user.getIsKt(),
                 user.getIsAuthor(),
                 user.getHasActiveSubscription(),

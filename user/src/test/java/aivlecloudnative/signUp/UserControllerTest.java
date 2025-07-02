@@ -243,6 +243,7 @@ class UserControllerTest {
         UserInfoResponse dto = new UserInfoResponse(
                 1L,
                 "user@example.com",
+                "test",
                 true,
                 true,
                 true,
