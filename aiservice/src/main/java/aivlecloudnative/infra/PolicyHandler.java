@@ -2,214 +2,181 @@ package aivlecloudnative.infra;
 
 import aivlecloudnative.domain.BookWork;
 import aivlecloudnative.domain.BookWorkRepository;
-import aivlecloudnative.domain.PublicationInfoCreationRequested;
 import aivlecloudnative.domain.PublicationRequested;
 import aivlecloudnative.domain.AutoPublished;
+
 import aivlecloudnative.external.AIServiceSystem;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional; // import 유지
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import java.util.function.Consumer;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.util.Optional; // Optional 임포트 유지
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.messaging.Message; // Spring Messaging Message 타입 import 추가 (필요 시)
 
-import java.time.LocalDateTime;
-import java.util.function.Consumer;
-import jakarta.transaction.Transactional;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import aivlecloudnative.infra.AbstractEvent; // AbstractEvent import 추가
-import com.fasterxml.jackson.databind.JsonNode;
-
-@Configuration
-@Service
+@Component
+@Transactional // 이 어노테이션의 트랜잭션 경계를 주의 깊게 관리해야 합니다.
 public class PolicyHandler {
-
-    private static final Logger logger = LoggerFactory.getLogger(PolicyHandler.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(); // ObjectMapper 선언 및 초기화
+    private static final Logger log = LoggerFactory.getLogger(PolicyHandler.class);
 
     @Autowired
-    private BookWorkRepository bookWorkRepository;
+    BookWorkRepository bookWorkRepository;
 
     @Autowired
-    private AIServiceSystem aiServiceSystem;
+    StreamBridge streamBridge;
 
-    /**
-     * PublicationRequested 이벤트를 처리하는 컨슈머.
-     * 새로운 도서 작업(BookWork) 엔티티를 생성하고 저장한 후,
-     * AI 정보 생성을 요청하는 PublicationInfoCreationRequested 이벤트를 발행합니다.
-     *
-     */
-    @Bean
-    @Transactional
-    public Consumer<Message<PublicationRequested>> publicationRequestedIn() {
-        // Consumer의 제네릭 타입을 Message<PublicationRequested>로 변경하여
-        // Spring Cloud Stream의 메시징 인터페이스를 명확히 따르도록 합니다.
-        // 이렇게 하면 message.getPayload()를 사용하여 실제 PublicationRequested 객체를 얻을 수 있습니다.
-        return message -> {
-            PublicationRequested event = message.getPayload(); // 여기에서 실제 PublicationRequested 객체를 가져옵니다.
+    @Autowired
+    AIServiceSystem aiServiceSystem; // AIServiceSystem 주입 추가
 
-            // 이제 event 객체에서 eventType을 직접 가져올 수 있습니다. (AbstractEvent를 상속받았다고 가정)
-            String eventType = event.getEventType(); // PublicationRequested가 AbstractEvent를 상속하고 getEventType()을 가진다면 이렇게 사용
+    private final ObjectMapper objectMapper;
 
-            logger.info("PolicyHandler: Received event from Kafka (Type: {})", eventType);
-
-            // 이벤트 타입 검사 (Optional: Kafka Binder 설정에 따라 필요 없을 수 있음)
-            if (!"PublicationRequested".equals(eventType)) {
-                logger.warn("Skipping event, type mismatch: Expected PublicationRequested, Got {}", eventType);
-                return; // 자신이 처리할 이벤트가 아니면 스킵
-            }
-
-            try {
-                // BookWork 엔티티 생성 및 필드 설정
-                BookWork bookWork = new BookWork();
-                bookWork.setManuscriptId(event.getManuscriptId()); // PublicationRequested에 getId()가 있어야 함
-                bookWork.setTitle(event.getTitle());
-                bookWork.setContent(event.getContent());
-                bookWork.setSummary(event.getSummary());
-                bookWork.setKeywords(event.getKeywords());
-                bookWork.setAuthorId(event.getAuthorId());
-                bookWork.setAuthorName(event.getAuthorName());
-                bookWork.setStatus("PublicationRequested"); // 초기 상태 설정
-                bookWork.setCreatedDate(LocalDateTime.now()); // 생성 시간 설정
-                bookWork.setLastModifiedDate(LocalDateTime.now()); // 최종 수정 시간 설정
-
-                // BookWork 저장
-                bookWorkRepository.save(bookWork);
-                logger.info("##### [Step 2] BookWork 생성 및 초기 상태 설정 완료 (ID: {}).", bookWork.getId());
-                System.out.println("First Policy Handler: bookwork created for ID: " + bookWork.getId());
-
-                // PublicationInfoCreationRequested 이벤트 발행
-                PublicationInfoCreationRequested publicationInfoCreationRequested = new PublicationInfoCreationRequested();
-                publicationInfoCreationRequested.setBookWorkId(bookWork.getId()); // PublicationInfoCreationRequested에 setBookWorkId()가 있어야 함
-                publicationInfoCreationRequested.setManuscriptId(event.getManuscriptId()); // PublicationRequested에 getId()가 있어야 함
-                publicationInfoCreationRequested.setTitle(event.getTitle());
-                publicationInfoCreationRequested.setContent(event.getContent());
-                publicationInfoCreationRequested.setSummary(event.getSummary());
-                publicationInfoCreationRequested.setKeywords(event.getKeywords());
-                publicationInfoCreationRequested.setAuthorId(event.getAuthorId());
-                publicationInfoCreationRequested.setAuthorName(event.getAuthorName());
-                publicationInfoCreationRequested.publish(); // 이벤트 발행
-                logger.info("##### [Step 2-1] PublicationInfoCreationRequested 이벤트 발행 완료 (BookWork ID: {}).",
-                        bookWork.getId());
-
-            } catch (Exception e) {
-                logger.error("First Policy Handler: Error processing event from Kafka: {}", e.getMessage(), e);
-                // 추가적인 에러 처리 (예: DLQ 전송 등)
-            }
-        };
+    public PolicyHandler() {
+        this.objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
-
     /**
-     * PublicationInfoCreationRequested 이벤트를 처리하는 컨슈머.
-     * 해당 이벤트의 정보를 바탕으로 AI 서비스를 호출하여 추가 정보를 생성하고,
-     * BookWork 엔티티를 업데이트한 후 최종 이벤트를 발행합니다.
-     *
-     * @param event PublicationInfoCreationRequested 타입의 이벤트 객체.
+     * publicationRequestedSubscriber: 집필 관리에서 발행하는
+     * 출간신청됨(publicationRequested) 이벤트를 구독
      */
     @Bean
-    @Transactional
-    public Consumer<PublicationInfoCreationRequested> publicationInfoCreationRequestedIn() {
-        return event -> { // Spring Cloud Stream이 이미 페이로드를 PublicationInfoCreationRequested 객체로 역직렬화합니다.
+    public Consumer<String> publicationRequestedSubscriber() {
+        return message -> {
+            try {
+                log.info("##### Received Raw Message (PublicationRequested): " + message);
 
-            logger.info("\n\n##### [Step 3] PublicationInfoCreationRequested 이벤트 수신 시작 (Consumer): {}",
-                    event.toJson()); // event 객체 사용
+                JsonNode jsonNode = objectMapper.readTree(message);
+                String eventType = jsonNode.get("eventType").asText();
 
-            // 이벤트에 포함된 ID로 BookWork 엔티티를 조회
-            // PublicationInfoCreationRequested에 getBookWorkId()가 있어야 함
-            bookWorkRepository.findById(event.getBookWorkId())
-                .ifPresentOrElse(bookWork -> {
-                    logger.info("##### [Step 3-1] DB에서 BookWork 엔티티 (ID: {}) 조회 성공. 현재 상태: {}",
-                            bookWork.getId(),
-                            bookWork.getStatus());
+                if (!"PublicationRequested".equals(eventType)) {
+                    log.info("##### Skipping event for publicationRequestedSubscriber, type mismatch: Expected PublicationRequested, Got " + eventType);
+                    return;
+                }
 
-                    try {
-                        logger.info("##### [Step 4] AI 서비스 호출을 위한 데이터 준비 중. BookWork ID: {}",
-                                bookWork.getId());
-                        logger.info("    AI 모델에 전달될 제목: {}",
-                                event.getTitle()); // event 객체 사용
-                        logger.info("    AI 모델에 전달될 요약: {}",
-                                event.getSummary()); // event 객체 사용
-                        logger.info("    AI 모델에 전달될 키워드: {}",
-                                event.getKeywords()); // event 객체 사용
-                        logger.info("    AI 모델에 전달될 저자 ID: {}",
-                                event.getAuthorId()); // event 객체 사용
-                        logger.info("    AI 모델에 전달될 저자명: {}",
-                                event.getAuthorName()); // event 객체 사용
-                        logger.info("    AI 모델에 전달될 원고 내용 (일부): {}...",
-                                event.getContent() != null && event
-                                        .getContent().length() > 100
-                                        ? event.getContent()
-                                        .substring(0, 100)
-                                        : event.getContent()); // event 객체 사용
+                PublicationRequested publicationRequested = objectMapper.treeToValue(jsonNode, PublicationRequested.class);
+                log.info("##### Transformed PublicationRequested Event: {}", publicationRequested);
 
-                        // AI 서비스 호출
-                        AIServiceSystem.AIResponse aiResponse = aiServiceSystem
-                                .callGPTApi(
-                                        event.getManuscriptId(), // event 객체 사용
-                                        event.getTitle(), // event 객체 사용
-                                        event.getSummary(), // event 객체 사용
-                                        event.getKeywords(), // event 객체 사용
-                                        event.getAuthorId(), // event 객체 사용
-                                        event.getAuthorName(), // event 객체 사용
-                                        event.getContent()); // event 객체 사용
+                // 핵심 비즈니스 로직을 Mono.fromCallable로 감싸 비동기 처리
+                Mono.fromCallable(() -> {
+                    // Assuming bookWorkRepository.findByManuscriptId returns Optional<BookWork>
+                    Optional<BookWork> optionalBookWork = bookWorkRepository.findByManuscriptId(publicationRequested.getManuscriptId());
 
-                        logger.info("##### [Step 5] AI 서비스 응답 성공적으로 수신 (BookWork ID: {}):",
-                                bookWork.getId());
-                        logger.info("    AI 응답 - Cover Image URL: {}",
-                                aiResponse.getCoverImageUrl());
-                        logger.info("    AI 응답 - Ebook URL: {}",
-                                aiResponse.getEbookUrl());
-                        logger.info("    AI 응답 - Category: {}",
-                                aiResponse.getCategory());
-                        logger.info("    AI 응답 - Price: {}", aiResponse.getPrice());
+                    if (optionalBookWork.isPresent()) {
+                        BookWork existingBookWork = optionalBookWork.get();
+                        log.warn("manuscriptId {} already has been processed. Skipping. Existing BookWork ID: {}",
+                                publicationRequested.getManuscriptId(), existingBookWork.getId());
+                        return Mono.empty(); // 이미 처리된 경우 Mono.empty() 반응형 스트림으로 반환
+                    } else {
+                        // BookWork 객체 생성 방식 수정: static 팩토리 메서드 호출
+                        BookWork newBookWork = BookWork.createRequestedBookWork(
+                                publicationRequested.getManuscriptId(),
+                                publicationRequested.getTitle(),
+                                publicationRequested.getContent(),
+                                publicationRequested.getSummary(),
+                                publicationRequested.getAuthorName(),
+                                publicationRequested.getKeywords(),
+                                publicationRequested.getAuthorId()
+                                // BookWork.createRequestedBookWork 내부에서 상태 설정
+                        );
+                        bookWorkRepository.save(newBookWork); // 첫 번째 DB 저장
+                        log.info("##### [Step 2] BookWork created and initialized (ID: {}).", newBookWork.getId());
 
-                        // BookWork 엔티티에 AI 응답 정보 업데이트 및 상태 변경 (completeAiProcessing 메서드 호출)
-                        bookWork.completeAiProcessing( // BookWork 도메인에 이 메서드가 정의되어 있어야 합니다.
+                        // AI 서비스 호출은 Mono를 반환하므로, 이를 다시 flatMap으로 체인해야 합니다.
+                        // Mono.fromCallable 내부에서는 블로킹 연산만 하는 것이 일반적입니다.
+                        // 따라서 이 Mono<AIResponse>를 호출하고 그 결과를 기다릴 수 있도록 Mono.block()을 사용하거나
+                        // 이 전체 블록을 Mono 체인으로 바꿔야 합니다.
+                        // 여기서는 Mono.fromCallable 안에서 AI 호출을 동기적으로 처리 (block() 사용)
+                        // 단, 이렇게 하면 Schedulers.boundedElastic() 스레드가 블로킹됩니다.
+                        // 더 좋은 방법은 PolicyHandler 전체를 Reactive하게 만드는 것이지만,
+                        // 현재 구조상 가장 빠르게 에러를 해결하는 방향으로 일단 block()을 추가합니다.
+                        // 이 부분은 나중에 Mono.fromCallable 바깥으로 빼내어 flatMap으로 연결하는 것을 재고려해야 합니다.
+
+                        AIServiceSystem.AIResponse aiResponse = aiServiceSystem.callGPTApi(
+                            newBookWork.getManuscriptId(),
+                            newBookWork.getTitle(),
+                            newBookWork.getContent(),
+                            newBookWork.getSummary(),
+                            newBookWork.getAuthorName(),
+                            newBookWork.getKeywords(),
+                            newBookWork.getAuthorId()
+                        ).block(); // <--- 여기서 .block()을 사용해야 컴파일 에러가 해결됩니다.
+
+                        if (aiResponse == null) {
+                            log.error("##### AI service call returned null for BookWork ID: {}", newBookWork.getId());
+                            // AI 서비스 실패 시 처리 로직 (예: BookWork 상태 변경)
+                            // newBookWork.failAiProcessing("AI service returned null");
+                            // bookWorkRepository.save(newBookWork);
+                            return Mono.empty(); // 실패 시 스트림 종료
+                        }
+
+                        log.info("##### [Step 5] AI 서비스 응답 성공적으로 수신 (BookWork ID: {}): {}", newBookWork.getId(), aiResponse);
+
+                        newBookWork.completeAiProcessing(
                                 aiResponse.getCoverImageUrl(),
                                 aiResponse.getEbookUrl(),
                                 aiResponse.getCategory(),
                                 aiResponse.getPrice());
-                        bookWorkRepository.save(bookWork); // 업데이트된 BookWork 저장
+                        bookWorkRepository.save(newBookWork); // 두 번째 DB 저장 (업데이트)
 
-                        logger.info("##### [Step 6] BookWork 엔티티 (ID: {}) 최종 정보 업데이트 완료. AutoPublished 이벤트 발행 준비 중.",
-                                bookWork.getId());
+                        AutoPublished autoPublishedEvent = AutoPublished.builder()
+                                .id(newBookWork.getId())
+                                .manuscriptId(newBookWork.getManuscriptId())
+                                .title(newBookWork.getTitle())
+                                .content(newBookWork.getContent())
+                                .summary(newBookWork.getSummary())
+                                .keywords(newBookWork.getKeywords())
+                                .authorId(newBookWork.getAuthorId())
+                                .authorName(newBookWork.getAuthorName())
+                                .coverImageUrl(newBookWork.getCoverImageUrl())
+                                .ebookUrl(newBookWork.getEbookUrl())
+                                .category(newBookWork.getCategory())
+                                .price(newBookWork.getPrice())
+                                .status(newBookWork.getStatus())
+                                .build();
 
-                        // --- AutoPublished 이벤트 발행 로직 시작 ---
-                        AutoPublished autoPublishedEvent = new AutoPublished();
-                        autoPublishedEvent.setId(bookWork.getId());
-                        autoPublishedEvent.setManuscriptId(bookWork.getManuscriptId());
-                        autoPublishedEvent.setTitle(bookWork.getTitle());
-                        autoPublishedEvent.setAuthorId(bookWork.getAuthorId());
-                        autoPublishedEvent.setAuthorName(bookWork.getAuthorName());
-                        autoPublishedEvent.setCoverImageUrl(bookWork.getCoverImageUrl());
-                        autoPublishedEvent.setEbookUrl(bookWork.getEbookUrl());
-                        autoPublishedEvent.setCategory(bookWork.getCategory());
-                        autoPublishedEvent.setPrice(bookWork.getPrice());
-                        autoPublishedEvent.publish(); // AutoPublished 이벤트 발행
+                        // 이벤트를 보내는 부분은 트랜잭션 커밋 이후에 실행되어야 하지만,
+                        // StreamBridge는 일반적으로 즉시 전송을 시도합니다.
+                        // 트랜잭션 후 발행을 위해서는 ApplicationEventPublisher 또는
+                        // @TransactionalEventListener 사용을 고려할 수 있습니다.
+                        streamBridge.send("autoPublishedPublisher-out-0", autoPublishedEvent);
+                        log.info("##### [Step 6-1] AutoPublished Event published (BookWork ID: {}).", newBookWork.getId());
 
-                        logger.info("##### [Step 6-1] AutoPublished 이벤트 발행 완료 (BookWork ID: {}).",
-                                bookWork.getId());
-                        // --- AutoPublished 이벤트 발행 로직 끝 ---
-
-                        logger.info("##### [Step 6] BookWork 전체 처리 프로세스 완료 (BookWork ID: {}).\n",
-                                bookWork.getId());
-
-                    } catch (Exception e) {
-                        logger.error("##### [Step 7] AI 서비스 호출 중 치명적인 오류 발생 (BookWork ID: {}): {}",
-                                bookWork.getId(), e.getMessage(), e);
-                        bookWork.failAiProcessing(e.getMessage()); // BookWork 도메인에 이 메서드가 정의되어 있어야 합니다.
-                        bookWorkRepository.save(bookWork); // 실패 상태 업데이트 저장
-                        logger.error("##### [Step 7] BookWork (ID: {}) 상태가 'AI_PROCESSING_FAILED'로 업데이트됨.",
-                                bookWork.getId());
+                        return Mono.just(autoPublishedEvent); // 결과 래핑
                     }
-                }, () -> {
-                    // BookWork을 찾지 못한 경우 (이벤트가 너무 빨리 오거나 이전 단계 오류)
-                    logger.warn(
-                            "##### [WARNING] PublicationInfoCreationRequested 이벤트에 해당하는 BookWork (ID: {})를 DB에서 찾을 수 없습니다. (이전 이벤트 처리 누락 또는 타이밍 문제)",
-                            event.getBookWorkId()); // PublicationInfoCreationRequested에 getBookWorkId()가 있어야 함
-                });
+                })
+                .flatMap(monoResult -> monoResult) // Mono.empty() 또는 Mono.just()를 받아서 Mono<T>로 플랫맵
+                                                 // 이 부분이 이제 필요 없음. Mono.fromCallable 내부에서 Mono를 반환할 때.
+                                                 // 즉, Mono.fromCallable 자체의 반환 타입이 Mono<Mono<T>>가 될 수 있음.
+                                                 // 아래 .subscribe() 부분에서 다시 .subscribe() 호출 방지.
+                .subscribeOn(Schedulers.boundedElastic()) // 블로킹 I/O 작업을 위한 스케줄러 (DB, AI block())
+                .subscribe(
+                        result -> {
+                            // 성공 시 처리 로직
+                            if (result instanceof AutoPublished) {
+                                log.info("##### PublicationRequested event processing completed successfully for BookWork ID: {}", ((AutoPublished)result).getId());
+                            } else {
+                                log.info("##### PublicationRequested event processing completed (skipped).");
+                            }
+                        },
+                        error -> log.error("Error processing PublicationRequested event asynchronously: {}", error.getMessage(), error)
+                );
+
+            } catch (Exception e) {
+                log.error("##### Error processing PublicationRequested event (initial parsing/setup): {}", e.getMessage(), e);
+            }
         };
     }
 }

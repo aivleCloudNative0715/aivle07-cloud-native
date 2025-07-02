@@ -1,7 +1,10 @@
 package aivlecloudnative.domain;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+import java.util.Optional;
 
 public interface BookWorkRepository extends JpaRepository<BookWork, Long> {
-        // JpaRepository를 상속받으면 findById, save, findAll 등 기본 CRUD 메서드가 자동으로 제공
+        List<BookWork> findByAuthorId(String authorId);
+        Optional<BookWork> findByManuscriptId(Long manuscriptId);
 }

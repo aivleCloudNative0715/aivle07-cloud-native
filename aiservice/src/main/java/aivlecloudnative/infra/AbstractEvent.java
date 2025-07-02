@@ -1,92 +1,40 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.AiserviceApplication; // ApplicationContext를 가져오기 위함 (Bean을 얻기 위함)
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.BeanUtils;
-import org.springframework.cloud.stream.function.StreamBridge; // StreamBridge import
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.util.MimeTypeUtils;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-//<<< Clean Arch / Outbound Adaptor
-public class AbstractEvent {
+import java.time.LocalDateTime;
 
-    String eventType;
-    Long timestamp;
+@Getter
+@Setter
+@ToString
+public abstract class AbstractEvent {
+    private String eventType;
+    private LocalDateTime timestamp;
 
-    public AbstractEvent(Object aggregate) {
-        this();
-        BeanUtils.copyProperties(aggregate, this);
+    // ObjectMapper 인스턴스를 static final로 선언하여 재사용
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    static {
+        OBJECT_MAPPER.registerModule(new JavaTimeModule());
+        OBJECT_MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     public AbstractEvent() {
-        this.setEventType(this.getClass().getSimpleName());
-        this.timestamp = System.currentTimeMillis();
+        this.eventType = this.getClass().getSimpleName();
+        this.timestamp = LocalDateTime.now();
     }
 
-    public void publish() {
-        /**
-         * spring streams 방식 (StreamBridge 사용)
-         */
-        // KafkaProcessor 대신 StreamBridge를 사용합니다.
-        StreamBridge streamBridge = AiserviceApplication.applicationContext.getBean(StreamBridge.class);
-
-        // "event-out"은 메시지를 보낼 output 바인딩의 이름입니다.
-        // application.yml 또는 application.properties에
-        // spring.cloud.stream.bindings.event-out.destination=your-topic-name
-        // 과 같이 정의되어야 합니다.
-        streamBridge.send("event-out-0",
-                MessageBuilder
-                        .withPayload(this)
-                        .setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
-                        .setHeader("type", getEventType())
-                        .build());
-    }
-
-    public void publishAfterCommit() {
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronizationAdapter() {
-                    @Override
-                    public void afterCompletion(int status) {
-                        AbstractEvent.this.publish();
-                    }
-                });
-    }
-
-    public String getEventType() {
-        return eventType;
-    }
-
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
-    }
-
-    public Long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public boolean validate() {
-        return getEventType().equals(getClass().getSimpleName());
-    }
-
+    // 모든 하위 클래스가 사용할 toJson 메서드
     public String toJson() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = null;
-
         try {
-            json = objectMapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON format exception", e);
+            return OBJECT_MAPPER.writeValueAsString(this);
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting event to JSON", e);
         }
-
-        return json;
     }
 }
-// >>> Clean Arch / Outbound Adaptor

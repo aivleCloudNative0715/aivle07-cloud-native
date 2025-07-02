@@ -2,77 +2,48 @@ package aivlecloudnative.infra;
 
 import aivlecloudnative.domain.BookWork;
 import aivlecloudnative.domain.BookWorkRepository;
-import aivlecloudnative.domain.PublicationInfoCreationRequested; // 이 이벤트는 여기서 발행
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.messaging.support.MessageBuilder;
-import jakarta.transaction.Transactional;
-
-import java.time.LocalDateTime;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import java.util.List;
+import java.util.Collections;
+import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/bookWorks")
-@Transactional
 public class BookWorkController {
 
-    @Autowired
-    private BookWorkRepository bookWorkRepository;
+    // 로거 클래스 이름 수정
+    private static final Logger log = LoggerFactory.getLogger(BookWorkController.class);
+    private final BookWorkRepository bookWorkRepository;
 
-    @Autowired
-    private StreamBridge streamBridge; // StreamBridge 주입
+    public BookWorkController(BookWorkRepository bookWorkRepository) {
+        this.bookWorkRepository = bookWorkRepository;
+    }
 
-    // BookWork 등록 API
-    @PostMapping
-    public ResponseEntity<BookWork> createBookWork(@RequestBody BookWork bookWork) { // @RequestBody는 BookWork 엔티티 자체를
-                                                                                     // 받도록
-        try {
-            // BookWork 상태 초기화
-            bookWork.setStatus("REQUESTED"); // 초기 상태 (PublicationRequested와 구분)
-            bookWork.setCreatedDate(LocalDateTime.now());
+    // authorId로 BookWork 조회 API (단일 BookWork 반환 가정)
+    @GetMapping("/{authorId}")
+    public ResponseEntity<List<BookWork>> getBookWorksByAuthorId(@PathVariable String authorId) { // 메서드명 변경 (복수형)
+        log.info("Attempting to retrieve BookWorks for authorId: {}", authorId);
 
-            // DB에 BookWork 저장
-            BookWork savedBookWork = bookWorkRepository.save(bookWork);
+        // bookWorkRepository.findByAuthorId(authorId)가 List<BookWork>를 반환한다고 가정
+        List<BookWork> books = bookWorkRepository.findByAuthorId(authorId);
 
-            // PublicationInfoCreationRequested 이벤트를 직접 발행
-            PublicationInfoCreationRequested event = new PublicationInfoCreationRequested(savedBookWork);
-
-            // StreamBridge를 사용하여 이벤트 발행 (application.yml의 바인딩 이름 사용)
-            // "publicationInfoCreationRequested-out-0" 바인딩으로 전송
-            boolean success = streamBridge.send("publicationInfoCreationRequested-out-0",
-                    MessageBuilder.withPayload(event).build());
-
-            if (!success) {
-                System.err.println("Failed to send PublicationInfoCreationRequested event for manuscriptId: "
-                        + savedBookWork.getManuscriptId()); // <<< getManuscriptId -> getManuscriptId
-            } else {
-                System.out.println("##### [Controller] PublicationInfoCreationRequested 이벤트 발행 완료: " + event.toJson());
-            }
-
-            return new ResponseEntity<>(savedBookWork, HttpStatus.OK);
-        } catch (Exception e) {
-            System.err.println("Error creating BookWork: " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        if (!books.isEmpty()) {
+            log.info("Successfully retrieved {} BookWorks for authorId: {}", books.size(), authorId);
+            return new ResponseEntity<>(books, HttpStatus.OK); // 조회된 목록 전체 반환
+        } else {
+            log.warn("No BookWorks found for authorId: {}", authorId);
+            // 책이 없을 경우, 404 Not Found 대신 빈 리스트와 200 OK를 반환하는 것이 RESTful API에서 더 흔함
+            // 클라이언트는 빈 배열을 받고 '책이 없음'을 인지할 수 있습니다.
+            return new ResponseEntity<>(Collections.emptyList(), HttpStatus.OK);
+            // 만약 404를 원한다면:
+            // return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-    }
-
-    // BookWork 조회 (필요하다면 추가)
-    @GetMapping("/{id}")
-    public ResponseEntity<BookWork> getBookWork(@PathVariable Long id) {
-        return bookWorkRepository.findById(id)
-                .map(bookWork -> new ResponseEntity<>(bookWork, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    // 모든 BookWork 조회 (페이징 포함)
-    @GetMapping
-    public ResponseEntity<Page<BookWork>> getAllBookWorks(Pageable pageable) {
-        Page<BookWork> bookWorks = bookWorkRepository.findAll(pageable);
-        return new ResponseEntity<>(bookWorks, HttpStatus.OK);
     }
 }

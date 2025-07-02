@@ -1,16 +1,22 @@
-# AI 서비스의 application.yml
-
 server:
-  port: 8084
+    port: 8084
 
 spring:
   application:
     name: aiservice
-
-  # --- 기본 프로파일 (default) 설정 ---
+  # --- 기본 프로필 (default) 설정 ---
   config:
     activate:
-      on-profile: default # 'default' 프로파일 활성화
+      on-profile: default
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
   jpa:
     properties:
       hibernate:
@@ -19,26 +25,12 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      # PolicyHandler에 정의된 모든 Consumer 빈 메서드 이름을 여기에 추가합니다.
-      # publicationRequestedIn(), publicationInfoCreationRequestedIn()
-      definition: publicationRequestedIn;publicationInfoCreationRequestedIn # 콤마(,) 또는 세미콜론(;)으로 구분
+      # publicationRequested: 집필관리 서비스에서 발행한 출간요청됨 이벤트 구독
+      definition: publicationRequestedSubscriber;autoPublishedPublisher
     stream:
       kafka:
         binder:
-          brokers: localhost:9092 # 로컬 개발 환경용 Kafka 주소 (호스트에서 직접 Kafka 실행 시)
-          consumer:
-            # Kafka 메시지 값을 JSON 문자열로 읽도록 지정합니다.
-            # Spring Cloud Stream이 이 문자열을 PublicationRequested 객체로 변환합니다.
-            value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-            # 또는, Spring Kafka의 JsonDeserializer를 직접 사용할 수도 있지만,
-            # Spring Cloud Stream의 message converter가 보통 StringDeserializer와 함께 잘 작동합니다.
-            # value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-            # enable.auto.commit은 true로 설정하여 메시지 처리 후 자동 커밋되도록 하는 것이 일반적입니다.
-            # 수동 커밋을 원한다면 enable.auto.commit: false로 유지하고, `message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class).acknowledge();`
-            # 와 같은 코드를 메시지 처리 로직의 맨 끝에 추가해야 합니다.
-            # 테스트 단계에서는 일단 true로 설정하여 메시지 소비 자체를 확인하는 것이 좋습니다.
-            # auto-commit-offset: true # Spring Cloud Stream 3.x에서 autoCommitOffset은 consumer.enable-auto-commit으로 대체됩니다.
-            enable-auto-commit: true
+          brokers: localhost:9092 # 로컬 환경 카프카 브로커 주소
         streams:
           binder:
             configuration:
@@ -48,28 +40,24 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        # PolicyHandler의 publicationRequestedIn() 메서드와 매핑됩니다.
-        publicationRequestedIn-in-0: # 이 바인딩은 PublicationRequested 이벤트를 수신합니다.
-          destination: aivlecloudnative
-          group: aiservice-publication-request-group
-          contentType: application/json
-          consumer:
-            maxAttempts: 3
+        # --- 인바운드 (구독) 바인딩 설정 ---
 
-        # PolicyHandler의 publicationInfoCreationRequestedIn() 메서드와 매핑됩니다.
-        publicationInfoCreationRequestedIn-in-0: # 이 바인딩은 PublicationInfoCreationRequested 이벤트를 수신합니다.
-          destination: aivlecloudnative
-          group: aiservice-publication-info-group
-          contentType: application/json
+        # 1. 출간요청됨(publicationRequested) 이벤트 구독 (집필관리 -> ai서비스)
+        publicationRequestedSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: ai-book-publicationRequested-group # 이 컨슈머 그룹의 이름
+          contentType: application/json # 메시지 콘텐츠 타입
           consumer:
-            maxAttempts: 3
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
 
-        publicationInfoCreationRequested-out-0: # 이 바인딩은 이벤트를 발행합니다.
-          destination: aivlecloudnative
+        # --- 아웃바운드 (발행) 바인딩 설정 ---
+
+        # 2. 자동출간됨(AutoPublished) 이벤트 발행 (ai서비스 -> 도서 플랫폼)
+        autoPublishedPublisher-out-0:
+          destination: aivlecloudnative # 이벤트가 발행될 Kafka 토픽
           producer:
-            headerMode: embeddedHeaders
-            partitionCount: 1
-
+            headerMode: headers # 메시지 헤더 모드
+            partitionCount: 1 # 토픽 파티션 수
   gpt:
     api-key: ${SPRING_GPT_API_KEY}
     base-url: https://api.openai.com/v1
@@ -79,28 +67,19 @@ spring:
 
 logging:
   level:
-    root: INFO
     org.hibernate.type: trace
-    org.springframework.cloud: TRACE
-    org.springframework.web.reactive.function.client: DEBUG
-    aivlecloudnative: DEBUG
-    org.springframework.cloud.stream: TRACE
-    org.springframework.kafka: TRACE
-    org.apache.kafka: TRACE
+    org.springframework.cloud: debug
 
---- # --- 여기는 프로필 간의 구분선입니다. ---
+---
 
 server:
-  port: 8084
+  port: 8087 # Docker 프로필에서도 포트 변경
 
 spring:
-  application:
-    name: aiservice
-
-  # --- Docker 프로파일 설정 ---
+  # --- Docker 프로필 설정 ---
   config:
     activate:
-      on-profile: docker # 'docker' 프로파일 활성화
+      on-profile: docker
   jpa:
     properties:
       hibernate:
@@ -109,13 +88,12 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      # PolicyHandler에 정의된 모든 Consumer 빈 메서드 이름을 여기에 추가합니다.
-      # publicationRequestedIn(), publicationInfoCreationRequestedIn()
-      definition: publicationRequestedIn;publicationInfoCreationRequestedIn # 콤마(,) 또는 세미콜론(;)으로 구분
+      definition: publicationRequestedSubscriber;
+                  autoPublishedPublisher
     stream:
       kafka:
         binder:
-          brokers: my-kafka:9092 # Docker 네트워크 내부 통신용 Kafka 주소 (docker-compose.yml에 정의된 advertised.listeners의 PLAINTEXT://kafka:29092와 일치)
+          brokers: my-kafka:9092 # Docker 환경에서는 도커 네트워크 내부의 카프카 서비스 이름 사용
         streams:
           binder:
             configuration:
@@ -125,42 +103,28 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        # PolicyHandler의 publicationRequestedIn() 메서드와 매핑됩니다.
-        publicationRequestedIn-in-0:
-          destination: aivlecloudnative
-          group: aiservice-publication-request-group
-          contentType: application/json
-          consumer:
-            maxAttempts: 3
+        # --- 인바운드 (구독) 바인딩 설정 ---
 
-        # PolicyHandler의 publicationInfoCreationRequestedIn() 메서드와 매핑됩니다.
-        publicationInfoCreationRequestedIn-in-0:
-          destination: aivlecloudnative
-          group: aiservice-publication-info-group
-          contentType: application/json
+        # 1. 출간요청됨(publicationRequested) 이벤트 구독 (집필관리 -> ai서비스)
+        publicationRequestedSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: ai-book-publicationRequested-group # 이 컨슈머 그룹의 이름
+          contentType: application/json # 메시지 콘텐츠 타입
           consumer:
-            maxAttempts: 3
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
 
-        publicationInfoCreationRequested-out-0:
-          destination: aivlecloudnative
+        # --- 아웃바운드 (발행) 바인딩 설정 ---
+
+        # 2. 자동출간됨(AutoPublished) 이벤트 발행 (ai서비스 -> 도서 플랫폼)
+        autoPublishedPublisher-out-0:
+          destination: aivlecloudnative # 이벤트가 발행될 Kafka 토픽
           producer:
-            headerMode: embeddedHeaders
-            partitionCount: 1
+            headerMode: headers # 메시지 헤더 모드
+            partitionCount: 1 # 토픽 파티션 수
 
-  gpt:
-    api-key: ${SPRING_GPT_API_KEY}
-    base-url: https://api.openai.com/v1
-    image-url: https://api.openai.com/v1
-    model: gpt-4o-mini
-    image-model: dall-e-3
-
-logging:
-  level:
-    root: INFO
-    org.hibernate.type: trace
-    org.springframework.cloud: TRACE
-    org.springframework.web.reactive.function.client: DEBUG
-    aivlecloudnative: DEBUG
-    org.springframework.cloud.stream: TRACE
-    org.springframework.kafka: TRACE
-    org.apache.kafka: TRACE
+gpt:
+  api-key: ${SPRING_GPT_API_KEY}
+  base-url: https://api.openai.com/v1
+  image-url: https://api.openai.com/v1
+  model: gpt-4o-mini
+  image-model: dall-e-3
