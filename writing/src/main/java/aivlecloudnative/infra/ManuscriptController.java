@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.List;
 
 import aivlecloudnative.domain.ManuscriptListRepository;
 import aivlecloudnative.domain.ManuscriptList;
@@ -66,26 +67,42 @@ public class ManuscriptController {
 
     // 리드 모델(Read Model) 조회 엔드포인트
 
-    // 1. 모든 원고 목록 조회
-    @GetMapping
-    public ResponseEntity<Iterable<ManuscriptList>> getAllManuscripts() {
-        System.out.println("##### /manuscripts called (GET all) #####");
-        // ManuscriptListRepository를 사용하여 모든 ManuscriptList 데이터를 조회
-        Iterable<ManuscriptList> manuscriptLists = manuscriptListRepository.findAll();
-        return new ResponseEntity<>(manuscriptLists, HttpStatus.OK);
+    // 1. 특정 작가의 모든 원고 목록 조회: GET /manuscriptLists/{authorId}
+    @GetMapping("/{authorId}") // 경로 변수 authorId를 사용
+    public ResponseEntity<List<ManuscriptList>> getManuscriptsByAuthor(
+            @PathVariable String authorId // authorId를 경로 변수로 받음
+    ) {
+        System.out.println("##### /manuscriptLists/" + authorId + " called (GET all by authorId) #####");
+
+        // 경로 변수로 받았으므로 null/empty 체크는 일반적으로 불필요합니다 (경로가 비어있으면 404가 발생)
+        // 만약 authorId의 특정 패턴 유효성 검사가 필요하면 여기에 추가 가능
+
+        System.out.println("##### Fetching manuscripts for authorId: " + authorId + " #####");
+        List<ManuscriptList> manuscriptLists = manuscriptListRepository.findByAuthorId(authorId);
+
+        if (manuscriptLists.isEmpty()) {
+            // 해당 작가의 원고가 없을 경우 404 Not Found 반환
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(manuscriptLists, HttpStatus.OK);
+        }
     }
 
-    // 2. 특정 원고 상세 조회
-    @GetMapping("/{manuscriptId}")
-    public ResponseEntity<ManuscriptList> getManuscriptById(@PathVariable Long manuscriptId) {
-        System.out.println("##### /manuscripts/{manuscriptId} called (GET by ID) #####");
-        // ManuscriptListRepository를 사용하여 특정 ID의 ManuscriptList 데이터를 조회
-        Optional<ManuscriptList> manuscriptListOptional = manuscriptListRepository.findById(manuscriptId);
+    // 2. 특정 작가의 특정 원고 상세 조회: GET /manuscriptLists/{authorId}/{manuscriptId}
+    @GetMapping("/{authorId}/{manuscriptId}") // authorId와 manuscriptId를 모두 경로 변수로 사용
+    public ResponseEntity<ManuscriptList> getSpecificManuscriptByAuthor(
+            @PathVariable String authorId,
+            @PathVariable Long manuscriptId
+    ) {
+        System.out.println("##### /manuscriptLists/" + authorId + "/" + manuscriptId + " called (GET by authorId and manuscriptId) #####");
+
+        // ManuscriptListRepository에 추가된 findByAuthorIdAndId 메서드 사용
+        Optional<ManuscriptList> manuscriptListOptional = manuscriptListRepository.findByAuthorIdAndManuscriptId(authorId, manuscriptId);
 
         if (manuscriptListOptional.isPresent()) {
             return new ResponseEntity<>(manuscriptListOptional.get(), HttpStatus.OK);
         } else {
-
+            // 해당 작가의 원고가 아니거나 원고 ID가 존재하지 않을 경우 404 Not Found 반환
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }

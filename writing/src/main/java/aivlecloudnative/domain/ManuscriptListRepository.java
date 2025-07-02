@@ -15,4 +15,6 @@ public interface ManuscriptListRepository extends JpaRepository<ManuscriptList, 
 
     List<ManuscriptList> findByAuthorId(String authorId);
 
+    Optional<ManuscriptList> findByAuthorIdAndManuscriptId(String authorId, Long manuscriptId);
+
 }

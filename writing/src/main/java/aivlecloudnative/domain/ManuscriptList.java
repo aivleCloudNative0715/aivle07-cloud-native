@@ -32,6 +32,8 @@ public class ManuscriptList {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    private String authorName;
+
     private String keywords;
     private String summary;
 

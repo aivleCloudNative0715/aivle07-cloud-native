@@ -15,6 +15,7 @@ public class ManuscriptRegistered extends AbstractEvent {
     private String authorId;
     private String title;
     private String content;
+    private String authorName;
     private String summary;
     private String keywords;
     private String status;
@@ -26,6 +27,7 @@ public class ManuscriptRegistered extends AbstractEvent {
         this.authorId = aggregate.getAuthorId();
         this.title = aggregate.getTitle();
         this.content = aggregate.getContent();
+        this.authorName = aggregate.getAuthorName();
         this.summary = aggregate.getSummary();
         this.keywords = aggregate.getKeywords();
         this.status = aggregate.getStatus();
