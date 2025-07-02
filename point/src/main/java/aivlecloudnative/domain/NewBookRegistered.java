@@ -1,4 +1,4 @@
-// src/main/java/aivlecloudnative/domain/AccessRequestedWithPoints.java
+// src/main/java/aivlecloudnative/domain/NewBookRegistered.java
 package aivlecloudnative.domain;
 
 import aivlecloudnative.infra.AbstractEvent;
@@ -11,7 +11,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AccessRequestedWithPoints extends AbstractEvent {
-    private String userId;
+public class NewBookRegistered extends AbstractEvent {
     private String bookId;
+    private String title;
+    private String author;
+    private Long price;
+    private String genre;
 }

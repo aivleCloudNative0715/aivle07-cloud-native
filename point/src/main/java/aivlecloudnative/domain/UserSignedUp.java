@@ -1,17 +1,19 @@
-// src/main/java/aivlecloudnative/domain/AccessRequestedWithPoints.java
 package aivlecloudnative.domain;
 
 import aivlecloudnative.infra.AbstractEvent;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // 추가
 
 @Getter
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AccessRequestedWithPoints extends AbstractEvent {
+public class UserSignedUp extends AbstractEvent {
     private String userId;
-    private String bookId;
+    private String email;
+    private String userName;
+    private String message;
+    private Boolean isKT;
 }

@@ -2,159 +2,174 @@ server:
     port: 8080
 
 spring:
-    application:
-        name: point
+  application:
+    name: point
+  # --- 기본 프로필 (default) 설정 ---
+  config:
+    activate:
+      on-profile: default
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
+  cloud:
+    function:
+      # 포인트 서비스에서 처리할 모든 인바운드/아웃바운드 함수를 명확히 정의
+      # userSignedUpSubscriber: 사용자 관리에서 발행하는 회원가입됨 이벤트 구독
+      # pointsGrantedPublisher: 포인트 서비스에서 발행하는 포인트 지급됨 이벤트
+      # accessRequestedWithPointsSubscriber: 사용자 관리에서 발행하는 포인트로 열람 신청함 이벤트 구독
+      # pointsDeductedPublisher: 포인트 서비스에서 발행하는 포인트 차감됨 이벤트
+      # newBookRegisteredSubscriber: 서재 플랫폼에서 발행하는 신규도서등록됨 이벤트를 구독하여 도서 정보를 저장하는 함수
+      definition: userSignedUpSubscriber;
+                  pointsGrantedPublisher;
+                  accessRequestedWithPointsSubscriber;
+                  pointsDeductedPublisher;
+                  newBookRegisteredSubscriber
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092 # 로컬 환경 카프카 브로커 주소
+        streams:
+          binder:
+            configuration:
+              default:
+                key:
+                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                value:
+                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      bindings:
+        # --- 인바운드 (구독) 바인딩 설정 ---
 
----
+        # 1. 회원가입됨(userSignedUp) 이벤트 구독 (사용자 관리 -> 포인트)
+        userSignedUpSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: point-user-signup-group # 이 컨슈머 그룹의 이름
+          contentType: application/json # 메시지 콘텐츠 타입
+          consumer:
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
 
-spring:
-    config:
-      activate:
-        on-profile: default
-    h2:
-        console:
-            enabled: true
-            path: /h2-console
-    datasource:
-        url: jdbc:h2:mem:testdb
-        username: sa
-        password: 
-        driver-class-name: org.h2.Driver
-    jpa:
-        properties:
-            hibernate:
-            show_sql: true
-            format_sql: true
-            implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
-    cloud:
-        stream:
-            kafka:
-                binder:
-                    brokers: localhost:9092
-                    autoAddPartitions: true
-                    autoCreateTopics: true
-                    consumer-properties:
-                        value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-                        spring.json.value.default.type: aivlecloudnative.domain.PointsDeducted
-                        spring.json.trusted.packages: "*"
-                        spring.json.use.type.headers: true
-                    streams:
-                        binder:
-                            configuration:
-                            default:
-                                key:
-                                    serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                                value:
-                                    serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-            function:
-                definition: processSubscriberSignedUp;processAccessRequestedWithPoints;processPointsGrantedEvent;processPointsDeductedEvent                
-            bindings:
-                processSubscriberSignedUp-in-0:
-                    destination: aivlecloudnative
-                    group: point
-                    contentType: application/json
-                processAccessRequestedWithPoints-in-0:
-                    destination: access_requested_with_points
-                    group: point
-                    contentType: application/json
+        # 3. 포인트로 열람 신청함(accessRequestedWithPoints) 이벤트 구독 (사용자 관리 -> 포인트)
+        accessRequestedWithPointsSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: point-access-request-group # 이 컨슈머 그룹의 이름
+          contentType: application/json # 메시지 콘텐츠 타입
+          consumer:
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
 
-                processPointsGrantedEvent-in-0:
-                    destination: points_granted
-                    group: point
-                    contentType: application/json
-                processPointsDeductedEvent-in-0:
-                    destination: points_deducted
-                    group: point-v2
-                    contentType: application/json
+        # 5. 신규도서등록됨(newBookRegistered) 이벤트 구독 (서재 플랫폼 -> 포인트)
+        newBookRegisteredSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: point-new-book-info-group # 신규 도서 정보 저장을 위한 컨슈머 그룹
+          contentType: application/json # 메시지 콘텐츠 타입
+          consumer:
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
 
-                pointsGranted-out-0:
-                    destination: points_granted
-                    contentType: application/json
-                pointsDeducted-out-0:
-                    destination: points_deducted
-                    contentType: application/json
+        # --- 아웃바운드 (발행) 바인딩 설정 ---
+
+        # 2. 포인트 지급됨(PointsGranted) 이벤트 발행 (포인트 -> 다른 서비스)
+        pointsGrantedPublisher-out-0:
+          destination: aivlecloudnative # 이벤트가 발행될 Kafka 토픽
+          producer:
+            headerMode: headers # 메시지 헤더 모드
+            partitionCount: 1 # 토픽 파티션 수
+
+        # 4. 포인트 차감됨(PointsDeducted) 이벤트 발행 (포인트 -> 다른 서비스)
+        pointsDeductedPublisher-out-0:
+          destination: aivlecloudnative # 이벤트가 발행될 Kafka 토픽
+          producer:
+            headerMode: headers # 메시지 헤더 모드
+            partitionCount: 1 # 토픽 파티션 수
+
 logging:
   level:
     org.hibernate.type: trace
     org.springframework.cloud: debug
-    org.springframework.kafka.listener: debug
-    org.springframework.messaging: debug
 
 ---
 
 server:
-  port: 8087
+  port: 8087 # Docker 프로필에서도 포트 변경
 
 spring:
-    config:
-        activate:
-            on-profile: docker
-    h2:
-        console:
-            enabled: true
-            path: /h2-console
+  # --- Docker 프로필 설정 ---
+  config:
+    activate:
+      on-profile: docker
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
+  cloud:
+    function:
+      definition: userSignedUpSubscriber;
+                  pointsGrantedPublisher;
+                  accessRequestedWithPointsSubscriber;
+                  pointsDeductedPublisher;
+                  newBookRegisteredSubscriber
+    stream:
+      kafka:
+        binder:
+          brokers: my-kafka:9092 # Docker 환경에서는 도커 네트워크 내부의 카프카 서비스 이름 사용
+        streams:
+          binder:
+            configuration:
+              default:
+                key:
+                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                value:
+                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      bindings:
+        # --- 인바운드 (구독) 바인딩 설정 ---
 
-    datasource:
-        url: jdbc:h2:mem:testdb
-        username: sa
-        password:
-        driver-class-name: org.h2.Driver
-    jpa:
-        properties:
-            hibernate:
-                show_sql: true
-                format_sql: true
-                implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
-    cloud:
-        stream:
-            kafka:
-                binder:
-                    brokers: my-kafka:9092
-                    autoAddPartitions: true
-                    autoCreateTopics: true
-                    consumer-properties:
-                        value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-                        spring.json.value.default.type: aivlecloudnative.domain.PointsDeducted
-                        spring.json.trusted.packages: "*"
-                        spring.json.use.type.headers: true
-            streams:
-                binder:
-                    configuration:
-                        default:
-                            key:
-                                serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                            value:
-                                serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-        function:
-            definition: processSubscriberSignedUp;processAccessRequestedWithPoints;processPointsGrantedEvent;processPointsDeductedEvent
-        bindings:
-            processSubscriberSignedUp-in-0:
-                destination: aivlecloudnative
-                group: point
-                contentType: application/json
-            processAccessRequestedWithPoints-in-0:
-                destination: access_requested_with_points
-                group: point
-                contentType: application/json
+        # 1. 회원가입됨(userSignedUp) 이벤트 구독 (사용자 관리 -> 포인트)
+        userSignedUpSubscriber-in-0:
+          destination: aivlecloudnative
+          group: point-user-signup-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
 
-            processPointsGrantedEvent-in-0:
-                destination: points_granted
-                group: point
-                contentType: application/json
-            processPointsDeductedEvent-in-0:
-                destination: points_deducted
-                group: point-v2
-                contentType: application/json
+        # 3. 포인트로 열람 신청함(accessRequestedWithPoints) 이벤트 구독 (사용자 관리 -> 포인트)
+        accessRequestedWithPointsSubscriber-in-0:
+          destination: aivlecloudnative
+          group: point-access-request-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
 
-            pointsGranted-out-0:
-                destination: points_granted
-                contentType: application/json
-            pointsDeducted-out-0:
-                destination: points_deducted
-                contentType: application/json
+        # 5. 신규도서등록됨(newBookRegistered) 이벤트 구독 (서재 플랫폼 -> 포인트)
+        newBookRegisteredSubscriber-in-0:
+          destination: aivlecloudnative
+          group: point-new-book-info-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
 
+        # --- 아웃바운드 (발행) 바인딩 설정 ---
 
+        # 2. 포인트 지급됨(PointsGranted) 이벤트 발행 (포인트 -> 다른 서비스)
+        pointsGrantedPublisher-out-0:
+          destination: aivlecloudnative
+          producer:
+            headerMode: headers
+            partitionCount: 1
 
-
-      
-          
+        # 4. 포인트 차감됨(PointsDeducted) 이벤트 발행 (포인트 -> 다른 서비스)
+        pointsDeductedPublisher-out-0:
+          destination: aivlecloudnative
+          producer:
+            headerMode: headers
+            partitionCount: 1

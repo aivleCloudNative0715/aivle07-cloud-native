@@ -1,93 +1,248 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.domain.*;
+import aivlecloudnative.domain.BookInfo;
+import aivlecloudnative.domain.BookInfoRepository;
+import aivlecloudnative.domain.NewBookRegistered;
+import aivlecloudnative.domain.Point;
+import aivlecloudnative.domain.PointRepository;
+import aivlecloudnative.domain.PointsGranted;
+import aivlecloudnative.domain.UserSignedUp;
+import aivlecloudnative.domain.AccessRequestedWithPoints;
+import aivlecloudnative.domain.PointsDeducted;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.Payload; 
-import org.springframework.stereotype.Service;
+import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.context.annotation.Bean; 
-import java.util.function.Consumer; 
-import java.util.Optional; 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-@Service
-@Transactional 
+import java.util.function.Consumer;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.util.Optional;
+
+import java.util.function.Function;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Component
+@Transactional
 public class PolicyHandler {
 
-    @Autowired
-    PointRepository pointRepository; 
+    private static final Logger log = LoggerFactory.getLogger(PolicyHandler.class);
 
-    @Bean 
-    public Consumer<SubscriberSignedUp> wheneverSubscriberSignedUp() { 
-        return subscriberSignedUp -> { 
+    @Autowired
+    PointRepository pointRepository;
+    @Autowired
+    BookInfoRepository bookInfoRepository;
+    @Autowired
+    StreamBridge streamBridge;
+
+    private final ObjectMapper objectMapper;
+
+    public PolicyHandler() {
+        this.objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
+
+
+    /**
+     * userSignedUpSubscriber: 사용자 관리에서 발행하는 회원가입됨(UserSignedUp) 이벤트를 구독
+     */
+    @Bean
+    public Consumer<String> userSignedUpSubscriber() {
+        return message -> {
             try {
-                if (!subscriberSignedUp.validate()) {
-                    System.err.println("##### SubscriberSignedUp event validation failed: " + subscriberSignedUp.toJson() + "\n");
-                    return; 
+                log.info("##### Received Raw Message (UserSignedUp): " + message);
+
+                JsonNode jsonNode = objectMapper.readTree(message);
+                String eventType = jsonNode.get("eventType").asText();
+
+                if (!"UserSignedUp".equals(eventType)) {
+                    log.info("##### Skipping event for userSignedUpSubscriber, type mismatch: Expected UserSignedUp, Got " + eventType);
+                    return;
                 }
 
-                System.out.println(
-                    "\n\n##### Listener: Received SubscriberSignedUp event: " + subscriberSignedUp.toJson() + "\n\n"
+                UserSignedUp userSignedUp = objectMapper.treeToValue(jsonNode, UserSignedUp.class);
+                log.info("##### Transformed UserSignedUp Event: {}", userSignedUp);
+
+                Mono.fromCallable(() -> {
+                    Optional<Point> optionalPoint = pointRepository.findByUserId(userSignedUp.getUserId());
+                    if (optionalPoint.isPresent()) {
+                        Point existingPoint = optionalPoint.get();
+                        log.warn("User {} already has points (ID: {}). Skipping initial grant.",
+                                userSignedUp.getUserId(), existingPoint.getId());
+                        return null;
+                    } else {
+                        Point newPoint = Point.createInitialPoint(userSignedUp.getUserId(), userSignedUp.getIsKT());
+                        pointRepository.save(newPoint);
+                        log.info("Granted {} points to user {} (Initial Point ID: {})",
+                                newPoint.getCurrentPoints(), newPoint.getUserId(), newPoint.getId());
+
+                        PointsGranted pointsGrantedEvent = new PointsGranted();
+                        pointsGrantedEvent.setId(newPoint.getId());
+                        pointsGrantedEvent.setUserId(newPoint.getUserId());
+                        pointsGrantedEvent.setCurrentPoints(newPoint.getCurrentPoints());
+                        pointsGrantedEvent.setGrantedPoints(newPoint.getIsKTmember() ? 5000L : 1000L);
+
+                        streamBridge.send("pointsGrantedPublisher-out-0", pointsGrantedEvent);
+
+                        return newPoint;
+                    }
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe(
+                    result -> {},
+                    error -> log.error("Error processing UserSignedUp event asynchronously: {}", error.getMessage(), error)
                 );
 
-                Point point = pointRepository.findByUserId(subscriberSignedUp.getId()).orElseGet(() -> {
-                    Point newPoint = new Point();
-                    newPoint.setUserId(subscriberSignedUp.getId());
-                    // SubscriberSignedUp 이벤트에 isKtMember 필드가 있다고 가정하고 가져옵니다.
-                    // 만약 SubscriberSignedUp에 이 필드가 없다면, 사용자 서비스 팀과 협의하여 이벤트를 확장하거나
-                    // isKTmember 여부를 판별하는 다른 로직이 필요합니다.
-                    // 여기서는 subscriberSignedUp.getIsKt() 메서드가 있다고 가정합니다.
-                    newPoint.setIsKTmember(subscriberSignedUp.getIsKt()); // <-- 이벤트에서 isKTmember 정보 가져오기
-                    newPoint.setCurrentPoints(0); 
-                    return newPoint;
-                });
-
-                // 4. 핵심 BIZ 로직: 회원가입 시 초기 포인트 지급 (KT 멤버십 여부에 따라 다름)
-                int pointsToGrant;
-                if (point.getIsKTmember() != null && point.getIsKTmember()) { // isKTmember가 null이 아니고 true인 경우
-                    pointsToGrant = 5000;
-                    System.out.println("##### Point BIZ Logic: User " + point.getUserId() + " is a KT member. Granting " + pointsToGrant + " points.\n");
-                } else {
-                    pointsToGrant = 1000;
-                    System.out.println("##### Point BIZ Logic: User " + point.getUserId() + " is NOT a KT member. Granting " + pointsToGrant + " points.\n");
-                }
-                // point.getCurrentPoints()는 해당 사용자가 현재 가지고 있는 포인트를 가져옵니다.
-                // 여기에 계산된 pointsToGrant 값을 더하여 새로운 현재 포인트로 설정합니다.
-                point.setCurrentPoints(point.getCurrentPoints() + pointsToGrant);
-                System.out.println("##### Point BIZ Logic: User " + point.getUserId() + " has total current points: " + point.getCurrentPoints() + "\n");
-                // 최종적으로 업데이트된 사용자별 현재 총 포인트를 로그로 출력합니다.
-
-                // 변경된 Point 엔티티를 데이터베이스에 저장 (영속화)
-                // pointRepository.save(point) 메서드를 호출하여 위의 setCurrentPoints()로 변경된 내용을
-                // 데이터베이스에 반영하고 저장합니다. @Transactional 어노테이션 덕분에 이 변경사항은
-                // 트랜잭션이 성공적으로 커밋될 때 데이터베이스에 영구적으로 기록됩니다.
-                pointRepository.save(point);
-                System.out.println("##### Point BIZ Logic: Point entity saved for user " + point.getUserId() + "\n");
-                // 포인트 엔티티가 성공적으로 저장되었음을 로그로 알립니다.
-
-                // 도메인 이벤트 발행: PointsGranted
-                // 포인트 지급이 성공적으로 이루어졌음을 시스템 내 다른 마이크로서비스들에게 알리기 위해
-                // 'PointsGranted'라는 이벤트를 생성합니다. 이 이벤트는 포인트 지급의 "사실"을 담습니다.
-                PointsGranted pointsGranted = new PointsGranted(point);
-                pointsGranted.setUserId(point.getUserId()); 
-                pointsGranted.setPointsGrantedAmount(point.getCurrentPoints()); 
-                pointsGranted.publishAfterCommit();
-                // 이 이벤트는 주로 'PointInquiryViewHandler'와 같은 다른 이벤트 핸들러가 구독하여
-                // 'PointInquiry' (조회 모델)를 업데이트하는 데 사용될 것입니다.
-                System.out.println("##### Event Published: PointsGranted for user " + point.getUserId() + " with amount " + point.getCurrentPoints() + "\n");
-                // 이벤트 발행 성공을 로그로 출력합니다.
-                
             } catch (Exception e) {
-                System.err.println("##### Error processing SubscriberSignedUp event: " + e.getMessage());
-                e.printStackTrace();
+                log.error("##### Error processing UserSignedUp event: {}", e.getMessage(), e);
             }
         };
     }
 
-    // TODO: 구독 신청 시 포인트 차감 BIZ 로직을 위한 Consumer 함수를 여기에 추가해야 합니다.
-    /*
     @Bean
-    public Consumer<AccessRequestedWithPoints> wheneverAccessRequestedWithPoints() {
-        // ... (이전 코드와 동일, 주석 처리된 상태 유지)
+    public Function<String, String> pointsGrantedPublisher() {
+        return s -> s;
     }
-    */
+
+    /**
+     * newBookRegisteredSubscriber: 서재 플랫폼에서 발행하는 신규도서등록됨(NewBookRegistered) 이벤트를 구독
+     */
+    @Bean
+    public Consumer<String> newBookRegisteredSubscriber() {
+        return message -> {
+            try {
+                log.info("##### Received Raw Message (NewBookRegistered): " + message);
+
+                JsonNode jsonNode = objectMapper.readTree(message);
+                String eventType = jsonNode.get("eventType").asText();
+
+                if (!"NewBookRegistered".equals(eventType)) {
+                    log.info("##### Skipping event for newBookRegisteredSubscriber, type mismatch: Expected NewBookRegistered, Got " + eventType);
+                    return;
+                }
+
+                NewBookRegistered newBookRegistered = objectMapper.treeToValue(jsonNode, NewBookRegistered.class);
+                log.info("##### Transformed NewBookRegistered Event: {}", newBookRegistered);
+
+                Mono.fromCallable(() -> {
+                    Optional<BookInfo> optionalBookInfo = bookInfoRepository.findByBookId(newBookRegistered.getBookId());
+                    if (optionalBookInfo.isPresent()) {
+                        BookInfo existingBookInfo = optionalBookInfo.get();
+                        log.warn("Book {} (ID: {}) already exists in BookInfo DB. Skipping.",
+                                newBookRegistered.getBookId(), existingBookInfo.getId());
+                        return null;
+                    } else {
+                        BookInfo bookInfo = BookInfo.builder()
+                                .bookId(newBookRegistered.getBookId())
+                                .price(newBookRegistered.getPrice())
+                                .build();
+                        bookInfoRepository.save(bookInfo);
+                        log.info("Saved new book info: {} with price {}",
+                                bookInfo.getBookId(), bookInfo.getPrice());
+                        return bookInfo;
+                    }
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe(
+                    result -> {},
+                    error -> log.error("Error processing NewBookRegistered event asynchronously: {}", error.getMessage(), error)
+                );
+
+            } catch (Exception e) {
+                log.error("##### Error processing NewBookRegistered event: {}", e.getMessage(), e);
+            }
+        };
+    }
+
+    /**
+     * accessRequestedWithPointsSubscriber: 사용자 관리에서 발행하는 포인트로 열람 신청함(AccessRequestedWithPoints) 이벤트를 구독
+     */
+    @Bean
+    public Consumer<String> accessRequestedWithPointsSubscriber() {
+        return message -> {
+            try {
+                log.info("##### Received Raw Message (AccessRequestedWithPoints): " + message);
+
+                JsonNode jsonNode = objectMapper.readTree(message);
+                String eventType = jsonNode.get("eventType").asText();
+
+                if (!"AccessRequestedWithPoints".equals(eventType)) {
+                    log.info("##### Skipping event for accessRequestedWithPointsSubscriber, type mismatch: Expected AccessRequestedWithPoints, Got " + eventType);
+                    return;
+                }
+
+                AccessRequestedWithPoints accessRequest = objectMapper.treeToValue(jsonNode, AccessRequestedWithPoints.class);
+                log.info("##### Transformed AccessRequestedWithPoints Event: {}", accessRequest);
+
+                final String userId = accessRequest.getUserId();
+                final String bookId = accessRequest.getBookId();
+
+                Mono.fromCallable(() -> {
+                    Optional<BookInfo> optionalBookInfo = bookInfoRepository.findByBookId(bookId);
+                    if (optionalBookInfo.isEmpty()) {
+                        log.warn("BookInfo for bookId {} not found. Cannot deduct points.", bookId);
+                        return null;
+                    }
+                    Long requiredPoints = optionalBookInfo.get().getPrice();
+
+                    Optional<Point> optionalPoint = pointRepository.findByUserId(userId);
+                    if (optionalPoint.isEmpty()) {
+                        log.warn("Points for userId {} not found. Cannot deduct points.", userId);
+                        return null;
+                    }
+
+                    Point userPoint = optionalPoint.get();
+                    if (userPoint.getCurrentPoints() < requiredPoints) {
+                        log.warn("User {} has insufficient points ({} current, {} required) for book {}.",
+                                userId, userPoint.getCurrentPoints(), requiredPoints, bookId);
+                        throw new InsufficientPointsException("Insufficient points for user " + userId);
+                    }
+
+                    userPoint.setCurrentPoints(userPoint.getCurrentPoints() - requiredPoints);
+                    pointRepository.save(userPoint);
+                    log.info("Deducted {} points from user {} for book {}. Remaining points: {}",
+                            requiredPoints, userId, bookId, userPoint.getCurrentPoints());
+
+                    PointsDeducted pointsDeductedEvent = new PointsDeducted();
+                    pointsDeductedEvent.setId(userPoint.getId());
+                    pointsDeductedEvent.setUserId(userId);
+                    pointsDeductedEvent.setBookId(bookId);
+                    pointsDeductedEvent.setDeductedPoints(requiredPoints);
+                    pointsDeductedEvent.setCurrentPoints(userPoint.getCurrentPoints());
+
+                    streamBridge.send("pointsDeductedPublisher-out-0", pointsDeductedEvent);
+
+                    return userPoint;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe(
+                    result -> {},
+                    error -> {
+                        if (error instanceof InsufficientPointsException) {
+                            log.error("Point deduction failed for user {} and book {}: {}", userId, bookId, error.getMessage());
+                        } else {
+                            log.error("Error processing AccessRequestedWithPoints event asynchronously: {}", error.getMessage(), error);
+                        }
+                    }
+                );
+
+            } catch (Exception e) {
+                log.error("##### Error processing AccessRequestedWithPoints event: {}", e.getMessage(), e);
+            }
+        };
+    }
+
+    @Bean
+    public Function<String, String> pointsDeductedPublisher() {
+        return s -> s;
+    }
 }
