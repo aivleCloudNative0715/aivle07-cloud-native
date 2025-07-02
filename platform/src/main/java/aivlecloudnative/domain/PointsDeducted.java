@@ -1,4 +1,4 @@
-package aivlecloudnative.domain; // 또는 aivlecloudnative.event
+package aivlecloudnative.domain;
 
 import aivlecloudnative.infra.AbstractEvent;
 import lombok.Data;
@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class AccessRequestedWithPoints extends AbstractEvent {
+public class PointsDeducted extends AbstractEvent {
 
     private String userId;
-    private Long bookId;
+    private Long bookId; // 어떤 책 열람에 대한 포인트 차감인지
 
-    public AccessRequestedWithPoints(String userId, Long bookId) {
+    public PointsDeducted(String userId, Long bookId) {
         super();
         this.userId = userId;
         this.bookId = bookId;
