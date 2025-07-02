@@ -76,6 +76,7 @@ public class PolicyHandler {
                 newBook.setCoverImageUrl(autoPublished.getCoverImageUrl());
                 newBook.setEbookUrl(autoPublished.getEbookUrl());
                 newBook.setPrice(autoPublished.getPrice());
+                newBook.setAuthorId(autoPublished.getAuthorId());
                 // viewCount와 isBestseller는 Book 생성자에서 초기화
 
                 // 4. Book 엔티티를 데이터베이스에 저장
@@ -209,7 +210,8 @@ public class PolicyHandler {
                     book.getPrice(),
                     book.getViewCount(),        // totalViewCount
                     bookView.getViewCount(),    // personalViewCount
-                    userId
+                    userId,
+                    book.getAuthorId()
             );
             streamBridge.send("bookViewed-out-0", bookViewedEvent.toJson());
             System.out.println("##### BookViewed event published: " + bookViewedEvent.toJson());
