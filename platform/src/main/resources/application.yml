@@ -57,7 +57,12 @@ spring:
           producer:
             headerMode: headers
             partitionCount: 1
-
+        # 신규 도서 등록됨 이벤트 발행 (서재 플랫폼 -> 포인트)
+        newBookRegisteredOut-out-0:
+          destination: aivlecloudnative
+          producer:
+            headerMode: headers
+            partitionCount: 1
 logging:
   level:
     org.hibernate.type: trace
@@ -118,6 +123,12 @@ spring:
             maxAttempts: 3
         # 도서 열람됨 이벤트 발행 (서재 플랫폼 -> 사용자 관리)
         bookViewed-out-0:
+          destination: aivlecloudnative
+          producer:
+            headerMode: headers
+            partitionCount: 1
+        # 신규 도서 등록됨 이벤트 발행 (서재 플랫폼 -> 포인트)
+        newBookRegisteredOut-out-0:
           destination: aivlecloudnative
           producer:
             headerMode: headers

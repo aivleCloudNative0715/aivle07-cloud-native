@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.function.Consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -82,6 +83,16 @@ public class PolicyHandler {
                 bookRepository.save(newBook);
 
                 System.out.println("##### New Book registered successfully: " + newBook.getTitle() + " (Book ID: " + newBook.getId() + ")");
+
+                // JSON으로 변환하여 신규 도서 등록됨 이벤트로 발행
+                try {
+                    String bookJson = objectMapper.writeValueAsString(newBook); // Book 객체를 JSON으로 직렬화
+                    streamBridge.send("newBookRegisteredOut-out-0", bookJson);
+                    System.out.println("##### NewBookRegistered event published (from Book entity): " + bookJson);
+                } catch (JsonProcessingException e) {
+                    System.err.println("##### Error publishing NewBookRegistered event: " + e.getMessage());
+                    e.printStackTrace();
+                }
 
             } catch (Exception e) {
                 System.err.println("##### Error processing AutoPublished event: " + e.getMessage());
