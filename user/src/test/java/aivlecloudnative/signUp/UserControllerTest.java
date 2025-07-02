@@ -91,6 +91,7 @@ class UserControllerTest {
                 "Bearer",
                 1L,
                 "user@example.com",
+                false,
                 false
         );
 

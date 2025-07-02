@@ -74,7 +74,8 @@ public class UserService {
                 "Bearer",
                 user.getId(),
                 user.getEmail(),
-                user.getIsAuthor()
+                user.getIsAuthor(),
+                user.getIsAdmin()
         );
     }
 
