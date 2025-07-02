@@ -21,4 +21,4 @@ public class AuthorRejected extends AbstractEvent {
         super();
     }
 }
-//>>> DDD / Domain Event
+//>>> DDD / Domain Event ff
