@@ -25,14 +25,17 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      # 포인트 서비스에서 처리할 함수들을 명확히 정의
-      # userSignedUp 이벤트 구독 (in), PointsGranted 이벤트 발행 (out)
-      # accessRequestedWithPoints 이벤트 구독 (in), PointsDeducted 이벤트 발행 (out)
-      definition: wheneverSubscriberSignedUp;
+      # 포인트 서비스에서 처리할 모든 인바운드/아웃바운드 함수를 명확히 정의
+      # userSignedUpSubscriber: 사용자 관리에서 발행하는 회원가입됨 이벤트 구독
+      # pointsGrantedPublisher: 포인트 서비스에서 발행하는 포인트 지급됨 이벤트
+      # accessRequestedWithPointsSubscriber: 사용자 관리에서 발행하는 포인트로 열람 신청함 이벤트 구독
+      # pointsDeductedPublisher: 포인트 서비스에서 발행하는 포인트 차감됨 이벤트
+      # newBookRegisteredSubscriber: 서재 플랫폼에서 발행하는 신규도서등록됨 이벤트를 구독하여 도서 정보를 저장하는 함수
+      definition: userSignedUpSubscriber;
                   pointsGrantedPublisher;
                   accessRequestedWithPointsSubscriber;
                   pointsDeductedPublisher;
-                  processPointsDeductedEvent
+                  newBookRegisteredSubscriber
     stream:
       kafka:
         binder:
@@ -46,41 +49,47 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
+        # --- 인바운드 (구독) 바인딩 설정 ---
+
         # 1. 회원가입됨(userSignedUp) 이벤트 구독 (사용자 관리 -> 포인트)
-        wheneverSubscriberSignedUp-in-0:
-          destination: aivlecloudnative # 이벤트가 발행되는 토픽
-          group: point-user-signup-group # 포인트 서비스의 컨슈머 그룹
-          contentType: application/json
+        userSignedUpSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: point-user-signup-group # 이 컨슈머 그룹의 이름
+          contentType: application/json # 메시지 콘텐츠 타입
           consumer:
-            maxAttempts: 3
-        
-        # 2. 포인트 지급됨(PointsGranted) 이벤트 발행 (포인트 -> 다른 서비스)
-        pointsGrantedPublisher-out-0:
-          destination: aivlecloudnative # 이벤트가 발행될 토픽 (예: 포인트 관련 이벤트 공통 토픽)
-          producer:
-            headerMode: headers
-            partitionCount: 1
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
 
         # 3. 포인트로 열람 신청함(accessRequestedWithPoints) 이벤트 구독 (사용자 관리 -> 포인트)
         accessRequestedWithPointsSubscriber-in-0:
-          destination: aivlecloudnative # 이벤트가 발행되는 토픽
-          group: point-access-request-group # 포인트 서비스의 컨슈머 그룹
-          contentType: application/json
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: point-access-request-group # 이 컨슈머 그룹의 이름
+          contentType: application/json # 메시지 콘텐츠 타입
           consumer:
-            maxAttempts: 3
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
+
+        # 5. 신규도서등록됨(newBookRegistered) 이벤트 구독 (서재 플랫폼 -> 포인트)
+        newBookRegisteredSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: point-new-book-info-group # 신규 도서 정보 저장을 위한 컨슈머 그룹
+          contentType: application/json # 메시지 콘텐츠 타입
+          consumer:
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
+
+        # --- 아웃바운드 (발행) 바인딩 설정 ---
+
+        # 2. 포인트 지급됨(PointsGranted) 이벤트 발행 (포인트 -> 다른 서비스)
+        pointsGrantedPublisher-out-0:
+          destination: aivlecloudnative # 이벤트가 발행될 Kafka 토픽
+          producer:
+            headerMode: headers # 메시지 헤더 모드
+            partitionCount: 1 # 토픽 파티션 수
 
         # 4. 포인트 차감됨(PointsDeducted) 이벤트 발행 (포인트 -> 다른 서비스)
         pointsDeductedPublisher-out-0:
-          destination: aivlecloudnative # 이벤트가 발행될 토픽
+          destination: aivlecloudnative # 이벤트가 발행될 Kafka 토픽
           producer:
-            headerMode: headers
-            partitionCount: 1
-
-        # 5. 포인트 차감됨 이벤트 수신 (Kafka → Inquiry 테이블 저장용)
-        processPointsDeductedEvent-in-0:
-          destination: aivlecloudnative
-          group: point-inquiry-group
-          contentType: application/json
+            headerMode: headers # 메시지 헤더 모드
+            partitionCount: 1 # 토픽 파티션 수
 
 logging:
   level:
@@ -109,7 +118,7 @@ spring:
                   pointsGrantedPublisher;
                   accessRequestedWithPointsSubscriber;
                   pointsDeductedPublisher;
-                  processPointsDeductedEvent
+                  newBookRegisteredSubscriber
     stream:
       kafka:
         binder:
@@ -123,6 +132,8 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
+        # --- 인바운드 (구독) 바인딩 설정 ---
+
         # 1. 회원가입됨(userSignedUp) 이벤트 구독 (사용자 관리 -> 포인트)
         wheneverSubscriberSignedUp-in-0:
           destination: aivlecloudnative
@@ -130,13 +141,6 @@ spring:
           contentType: application/json
           consumer:
             maxAttempts: 3
-        
-        # 2. 포인트 지급됨(PointsGranted) 이벤트 발행 (포인트 -> 다른 서비스)
-        pointsGrantedPublisher-out-0:
-          destination: aivlecloudnative
-          producer:
-            headerMode: headers
-            partitionCount: 1
 
         # 3. 포인트로 열람 신청함(accessRequestedWithPoints) 이벤트 구독 (사용자 관리 -> 포인트)
         accessRequestedWithPointsSubscriber-in-0:
@@ -146,15 +150,26 @@ spring:
           consumer:
             maxAttempts: 3
 
+        # 5. 신규도서등록됨(newBookRegistered) 이벤트 구독 (서재 플랫폼 -> 포인트)
+        newBookRegisteredSubscriber-in-0:
+          destination: aivlecloudnative
+          group: point-new-book-info-group
+          contentType: application/json
+          consumer:
+            maxAttempts: 3
+
+        # --- 아웃바운드 (발행) 바인딩 설정 ---
+
+        # 2. 포인트 지급됨(PointsGranted) 이벤트 발행 (포인트 -> 다른 서비스)
+        pointsGrantedPublisher-out-0:
+          destination: aivlecloudnative
+          producer:
+            headerMode: headers
+            partitionCount: 1
+
         # 4. 포인트 차감됨(PointsDeducted) 이벤트 발행 (포인트 -> 다른 서비스)
         pointsDeductedPublisher-out-0:
           destination: aivlecloudnative
           producer:
             headerMode: headers
             partitionCount: 1
-
-        # 5. 포인트 차감됨 이벤트 수신 (Kafka → Inquiry 테이블 저장용)
-        processPointsDeductedEvent-in-0:
-          destination: aivlecloudnative
-          group: point-inquiry-group
-          contentType: application/json
