@@ -28,7 +28,7 @@ spring:
       # 포인트 서비스에서 처리할 함수들을 명확히 정의
       # userSignedUp 이벤트 구독 (in), PointsGranted 이벤트 발행 (out)
       # accessRequestedWithPoints 이벤트 구독 (in), PointsDeducted 이벤트 발행 (out)
-      definition: userSignedUpSubscriber;
+      definition: wheneverSubscriberSignedUp;
                   pointsGrantedPublisher;
                   accessRequestedWithPointsSubscriber;
                   pointsDeductedPublisher;
@@ -47,7 +47,7 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
         # 1. 회원가입됨(userSignedUp) 이벤트 구독 (사용자 관리 -> 포인트)
-        userSignedUpSubscriber-in-0:
+        wheneverSubscriberSignedUp-in-0:
           destination: aivlecloudnative # 이벤트가 발행되는 토픽
           group: point-user-signup-group # 포인트 서비스의 컨슈머 그룹
           contentType: application/json
@@ -105,7 +105,7 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      definition: userSignedUpSubscriber;
+      definition: wheneverSubscriberSignedUp;
                   pointsGrantedPublisher;
                   accessRequestedWithPointsSubscriber;
                   pointsDeductedPublisher;
@@ -124,7 +124,7 @@ spring:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
         # 1. 회원가입됨(userSignedUp) 이벤트 구독 (사용자 관리 -> 포인트)
-        userSignedUpSubscriber-in-0:
+        wheneverSubscriberSignedUp-in-0:
           destination: aivlecloudnative
           group: point-user-signup-group
           contentType: application/json

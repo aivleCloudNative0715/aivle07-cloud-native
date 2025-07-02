@@ -11,6 +11,7 @@ public class PointsDeducted extends AbstractEvent {
     private Long userId; // 포인트가 차감된 사용자 ID
     private Long deductedPoints; // 차감된 포인트 양 (Long 타입으로 정의)
     private Integer currentPoints; // 차감 후 현재 남은 총 포인트
+    private Long bookId; // <-- 이 필드가 반드시 있어야 합니다!
 
     // 기본 생성자 (Jackson 직렬화를 위해 필요)
     public PointsDeducted() {
@@ -23,9 +24,9 @@ public class PointsDeducted extends AbstractEvent {
         this.id = aggregate.getId();
         this.userId = aggregate.getUserId();
         this.currentPoints = aggregate.getCurrentPoints();
-        // deductedPoints는 이벤트 발생 시점에 명시적으로 설정되어야 하므로,
+        // deductedPoints와 bookId는 이벤트 발생 시점에 명시적으로 설정되어야 하므로,
         // 이 생성자에서는 직접 aggregate에서 가져오지 않습니다.
-        // setDeductedPoints()를 통해 외부에서 설정되어야 합니다.
+        // setDeductedPoints()와 setBookId()를 통해 외부에서 설정되어야 합니다.
     }
 
     // --- Getters and Setters ---
@@ -59,6 +60,14 @@ public class PointsDeducted extends AbstractEvent {
 
     public void setCurrentPoints(Integer currentPoints) {
         this.currentPoints = currentPoints;
+    }
+
+    public Long getBookId() { 
+        return bookId;
+    }
+
+    public void setBookId(Long bookId) { 
+        this.bookId = bookId;
     }
 
     // AbstractEvent의 validate 메서드를 오버라이드하여 이 이벤트의 유효성을 검사할 수 있습니다.
