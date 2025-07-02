@@ -19,13 +19,13 @@ public class BookViewController {
 
     // 특정 사용자의 도서 열람 기록 조회 API
     @GetMapping("/users/{userId}")
-    public List<BookView> getPersonalBookViewHistory(@PathVariable String userId) {
+    public List<BookView> getPersonalBookViewHistory(@PathVariable Long userId) {
         return bookViewRepository.findByUserId(userId);
     }
 
     // 특정 사용자의 특정 도서 열람 기록 조회 API (선택적)
     @GetMapping("/users/{userId}/books/{bookId}")
-    public BookView getPersonalBookView(@PathVariable String userId, @PathVariable Long bookId) {
+    public BookView getPersonalBookView(@PathVariable Long userId, @PathVariable Long bookId) {
         return bookViewRepository.findByUserIdAndBookId(userId, bookId).orElse(null);
     }
 }

@@ -19,13 +19,13 @@ public class BookViewed extends AbstractEvent {
     private Double price;
     private Long totalViewCount; // Book 엔티티의 viewCount
     private Long personalViewCount; // BookView 엔티티의 viewCount
-    private String userId;
+    private Long userId;
     private String authorId; // 저자의 email
 
     public BookViewed(
             Long bookId, String title, String authorName, String summary,
             String category, String coverImageUrl, Double price,
-            Long totalViewCount, Long personalViewCount, String userId,
+            Long totalViewCount, Long personalViewCount, Long userId,
             String authorId) {
         super();
         this.bookId = bookId;

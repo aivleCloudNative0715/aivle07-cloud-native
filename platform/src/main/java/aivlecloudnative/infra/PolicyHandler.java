@@ -165,7 +165,7 @@ public class PolicyHandler {
     /**
      * 도서 열람 공통 처리 로직
      */
-    private void processBookView(Long bookId, String userId) {
+    private void processBookView(Long bookId, Long userId) {
         // 1. Book 엔티티 업데이트 (totalViewCount, isBestseller)
         Optional<Book> optionalBook = bookRepository.findById(bookId);
         if (optionalBook.isPresent()) {

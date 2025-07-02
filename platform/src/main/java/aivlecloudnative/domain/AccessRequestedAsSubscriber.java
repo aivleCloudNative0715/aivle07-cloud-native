@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class AccessRequestedAsSubscriber extends AbstractEvent {
 
-    private String userId;
+    private Long userId;
     private Long bookId;
 
-    public AccessRequestedAsSubscriber(String userId, Long bookId) {
+    public AccessRequestedAsSubscriber(Long userId, Long bookId) {
         super();
         this.userId = userId;
         this.bookId = bookId;
