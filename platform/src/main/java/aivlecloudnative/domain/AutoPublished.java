@@ -21,12 +21,14 @@ public class AutoPublished extends AbstractEvent {
     private String category;
     private Double price; // 가격은 일반적으로 Double 또는 BigDecimal 사용
     private String status; // 출간 상태 (예: "PUBLISHED")
+    private String authorId; // 저자의 email
 
     // 생성자
     public AutoPublished(
             Long id, String title, Long manuscriptId, String summary,
             String keywords, String authorName, String coverImageUrl,
-            String ebookUrl, String category, Double price, String status) {
+            String ebookUrl, String category, Double price, String status,
+            String authorId) {
         super(); // AbstractEvent의 생성자 호출
         this.id = id;
         this.title = title;
@@ -39,5 +41,6 @@ public class AutoPublished extends AbstractEvent {
         this.category = category;
         this.price = price;
         this.status = status;
+        this.authorId = authorId;
     }
 }

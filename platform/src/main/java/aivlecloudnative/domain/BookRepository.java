@@ -14,4 +14,10 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     // isBestseller가 true인 도서를 페이징하여 조회하는 메서드 (정렬 포함 가능)
     Page<Book> findByIsBestseller(Boolean isBestseller, Pageable pageable);
+
+    // authorId로 도서를 조회하는 메서드
+    List<Book> findByAuthorId(String authorId);
+
+    // authorId로 도서를 페이징하여 조회하는 메서드
+    Page<Book> findByAuthorId(String authorId, Pageable pageable);
 }

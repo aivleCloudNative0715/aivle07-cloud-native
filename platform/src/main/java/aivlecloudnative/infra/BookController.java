@@ -46,4 +46,16 @@ public class BookController {
         Pageable pageable = PageRequest.of(0, n, Sort.by(Sort.Direction.DESC, "viewCount"));
         return bookRepository.findByIsBestseller(true, pageable).getContent();
     }
+
+    // 특정 authorId로 도서 리스트 조회 API
+    @GetMapping("/byAuthor")
+    public List<Book> getBooksByAuthorId(@RequestParam String authorId) {
+        return bookRepository.findByAuthorId(authorId);
+    }
+
+    // 특정 authorId로 도서 리스트 조회 API (페이징 지원)
+    @GetMapping("/byAuthor/paged")
+    public Page<Book> getPagedBooksByAuthorId(@RequestParam String authorId, Pageable pageable) {
+        return bookRepository.findByAuthorId(authorId, pageable);
+    }
 }

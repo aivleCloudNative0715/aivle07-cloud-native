@@ -2,12 +2,12 @@ package aivlecloudnative.infra;
 
 import aivlecloudnative.domain.AutoPublished;
 import aivlecloudnative.domain.AccessRequestedAsSubscriber;
-import aivlecloudnative.domain.AccessRequestedWithPoints;
 import aivlecloudnative.domain.Book;
 import aivlecloudnative.domain.BookRepository;
 import aivlecloudnative.domain.BookView;
 import aivlecloudnative.domain.BookViewed;
 import aivlecloudnative.domain.BookViewRepository;
+import aivlecloudnative.domain.PointsDeducted;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.function.Consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -75,6 +76,7 @@ public class PolicyHandler {
                 newBook.setCoverImageUrl(autoPublished.getCoverImageUrl());
                 newBook.setEbookUrl(autoPublished.getEbookUrl());
                 newBook.setPrice(autoPublished.getPrice());
+                newBook.setAuthorId(autoPublished.getAuthorId());
                 // viewCount와 isBestseller는 Book 생성자에서 초기화
 
                 // 4. Book 엔티티를 데이터베이스에 저장
@@ -82,6 +84,16 @@ public class PolicyHandler {
                 bookRepository.save(newBook);
 
                 System.out.println("##### New Book registered successfully: " + newBook.getTitle() + " (Book ID: " + newBook.getId() + ")");
+
+                // JSON으로 변환하여 신규 도서 등록됨 이벤트로 발행
+                try {
+                    String bookJson = objectMapper.writeValueAsString(newBook); // Book 객체를 JSON으로 직렬화
+                    streamBridge.send("newBookRegisteredOut-out-0", bookJson);
+                    System.out.println("##### NewBookRegistered event published (from Book entity): " + bookJson);
+                } catch (JsonProcessingException e) {
+                    System.err.println("##### Error publishing NewBookRegistered event: " + e.getMessage());
+                    e.printStackTrace();
+                }
 
             } catch (Exception e) {
                 System.err.println("##### Error processing AutoPublished event: " + e.getMessage());
@@ -121,30 +133,30 @@ public class PolicyHandler {
     }
 
     /**
-     * 변경된 로직: 사용자 관리 서버에서 발행하는 포인트로 열람신청함 이벤트를 구독하여 도서 열람 기록을 처리합니다.
+     * 포인트 서버에서 발행하는 포인트 차감됨 이벤트를 구독하여 도서 열람 기록을 처리
      */
     @Bean
-    public Consumer<String> accessRequestedWithPointsEventsIn() {
+    public Consumer<String> pointsDeductedEventsIn() {
         return message -> {
             try {
-                System.out.println("##### Received AccessRequestedWithPoints Event : " + message);
+                System.out.println("##### Received Raw Message : " + message);
 
                 JsonNode jsonNode = objectMapper.readTree(message);
                 String eventType = jsonNode.get("eventType").asText();
 
-                if (!"AccessRequestedWithPoints".equals(eventType)) { // 이벤트 타입 검증
-                    System.out.println("##### Skipping event, type mismatch: Expected AccessRequestedWithPoints, Got " + eventType);
+                if (!"PointsDeducted".equals(eventType)) {
+                    System.out.println("##### Skipping event, type mismatch: Expected PointsDeducted, Got " + eventType);
                     return;
                 }
 
-                AccessRequestedWithPoints event = objectMapper.treeToValue(jsonNode, AccessRequestedWithPoints.class);
+                PointsDeducted event = objectMapper.treeToValue(jsonNode, PointsDeducted.class);
 
-                System.out.println("##### Transformed AccessRequestedWithPoints Event: " + event.getEventType() + " - User ID: " + event.getUserId() + ", Book ID: " + event.getBookId());
+                System.out.println("##### Transformed PointsDeducted Event: " + event.getEventType() + " - User ID: " + event.getUserId() + ", Book ID: " + event.getBookId());
 
                 processBookView(event.getBookId(), event.getUserId());
 
             } catch (Exception e) {
-                System.err.println("##### Error processing AccessRequestedWithPoints event: " + e.getMessage());
+                System.err.println("##### Error processing PointsDeducted event: " + e.getMessage());
                 e.printStackTrace();
             }
         };
@@ -198,7 +210,8 @@ public class PolicyHandler {
                     book.getPrice(),
                     book.getViewCount(),        // totalViewCount
                     bookView.getViewCount(),    // personalViewCount
-                    userId
+                    userId,
+                    book.getAuthorId()
             );
             streamBridge.send("bookViewed-out-0", bookViewedEvent.toJson());
             System.out.println("##### BookViewed event published: " + bookViewedEvent.toJson());

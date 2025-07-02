@@ -21,6 +21,7 @@ public class Book {
     private Double price;
     private Long viewCount; // 전체 유저의 총 조회수
     private Boolean isBestseller; // 베스트셀러 여부
+    private String authorId; // 저자의 email
 
     public Book() {
         this.viewCount = 0L; // 초기화
