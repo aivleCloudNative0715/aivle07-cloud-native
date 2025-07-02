@@ -61,5 +61,12 @@ public class UserController {
     public List<Long> getContentHistories(@PathVariable Long id) {
         return userService.getContentHistory(id);
     }
+
+    /* ---------- 사용자 정보 조회 ---------- */
+    @GetMapping("/{id}")
+    public UserInfoResponse getUserInfo(@PathVariable Long id) {
+        return userService.getUserInfo(id);
+    }
 }
+
 //>>> Clean Arch / Inbound Adaptor

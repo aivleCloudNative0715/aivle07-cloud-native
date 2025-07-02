@@ -14,6 +14,7 @@ import aivlecloudnative.domain.RequestContentAccessCommand;
 import aivlecloudnative.domain.RequestSubscriptionCommand;
 import aivlecloudnative.domain.SignUpCommand;
 import aivlecloudnative.domain.User;
+import aivlecloudnative.domain.UserInfoResponse;
 import aivlecloudnative.infra.UserController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -85,7 +86,13 @@ class UserControllerTest {
         cmd.setEmail("user@example.com");
         cmd.setPassword("1234");
 
-        LoginResponse response = new LoginResponse("mock-token", "Bearer", 1L, "user@example.com");
+        LoginResponse response = new LoginResponse(
+                "mock-token",
+                "Bearer",
+                1L,
+                "user@example.com",
+                false
+        );
 
         Mockito.when(userService.login(any(LoginCommand.class)))
                 .thenReturn(response);
@@ -229,4 +236,26 @@ class UserControllerTest {
 
         Mockito.verify(userService).getContentHistory(1L);
     }
+
+    @Test
+    @DisplayName("사용자 정보 조회 성공 시 200과 JSON 반환")
+    void getUserInfo_should_return200_and_json() throws Exception {
+        UserInfoResponse dto = new UserInfoResponse(
+                1L,
+                "user@example.com",
+                true,
+                true,
+                true,
+                List.of(2L, 5L)
+        );
+
+        Mockito.when(userService.getUserInfo(1L)).thenReturn(dto);
+
+        mockMvc.perform(get("/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(dto)));
+
+        Mockito.verify(userService).getUserInfo(1L);
+    }
+
 }

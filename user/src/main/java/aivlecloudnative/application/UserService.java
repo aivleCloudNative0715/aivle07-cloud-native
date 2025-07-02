@@ -2,6 +2,7 @@ package aivlecloudnative.application;
 
 import aivlecloudnative.domain.AccessRequestedAsSubscriber;
 import aivlecloudnative.domain.AccessRequestedWithPoints;
+import aivlecloudnative.domain.AuthorAccepted;
 import aivlecloudnative.domain.BookViewed;
 import aivlecloudnative.domain.LoginCommand;
 import aivlecloudnative.domain.LoginResponse;
@@ -11,6 +12,7 @@ import aivlecloudnative.domain.RequestContentAccessCommand;
 import aivlecloudnative.domain.RequestSubscriptionCommand;
 import aivlecloudnative.domain.SignUpCommand;
 import aivlecloudnative.domain.User;
+import aivlecloudnative.domain.UserInfoResponse;
 import aivlecloudnative.domain.UserRepository;
 import aivlecloudnative.domain.UserSignedUp;
 import aivlecloudnative.domain.UserSubscribed;
@@ -67,7 +69,13 @@ public class UserService {
         String token = jwtTokenProvider.createToken(user.getId(), List.of("ROLE_USER"));
 
         // ✅ 토큰 + 사용자 정보 응답
-        return new LoginResponse(token, "Bearer", user.getId(), user.getEmail());
+        return new LoginResponse(
+                token,
+                "Bearer",
+                user.getId(),
+                user.getEmail(),
+                user.getIsAuthor()
+        );
     }
 
     @Transactional
@@ -145,5 +153,27 @@ public class UserService {
         User user = findUserByIdOrThrow(id);
 
         return user.getHasActiveSubscription();
+    }
+
+    @Transactional
+    public void authorApproved(AuthorAccepted authorAccepted) {
+        Long userId = authorAccepted.getId();
+
+        User user = findUserByIdOrThrow(userId);
+        user.setIsAuthor(true);
+
+        // 변경사항 저장 (JPA 엔티티이므로 트랜잭션 내에서 dirty checking으로 자동 반영됨)
+    }
+
+    public UserInfoResponse getUserInfo(Long id) {
+        User user = findUserByIdOrThrow(id);
+        return new UserInfoResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getIsKt(),
+                user.getIsAuthor(),
+                user.getHasActiveSubscription(),
+                user.getMyBookHistory()
+        );
     }
 }

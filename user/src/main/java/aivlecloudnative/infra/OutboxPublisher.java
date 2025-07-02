@@ -24,7 +24,6 @@ public class OutboxPublisher {
     @Scheduled(fixedDelay = 3000)
     @Transactional
     public void publishEvents() {
-        log.info("🟢 OutboxPublisher 스케줄러 실행됨");
         List<OutboxMessage> messages = outboxRepo.findByStatusOrderByCreatedAtAsc(OutboxMessage.PublishStatus.READY);
 
         for (OutboxMessage msg : messages) {
