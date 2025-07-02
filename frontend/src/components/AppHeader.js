@@ -10,6 +10,7 @@ export default function AppHeader() {
     const { isLoggedIn, isAuthor, logout } = useAuth();
 
     const showBackButton = location.pathname !== "/";
+    const hideManuscriptButton = location.pathname.startsWith("/manuscriptList");
 
     const handleLogout = () => {
         logout();
@@ -32,8 +33,8 @@ export default function AppHeader() {
                 {isLoggedIn ? (
                     <>
                         <Button onClick={() => navigate("/mypage")}>마이페이지</Button>
-                        {isAuthor && (
-                            <Button onClick={() => navigate("/manuscript")}>원고 등록</Button>
+                        {isAuthor && !hideManuscriptButton && (
+                            <Button onClick={() => navigate("/manuscriptList")}>원고 조회</Button>
                         )}
                         <Button variant="ghost" onClick={handleLogout}>로그아웃</Button>
                     </>
