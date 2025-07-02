@@ -1,5 +1,8 @@
 package aivlecloudnative.infra;
 
+import aivlecloudnative.domain.BookInfo;
+import aivlecloudnative.domain.BookInfoRepository;
+import aivlecloudnative.domain.NewBookRegistered;
 import aivlecloudnative.domain.Point;
 import aivlecloudnative.domain.PointRepository;
 import aivlecloudnative.domain.PointsGranted;
@@ -15,16 +18,20 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.function.Function;
+import java.util.Optional;
 
 @Configuration
 public class PolicyHandler {
 
     private static final Logger log = LoggerFactory.getLogger(PolicyHandler.class);
     private final PointRepository pointRepository;
+    private final BookInfoRepository bookInfoRepository;
 
-    public PolicyHandler(PointRepository pointRepository) {
+    public PolicyHandler(PointRepository pointRepository, BookInfoRepository bookInfoRepository) {
         this.pointRepository = pointRepository;
+        this.bookInfoRepository = bookInfoRepository; // 초기화
     }
+
 
     @Bean
     public Function<Flux<Message<UserSignedUp>>, Flux<Message<PointsGranted>>> userSignedUpSubscriber() {
@@ -64,6 +71,40 @@ public class PolicyHandler {
                                 }
                             });
                 });
+    }
+
+    @Bean
+    public Function<Flux<Message<NewBookRegistered>>, Mono<Void>> newBookRegisteredSubscriber() {
+        return newBookRegisteredMessageFlux -> newBookRegisteredMessageFlux
+                .flatMap(message -> {
+                    NewBookRegistered newBookRegistered = message.getPayload();
+                    log.info("Received NewBookRegistered event: {}", newBookRegistered);
+
+                    // 1. 도서 정보 저장 로직
+                    // 이미 해당 bookId로 도서 정보가 있는지 확인 (중복 저장 방지)
+                    return Mono.fromCallable(() -> bookInfoRepository.findByBookId(newBookRegistered.getBookId()))
+                            .subscribeOn(Schedulers.boundedElastic()) // 블로킹 호출을 위한 스케줄러 지정
+                            .flatMap(optionalBookInfo -> {
+                                if (optionalBookInfo.isPresent()) {
+                                    BookInfo existingBookInfo = optionalBookInfo.get();
+                                    log.warn("Book {} (ID: {}) already exists in BookInfo DB. Skipping.",
+                                            newBookRegistered.getBookId(), existingBookInfo.getId());
+                                    return Mono.empty(); // 이미 있으면 빈 Mono 반환
+                                } else {
+                                    // 신규 도서 정보 저장
+                                    BookInfo bookInfo = BookInfo.builder()
+                                            .bookId(newBookRegistered.getBookId())
+                                            .price(newBookRegistered.getPrice()) // 이벤트에서 price 필드 사용
+                                            // 필요한 다른 필드도 여기서 매핑
+                                            .build();
+                                    bookInfoRepository.save(bookInfo); // DB에 도서 정보 저장
+                                    log.info("Saved new book info: {} with price {}",
+                                            bookInfo.getBookId(), bookInfo.getPrice());
+                                    return Mono.empty(); // 이 이벤트는 추가 이벤트를 발행하지 않으므로 빈 Mono 반환
+                                }
+                            });
+                })
+                .then(); // 모든 Flux 요소 처리가 완료되면 Mono<Void>로 변환
     }
 
     @Bean

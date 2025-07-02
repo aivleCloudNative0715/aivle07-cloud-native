@@ -114,7 +114,7 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function:
-      definition: wheneverSubscriberSignedUp;
+      definition: userSignedUpSubscriber;
                   pointsGrantedPublisher;
                   accessRequestedWithPointsSubscriber;
                   pointsDeductedPublisher;
@@ -135,7 +135,7 @@ spring:
         # --- 인바운드 (구독) 바인딩 설정 ---
 
         # 1. 회원가입됨(userSignedUp) 이벤트 구독 (사용자 관리 -> 포인트)
-        wheneverSubscriberSignedUp-in-0:
+        userSignedUpSubscriber-in-0:
           destination: aivlecloudnative
           group: point-user-signup-group
           contentType: application/json
