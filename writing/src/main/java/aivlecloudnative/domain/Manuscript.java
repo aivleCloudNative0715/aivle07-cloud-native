@@ -50,6 +50,8 @@ public class Manuscript {
     @Column(nullable = false)
     private String title;
 
+    private String authorName;
+
     @Column(columnDefinition = "TEXT")
     private String content;
     private String status;
@@ -90,12 +92,13 @@ public class Manuscript {
     }
 
     // 초기 등록 시 원고 객체를 생성하는 팩토리 메서드
-    public static Manuscript createNew(String authorId, String title, String content, String summary, String keywords) {
-
+    public static Manuscript createNew(String authorId, String title, String authorName, String content, String summary, String keywords) {
+        // 인자로 받는 파라미터 순서 유의
         Manuscript manuscript = new Manuscript();
         manuscript.setAuthorId(authorId);
         manuscript.setTitle(title);
         manuscript.setContent(content);
+        manuscript.setAuthorName(authorName);
         // 초기 상태 설정
         manuscript.setStatus("REGISTERED");
         manuscript.setLastModifiedAt(LocalDateTime.now());
