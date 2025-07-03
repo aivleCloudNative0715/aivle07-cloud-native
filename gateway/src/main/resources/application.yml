@@ -61,9 +61,9 @@ server:
     enabled: true
     key-store: classpath:keystore.p12 # Ensure this file is present in src/main/resources and packaged in the Docker image
     key-store-type: PKCS12
-    key-store-password: aivle202507
+    key-store-password: ${KEYSTORE_PASSWORD}
     key-alias: springboot
-    key-password: aivle202507
+    key-password: ${KEY_PASSWORD}
 
 ---
 
@@ -121,6 +121,6 @@ server:
     enabled: true
     key-store: classpath:keystore.p12 # Ensure this file is present in src/main/resources and packaged in the Docker image
     key-store-type: PKCS12
-    key-store-password: aivle202507
+    key-store-password: ${KEYSTORE_PASSWORD}
     key-alias: springboot
-    key-password: aivle202507
+    key-password: ${KEY_PASSWORD}
