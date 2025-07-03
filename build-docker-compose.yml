@@ -91,7 +91,7 @@ services:
   writing:
     depends_on:
       - kafka
-    image: adoptopenjdk/maven-openjdk11:latest
+    image: meatcarrot/writing:20250703
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     command: mvn spring-boot:run
