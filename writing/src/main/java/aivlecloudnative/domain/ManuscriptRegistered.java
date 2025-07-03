@@ -30,12 +30,7 @@ public class ManuscriptRegistered extends AbstractEvent {
         this.summary = aggregate.getSummary();
         this.keywords = aggregate.getKeywords();
         this.status = aggregate.getStatus();
-        if (aggregate.getLastModifiedAt() != null) {
-            this.lastModifiedAt = aggregate.getLastModifiedAt()
-                    .atZone(java.time.ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli();
-        }
+        this.lastModifiedAt = aggregate.getLastModifiedAt();
     }
 
     @Override

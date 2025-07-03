@@ -19,7 +19,7 @@ public class ManuscriptSaved extends AbstractEvent {
     private String summary;
     private String keywords;
     private String status;
-    private LocalDateTime lastModifiedAt;
+    private Long lastModifiedAt;
 
     public ManuscriptSaved(Manuscript aggregate) {
         super();

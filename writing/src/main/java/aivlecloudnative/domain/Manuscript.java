@@ -1,19 +1,6 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.WritingApplication;
-import aivlecloudnative.infra.AbstractEvent;
-// import aivlecloudnative.infra.EventPublisher; // <-- 제거: EventPublisher는 더 이상 사용하지 않습니다.
-
-import org.springframework.beans.BeanUtils; // 객체 속성 복사를 위해 필요
-// import org.springframework.beans.factory.annotation.Autowired; // <-- 제거: EventPublisher 주입이 필요 없어졌습니다.
-
-// 아웃박스 패턴을 위한 EventOutboxSaver 임포트
-import aivlecloudnative.domain.EventOutboxSaver; // <-- 추가
-
-// 발행할 이벤트 DTO 임포트
-import aivlecloudnative.domain.ManuscriptRegistered;
-import aivlecloudnative.domain.ManuscriptSaved;
-import aivlecloudnative.domain.PublicationRequested;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -30,7 +17,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.time.LocalDateTime;
 
 //<<< DDD / Aggregate Root
 @Entity
@@ -55,7 +41,7 @@ public class Manuscript {
     @Column(columnDefinition = "TEXT")
     private String content;
     private String status;
-    private LocalDateTime lastModifiedAt; // Date -> LocalDateTime으로 변경
+    private Long lastModifiedAt;
     private String summary;
     private String keywords;
 
@@ -77,7 +63,7 @@ public class Manuscript {
     public void changeStatusToSaved() {
 
         this.setStatus("SAVED");
-        this.setLastModifiedAt(LocalDateTime.now());
+        this.setLastModifiedAt(System.currentTimeMillis());
 
     }
 
@@ -88,7 +74,7 @@ public class Manuscript {
             throw new IllegalStateException("Manuscript must be in SAVED or REGISTERED status to request publication.");
         }
         this.setStatus("PUBLICATION_REQUESTED");
-        this.setLastModifiedAt(LocalDateTime.now());
+        this.setLastModifiedAt(System.currentTimeMillis());
     }
 
     // 초기 등록 시 원고 객체를 생성하는 팩토리 메서드
@@ -101,7 +87,7 @@ public class Manuscript {
         manuscript.setAuthorName(authorName);
         // 초기 상태 설정
         manuscript.setStatus("REGISTERED");
-        manuscript.setLastModifiedAt(LocalDateTime.now());
+        manuscript.setLastModifiedAt(System.currentTimeMillis());
         manuscript.setSummary(summary);
         manuscript.setKeywords(keywords);
         return manuscript;
