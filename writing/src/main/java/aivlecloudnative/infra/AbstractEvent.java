@@ -6,14 +6,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.springframework.beans.BeanUtils;
 
-import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -42,13 +39,13 @@ public abstract class AbstractEvent {
 
     private Long id;
     private String eventType;
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private Long timestamp;
 
 
     public AbstractEvent(Object aggregate) {
         this();
         BeanUtils.copyProperties(aggregate, this);
-
+        this.timestamp = System.currentTimeMillis();
         this.setEventType(this.getClass().getSimpleName());
     }
 

@@ -15,7 +15,10 @@ public class Book {
     private String title;
     private String summary;
     private String authorName;
+    private String content;
     private String category;
+
+    @Column(name = "cover_image_url", columnDefinition = "TEXT")
     private String coverImageUrl;
     private String ebookUrl;
     private Double price;

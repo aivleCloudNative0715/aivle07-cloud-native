@@ -71,6 +71,7 @@ public class PolicyHandler {
                 Book newBook = new Book();
                 newBook.setTitle(autoPublished.getTitle());
                 newBook.setSummary(autoPublished.getSummary());
+                newBook.setContent(autoPublished.getContent());
                 newBook.setAuthorName(autoPublished.getAuthorName());
                 newBook.setCategory(autoPublished.getCategory());
                 newBook.setCoverImageUrl(autoPublished.getCoverImageUrl());
