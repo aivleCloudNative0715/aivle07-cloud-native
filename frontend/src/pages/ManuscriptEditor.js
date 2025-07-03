@@ -145,7 +145,10 @@ export default function ManuscriptEditor() {
                     {isEdit && (
                         <>
                             <p>🏷️ <strong>상태:</strong> {getStatusLabel(statusText)}</p>
-                            <p>🕒 <strong>최근 수정:</strong> {lastModifiedAt?.split("T")[0]}</p>
+                            <p>
+                                🕒 <strong>최근 수정:</strong>{" "}
+                                {lastModifiedAt ? new Date(lastModifiedAt).toISOString().split("T")[0] : "N/A"}
+                            </p>
                         </>
                     )}
 
