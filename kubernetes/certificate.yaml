@@ -1,0 +1,15 @@
+# certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tls-secret
+spec:
+  secretName: tls-secret
+  duration: 2160h
+  renewBefore: 360h
+  commonName: yolang.shop
+  dnsNames:
+    - yolang.shop
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer

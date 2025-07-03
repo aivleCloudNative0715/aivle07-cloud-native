@@ -1,0 +1,40 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: gateway-virtualservice
+spec:
+  hosts:
+    - yolang.shop
+  gateways:
+    - cloud-native-gateway
+  http:
+    # API 라우팅 - /users, /books 등
+    - match:
+        - uri:
+            prefix: /users
+        - uri:
+            prefix: /books
+        - uri:
+            prefix: /authors
+        - uri:
+            prefix: /points
+        - uri:
+            prefix: /bookViews
+        - uri:
+            prefix: /manuscripts
+        - uri:
+            prefix: /publicationStatuses
+        - uri:
+            prefix: /bookWorks
+        - uri:
+            prefix: /viewSubscriptionHistories
+        - uri:
+            prefix: /viewReadingHistories
+        - uri:
+            prefix: /viewContectHistories
+            # 기타 API 경로도 여기 추가
+      route:
+        - destination:
+            host: gateway
+            port:
+              number: 8088
