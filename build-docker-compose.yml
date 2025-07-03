@@ -26,7 +26,7 @@ services:
   user:
     depends_on:
       - kafka
-    image: laylaoh/user:20250702
+    image: laylaoh/user:lastest
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     env_file:
@@ -42,9 +42,11 @@ services:
   author:
     depends_on:
       - kafka
-    image: adoptopenjdk/maven-openjdk11:latest
+    image: sung0/author:20250703
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    env_file:
+      - .env
     command: mvn spring-boot:run
     ports:
       - 8083:8083
@@ -75,7 +77,7 @@ services:
   platform:
     depends_on:
       - kafka
-    image: adoptopenjdk/maven-openjdk11:latest
+    image: universeonoff/platform:20250703
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     command: mvn spring-boot:run
@@ -103,7 +105,7 @@ services:
   point:
     depends_on:
       - kafka
-    image: adoptopenjdk/maven-openjdk11:latest
+    image: bildad01/point:20250703
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     command: mvn spring-boot:run
