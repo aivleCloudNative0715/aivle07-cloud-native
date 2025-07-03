@@ -1,13 +1,11 @@
-// src/pages/AllBooksPage.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
 import AppHeader from "../components/AppHeader";
 import { useAuth } from "../context/AuthContext";
 
 export default function AllBooksPage() {
     const navigate = useNavigate();
-    const { user, isLoggedIn, isAuthor } = useAuth();
+    const { user, isLoggedIn } = useAuth();
     const userId = user?.userId ?? 0;
 
     const API_BASE = process.env.REACT_APP_API_URL;

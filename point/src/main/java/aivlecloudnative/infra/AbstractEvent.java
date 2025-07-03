@@ -7,14 +7,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @ToString
 public abstract class AbstractEvent {
     private String eventType;
-    private LocalDateTime timestamp;
+    private Long timestamp;
 
     // ObjectMapper 인스턴스를 static final로 선언하여 재사용
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -26,7 +24,7 @@ public abstract class AbstractEvent {
 
     public AbstractEvent() {
         this.eventType = this.getClass().getSimpleName();
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = System.currentTimeMillis();
     }
 
     // 모든 하위 클래스가 사용할 toJson 메서드

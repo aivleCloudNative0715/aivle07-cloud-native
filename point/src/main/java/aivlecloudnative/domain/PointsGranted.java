@@ -15,5 +15,5 @@ public class PointsGranted extends AbstractEvent {
     private Long id;
     private Long currentPoints;
     private Long grantedPoints;
-    private String userId;
+    private Long userId;
 }
