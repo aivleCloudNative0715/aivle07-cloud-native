@@ -99,6 +99,7 @@ export default function MyPage() {
                     }),
                 ]);
 
+                // ✅ 유저 정보
                 if (!userRes.ok) throw new Error("사용자 정보를 불러올 수 없습니다.");
                 const userData = await userRes.json();
                 setDetail(userData);
@@ -216,22 +217,6 @@ export default function MyPage() {
                         <p><strong>📱 KT 회원 여부:</strong> {isKt ? "예" : "아니오"}</p>
                         <p><strong>💰 포인트 잔액:</strong> 0</p>
                     </div>
-                </section>
-
-
-
-
-                <section className="mb-6">
-                    <h3 className="text-xl font-semibold mb-2">📘 열람한 책</h3>
-                    {viewedBooks.length === 0 ? (
-                        <p>열람한 책이 없습니다.</p>
-                    ) : (
-                        <ul className="list-disc list-inside">
-                            {viewedBooks.map((b, i) => (
-                                <li key={i}>{b.title}</li>
-                            ))}
-                        </ul>
-                    )}
                 </section>
             </main>
         </div>

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import AppHeader from "../components/AppHeader";
-import {Button} from "../components/ui/button";
-import {getStatusLabel} from "../lib/statusUtils";
+import { Button } from "../components/ui/button";
+import { getStatusLabel } from "../lib/statusUtils";
 
 export default function ManuscriptList() {
     const { user } = useAuth();
@@ -47,26 +47,21 @@ export default function ManuscriptList() {
     return (
         <div className="min-h-screen flex flex-col">
             <AppHeader isLoggedIn={!!user} isAuthor={user.isAuthor} />
+
             <main className="container mx-auto px-6 py-10 max-w-4xl">
+
+                {/* 상단 새 원고 작성 버튼 */}
+                <div className="flex justify-end mb-6">
+                    <Button onClick={() => navigate(`/manuscript/${user.userId}/new`)}>
+                        ✍️ 새 원고 작성하기
+                    </Button>
+                </div>
+
                 {loading && <p>원고 목록 불러오는 중...</p>}
-                {error && <p className="text-red-600">{error}</p>}
 
-                {!loading && !error && manuscripts.length === 0 && (
-                    <p className="text-gray-500 text-center">작성한 원고가 없습니다.</p>
-                )}
-
-                {!loading && !error && (
+                {!loading && (
                     <>
-                        <div className="flex items-center justify-between mb-4">
-                          <h2 className="text-2xl font-bold">✍️ 내 원고 목록</h2>
-                          <Button
-                              onClick={() =>
-                             navigate(`/manuscript/${user.userId}/new`)
-                            }
-                          >
-                            원고 등록
-                          </Button>
-                        </div>
+                        <h2 className="text-2xl font-bold mb-4">📄 내 원고 목록</h2>
 
                         <table className="w-full table-auto border">
                             <thead className="bg-gray-100">
@@ -78,20 +73,26 @@ export default function ManuscriptList() {
                             </tr>
                             </thead>
                             <tbody>
-                            {manuscripts.map((m) => (
-                                <tr
-                                    key={m.id}
-                                    className="hover:bg-gray-100 cursor-pointer"
-                                    onClick={() => navigate(`/manuscript/${m.authorId}/${m.manuscriptId}`)}
-                                >
-                                    <td className="p-2 border text-center">{m.manuscriptId}</td>
-                                    <td className="p-2 border">{m.title}</td>
-                                    <td className="p-2 border text-center">
-                                        {m.lastModifiedAt?.split("T")[0]}
+                            {!error && manuscripts.length === 0 ? (
+                                <tr>
+                                    <td colSpan="4" className="p-4 text-center text-gray-500">
+                                        작성한 원고가 없습니다.
                                     </td>
-                                    <td className="p-2 border text-center">{getStatusLabel(m.status)}</td>
                                 </tr>
-                            ))}
+                            ) : (
+                                manuscripts.map((m) => (
+                                    <tr
+                                        key={m.manuscriptId}
+                                        className="hover:bg-gray-100 cursor-pointer"
+                                        onClick={() => navigate(`/manuscript/${m.authorId}/${m.manuscriptId}`)}
+                                    >
+                                        <td className="p-2 border text-center">{m.manuscriptId}</td>
+                                        <td className="p-2 border">{m.title}</td>
+                                        <td className="p-2 border text-center">{m.lastModifiedAt?.split("T")[0]}</td>
+                                        <td className="p-2 border text-center">{getStatusLabel(m.status)}</td>
+                                    </tr>
+                                ))
+                            )}
                             </tbody>
                         </table>
                     </>
