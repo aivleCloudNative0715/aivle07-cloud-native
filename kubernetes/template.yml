@@ -1,3 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:6.2-alpine # 가벼운 Redis 이미지
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 6379
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 15
+          periodSeconds: 20
+
 ---
 
 apiVersion: apps/v1
@@ -19,6 +52,7 @@ spec:
       containers:
         - name: user
           image: laylaoh/user:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8082
           env:
@@ -65,6 +99,7 @@ spec:
       containers:
         - name: author
           image: sung0/author:20250703
+          imagePullPolicy: Always
           ports:
             - containerPort: 8083
           env:
@@ -111,9 +146,12 @@ spec:
       containers:
         - name: aiservice
           image: gnoejnahi/aiservice:20250703
+          imagePullPolicy: Always
           ports:
             - containerPort: 8084
           env:
+            - name: SPRING_PROFILES_ACTIVE  
+              value: "docker"
             - name: SPRING_GPT_BASE_URL
               value: https://api.openai.com/v1
             - name: SPRING_GPT_IMAGE_URL
@@ -165,6 +203,7 @@ spec:
       containers:
         - name: platform
           image: universeonoff/platform:20250703
+          imagePullPolicy: Always
           ports:
             - containerPort: 8085
           readinessProbe:
@@ -205,6 +244,7 @@ spec:
       containers:
         - name: writing
           image: meatcarrot/writing:20250703
+          imagePullPolicy: Always
           ports:
             - containerPort: 8086
           readinessProbe:
@@ -245,6 +285,7 @@ spec:
       containers:
         - name: point
           image: bildad01/point:20250703
+          imagePullPolicy: Always
           ports:
             - containerPort: 8087
           readinessProbe:
@@ -267,6 +308,21 @@ spec:
 
 ---
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: redis
+  type: ClusterIP # 클러스터 내부에서만 접근
+
+---
 
 apiVersion: v1
 kind: Service
