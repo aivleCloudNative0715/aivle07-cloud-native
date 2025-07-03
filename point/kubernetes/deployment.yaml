@@ -16,13 +16,13 @@ spec:
     spec:
       containers:
         - name: point
-          image: "username/point:latest"
+          image: "bildad01/point:20250703"
           ports:
-            - containerPort: 8080
+            - containerPort: 8087
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8087
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -30,7 +30,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8087
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5

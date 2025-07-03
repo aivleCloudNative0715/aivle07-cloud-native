@@ -16,13 +16,13 @@ spec:
     spec:
       containers:
         - name: platform
-          image: "confluentinc/cp-kafka:7.4.3"
+          image: "universeonoff/platform:20250703"
           ports:
-            - containerPort: 8080
+            - containerPort: 8085
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8085
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -30,7 +30,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8085
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5
