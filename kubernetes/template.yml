@@ -26,7 +26,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: jwt-secret
-                  key: jwt-secret
+                  key: jwt_secret
           readinessProbe:
             httpGet:
               path: '/actuator/health'
@@ -72,7 +72,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: jwt-secret
-                  key: jwt-secret
+                  key: jwt_secret
           readinessProbe:
             httpGet:
               path: '/actuator/health'
