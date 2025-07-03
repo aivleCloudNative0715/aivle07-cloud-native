@@ -13,6 +13,7 @@ public class AutoPublished extends AbstractEvent {
     private Long id; // 책 작업 관리 관련 ID (이벤트 식별용)
     private String title;
     private Long manuscriptId; // 원고 ID
+    private String content;
     private String summary;
     private String keywords;
     private String authorName;
@@ -25,7 +26,7 @@ public class AutoPublished extends AbstractEvent {
 
     // 생성자
     public AutoPublished(
-            Long id, String title, Long manuscriptId, String summary,
+            Long id, String title, Long manuscriptId, String content, String summary,
             String keywords, String authorName, String coverImageUrl,
             String ebookUrl, String category, Double price, String status,
             String authorId) {
@@ -33,6 +34,7 @@ public class AutoPublished extends AbstractEvent {
         this.id = id;
         this.title = title;
         this.manuscriptId = manuscriptId;
+        this.content = content;
         this.summary = summary;
         this.keywords = keywords;
         this.authorName = authorName;

@@ -111,14 +111,11 @@ export default function BookDetail() {
                         {/* ───── 열람 권한 有 ───── */}
                         {hasAccess ? (
                             <>
-                                <a
-                                    href={book.ebookUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="mt-6 inline-block text-blue-600 underline"
-                                >
-                                    전자책 보기
-                                </a>
+                                <p>내용:</p>
+                                <div style={{ whiteSpace: 'pre-wrap', padding: '1rem', border: '1px solid #ccc', borderRadius: '8px', lineHeight: '1.6' }}>
+
+                                    {book.content}
+                                </div>
                             </>
                         ) : (
                             /* ───── 열람 권한 無 ───── */
