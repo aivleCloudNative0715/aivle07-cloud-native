@@ -68,11 +68,11 @@ spring:
         - id: user
           uri: http://user:8082
           predicates:
-            - Path=/users/**, 
+            - Path=/users/**, /viewSubscriptionHistories/**, /viewReadingHistories/**, /viewSubscriptionHistories/**, /viewContectHistories/**
         - id: author
           uri: http://author:8083
           predicates:
-            - Path=/authors/**, 
+            - Path=/authors/**, /publicationStatuses/**
         - id: aiservice
           uri: http://aiservice:8084
           predicates:
@@ -84,11 +84,11 @@ spring:
         - id: writing
           uri: http://writing:8086
           predicates:
-            - Path=/manuscripts/**, 
+            - Path=/manuscripts/**, /manuscriptLists/**
         - id: point
           uri: http://point:8087
           predicates:
-            - Path=/points/**, 
+            - Path=/points/**, /pointInquiries/**
         - id: frontend
           uri: http://frontend:8080
           predicates:
