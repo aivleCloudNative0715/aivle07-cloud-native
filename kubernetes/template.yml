@@ -18,15 +18,15 @@ spec:
     spec:
       containers:
         - name: user
-          image: laylaoh/user:lastest
+          image: laylaoh/user:latest
           ports:
             - containerPort: 8082
           env:
             - name: JWT_SECRET
-              valueForm:
+              valueFrom:
                 secretKeyRef:
                   name: jwt-secret
-                  key: jwt-secret
+                  key: jwt_secret
           readinessProbe:
             httpGet:
               path: '/actuator/health'
@@ -69,10 +69,10 @@ spec:
             - containerPort: 8083
           env:
             - name: JWT_SECRET
-              valueForm:
+              valueFrom:
                 secretKeyRef:
                   name: jwt-secret
-                  key: jwt-secret
+                  key: jwt_secret
           readinessProbe:
             httpGet:
               path: '/actuator/health'
@@ -123,7 +123,7 @@ spec:
             - name: SPRING_GPT_IMAGE_MODEL
               value: dall-e-3
             - name: SPRING_GPT_API_KEY
-              valueForm:
+              valueFrom:
                 secretKeyRef:
                   name: openai-api-key-secret
                   key: api_key
@@ -164,7 +164,7 @@ spec:
     spec:
       containers:
         - name: platform
-          image: username/platform:latest
+          image: universeonoff/platform:20250703
           ports:
             - containerPort: 8085
           readinessProbe:

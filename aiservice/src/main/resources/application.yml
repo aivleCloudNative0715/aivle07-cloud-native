@@ -73,7 +73,7 @@ logging:
 ---
 
 server:
-  port: 8087 # Docker 프로필에서도 포트 변경
+  port: 8084 # Docker 프로필에서도 포트 변경
 
 spring:
   # --- Docker 프로필 설정 ---
