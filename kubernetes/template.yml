@@ -18,13 +18,13 @@ spec:
     spec:
       containers:
         - name: user
-          image: username/user:latest
+          image: laylaoh/user:lastest
           ports:
-            - containerPort: 8080
+            - containerPort: 8082
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8082
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -32,7 +32,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8082
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5
@@ -58,13 +58,13 @@ spec:
     spec:
       containers:
         - name: author
-          image: username/author:latest
+          image: sung0/author:20250703
           ports:
-            - containerPort: 8080
+            - containerPort: 8083
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8083
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -72,7 +72,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8083
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5
@@ -98,13 +98,13 @@ spec:
     spec:
       containers:
         - name: aiservice
-          image: username/aiservice:latest
+          image: gnoejnahi/aiservice:20250703
           ports:
-            - containerPort: 8080
+            - containerPort: 8084
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8084
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -112,7 +112,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8084
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5
@@ -140,11 +140,11 @@ spec:
         - name: platform
           image: username/platform:latest
           ports:
-            - containerPort: 8080
+            - containerPort: 8085
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8085
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -152,7 +152,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8085
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5
@@ -178,13 +178,13 @@ spec:
     spec:
       containers:
         - name: writing
-          image: username/writing:latest
+          image: meatcarrot/writing:20250703
           ports:
-            - containerPort: 8080
+            - containerPort: 8086
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8086
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -192,7 +192,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8086
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5
@@ -218,13 +218,13 @@ spec:
     spec:
       containers:
         - name: point
-          image: username/point:latest
+          image: bildad01/point:20250703
           ports:
-            - containerPort: 8080
+            - containerPort: 8087
           readinessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8087
             initialDelaySeconds: 10
             timeoutSeconds: 2
             periodSeconds: 5
@@ -232,7 +232,7 @@ spec:
           livenessProbe:
             httpGet:
               path: '/actuator/health'
-              port: 8080
+              port: 8087
             initialDelaySeconds: 120
             timeoutSeconds: 2
             periodSeconds: 5
@@ -250,8 +250,8 @@ metadata:
     app: user
 spec:
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8082
+      targetPort: 8082
   selector:
     app: user
 
@@ -267,8 +267,8 @@ metadata:
     app: author
 spec:
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8083
+      targetPort: 8083
   selector:
     app: author
 
@@ -284,8 +284,8 @@ metadata:
     app: aiservice
 spec:
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8084
+      targetPort: 8084
   selector:
     app: aiservice
 
@@ -301,8 +301,8 @@ metadata:
     app: platform
 spec:
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8085
+      targetPort: 8085
   selector:
     app: platform
 
@@ -318,8 +318,8 @@ metadata:
     app: writing
 spec:
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8086
+      targetPort: 8086
   selector:
     app: writing
 
@@ -335,8 +335,8 @@ metadata:
     app: point
 spec:
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8087
+      targetPort: 8087
   selector:
     app: point
 
