@@ -67,7 +67,7 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     function: # <-- 이 부분을 추가
-      definition: manuscriptEventsIn;publicationRequested  # <-- 이 부분을 추가: 명시적으로 사용할 Consumer 빈의 이름 지정
+      definition: manuscriptEventsIn # <-- 이 부분을 추가: 명시적으로 사용할 Consumer 빈의 이름 지정
     stream:
       kafka:
         binder:
@@ -88,7 +88,7 @@ spring:
           consumer:
             maxAttempts: 3
 
-        publicationRequested-out-0:
+        event-out:
           destination: aivlecloudnative
           producer:
             headerMode: headers

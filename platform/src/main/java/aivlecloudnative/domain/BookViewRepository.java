@@ -1,21 +1,17 @@
 package aivlecloudnative.domain;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
+import java.util.Optional;
 
-//<<< PoEAA / Repository
-@RepositoryRestResource(collectionResourceRel = "bookViews", path = "bookViews")
+@Repository
 public interface BookViewRepository extends JpaRepository<BookView, Long> {
-        // 특정 카테고리의 BookView를 조회
-        List<BookView> findByCategory(String category);
 
-        // 베스트셀러 목록을 조회하는 메서드
-        Page<BookView> findByIsbestsellerTrue(Pageable pageable);
+    // 특정 사용자의 특정 도서 열람 기록을 조회하는 메서드
+    Optional<BookView> findByUserIdAndBookId(Long userId, Long bookId);
 
-        // 조회수 기준으로 정렬하여 상위 N개 조회하는 메서드
-        // 페이징 지원
-        Page<BookView> findByOrderByViewCountDesc(Pageable pageable);
-    }
+    // 특정 사용자의 모든 도서 열람 기록을 조회하는 메서드
+    List<BookView> findByUserId(Long userId);
+}

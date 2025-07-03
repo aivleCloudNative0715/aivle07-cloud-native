@@ -1,37 +1,27 @@
 package aivlecloudnative.signUp;
 
+import aivlecloudnative.application.TokenBlacklistService;
 import aivlecloudnative.application.UserService;
-import aivlecloudnative.domain.BookViewed;
-import aivlecloudnative.domain.OutboxMessage;
-import aivlecloudnative.domain.OutboxMessageRepository;
-import aivlecloudnative.domain.RequestContentAccessCommand;
-import aivlecloudnative.domain.RequestSubscriptionCommand;
-import aivlecloudnative.domain.SignUpCommand;
-import aivlecloudnative.domain.User;
-import aivlecloudnative.domain.UserRepository;
+import aivlecloudnative.domain.*;
+import aivlecloudnative.infra.JwtTokenProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import java.util.*;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
-
-    @InjectMocks
-    private UserService userService;
 
     @Mock
     private UserRepository userRepository;
@@ -39,68 +29,150 @@ public class UserServiceTest {
     @Mock
     private OutboxMessageRepository outboxMessageRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Mock
+    private TokenBlacklistService tokenBlacklistService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private UserService userService;
+
     @BeforeEach
-    void init() {
-        userService = new UserService(userRepository, outboxMessageRepository, objectMapper);
+    void setUp() {
+        userService = new UserService(
+                userRepository,
+                outboxMessageRepository,
+                objectMapper,
+                passwordEncoder,
+                jwtTokenProvider,
+                tokenBlacklistService
+        );
     }
 
     @Test
-    @DisplayName("존재하지 않는 userId로 요청 시 예외 발생")
-    void requestSubscription_shouldThrowException_ifUserNotFound() {
-        // given
-        Long invalidUserId = 999L;
-        RequestSubscriptionCommand command = new RequestSubscriptionCommand();
-        command.setUserId(invalidUserId);
-
-        when(userRepository.findById(invalidUserId))
-                .thenReturn(Optional.empty());
-
-        // when & then
-        assertThrows(IllegalArgumentException.class, () -> userService.requestSubscription(command));
-        verify(userRepository).findById(invalidUserId);
-    }
-
-    @Test
-    @DisplayName("이메일 중복 시 회원가입 실패")
+    @DisplayName("회원가입 시 이메일 중복이면 실패")
     void signUp_shouldThrow_ifEmailExists() {
-        // given
         SignUpCommand cmd = new SignUpCommand();
         cmd.setEmail("test@example.com");
 
         when(userRepository.existsByEmail(cmd.getEmail())).thenReturn(true);
 
-        // when & then
         assertThrows(IllegalArgumentException.class, () -> userService.signUp(cmd));
     }
 
     @Test
-    @DisplayName("회원가입 성공 시 Outbox 저장")
-    void signUp_shouldSaveOutbox() {
-        // given
+    @DisplayName("회원가입 성공 시 비밀번호 암호화 및 Outbox 저장")
+    void signUp_shouldEncodePassword_andSaveOutbox() {
         SignUpCommand cmd = new SignUpCommand();
-        cmd.setEmail("test@example.com");
+        cmd.setEmail("user@example.com");
         cmd.setUserName("홍길동");
+        cmd.setPassword("plain1234");
         cmd.setIsKt(true);
 
-        when(userRepository.existsByEmail(cmd.getEmail())).thenReturn(false);
-        when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(userRepository.existsByEmail(any())).thenReturn(false);
+        when(passwordEncoder.encode(cmd.getPassword())).thenReturn("encoded1234");
+        when(userRepository.save(any())).thenAnswer(i -> {
+            User u = i.getArgument(0);
+            u.setId(1L); // id 설정 필요 시
+            return u;
+        });
 
-        // when
-        userService.signUp(cmd);
+        SignUpResponse response = userService.signUp(cmd);
 
-        // then
+        Assertions.assertEquals("user@example.com", response.email());
+        Assertions.assertEquals("홍길동", response.username());
+        Assertions.assertEquals(1L, response.userId());
+
         verify(outboxMessageRepository).save(any(OutboxMessage.class));
     }
 
+
     @Test
-    @DisplayName("KT 유저가 열람 신청 시 AccessRequestedAsSubscriber 이벤트 저장")
-    void requestContentAccess_shouldSaveKtEvent() {
+    @DisplayName("로그인 성공 시 JWT 포함 LoginResponse 반환")
+    void login_shouldReturnToken_whenCredentialsMatch() {
+        String rawPassword = "plain1234";
+        String encodedPassword = "encoded1234";
+        String fakeToken = "jwt.token.string";
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("user@example.com");
+        user.setPassword(encodedPassword);
+
+        LoginCommand cmd = new LoginCommand();
+        cmd.setEmail("user@example.com");
+        cmd.setPassword(rawPassword);
+
+        when(userRepository.findByEmail(cmd.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
+        when(jwtTokenProvider.createToken(eq(user.getId()), eq(user.getEmail()), eq(false), eq(false)))
+                .thenReturn(fakeToken);
+
+        LoginResponse response = userService.login(cmd);
+
+        Assertions.assertEquals(fakeToken, response.accessToken());
+        Assertions.assertEquals("Bearer", response.tokenType());
+
+        verify(jwtTokenProvider.createToken(eq(user.getId()), eq(user.getEmail()), eq(false), eq(false)));
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 이메일 없음")
+    void login_shouldThrow_ifUserNotFound() {
+        LoginCommand cmd = new LoginCommand();
+        cmd.setEmail("missing@example.com");
+        cmd.setPassword("1234");
+
+        when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> userService.login(cmd));
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 비밀번호 불일치")
+    void login_shouldThrow_ifPasswordIncorrect() {
+        LoginCommand cmd = new LoginCommand();
+        cmd.setEmail("user@example.com");
+        cmd.setPassword("wrongpass");
+
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setPassword("encodedpass");
+
+        when(userRepository.findByEmail(cmd.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(cmd.getPassword(), user.getPassword())).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> userService.login(cmd));
+    }
+
+    @Test
+    @DisplayName("로그아웃 시 토큰이 블랙리스트에 남은 만료시간으로 등록된다")
+    void logout_shouldBlacklistToken_withRemainingExpiration() {
         // given
+        String token = "jwt.token.string";
+        long remainMs = 30 * 60 * 1000L; // 30분 남았다고 가정
+
+        when(jwtTokenProvider.getExpiration(token)).thenReturn(remainMs);
+
+        // when
+        userService.logout(token);
+
+        // then
+        verify(tokenBlacklistService).blacklist(token, remainMs);
+    }
+
+    @Test
+    @DisplayName("KT 유저 열람 신청 시 이벤트 저장")
+    void requestContentAccess_shouldSaveKtEvent() {
         User user = new User();
         user.setId(1L);
         user.setIsKt(true);
+        user.setHasActiveSubscription(true);
 
         RequestContentAccessCommand cmd = new RequestContentAccessCommand();
         cmd.setUserId(1L);
@@ -109,17 +181,14 @@ public class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        // when
         userService.requestContentAccess(cmd);
 
-        // then
         verify(outboxMessageRepository).save(argThat(msg -> msg.getEventType().equals("AccessRequestedAsSubscriber")));
     }
 
     @Test
-    @DisplayName("비 KT 유저가 열람 신청 시 AccessRequestedWithPoints 이벤트 저장")
+    @DisplayName("비 KT 유저 열람 신청 시 이벤트 저장")
     void requestContentAccess_shouldSavePointEvent() {
-        // given
         User user = new User();
         user.setId(1L);
         user.setIsKt(false);
@@ -131,38 +200,33 @@ public class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        // when
         userService.requestContentAccess(cmd);
 
-        // then
         verify(outboxMessageRepository).save(argThat(msg -> msg.getEventType().equals("AccessRequestedWithPoints")));
     }
 
     @Test
-    @DisplayName("BookViewed 이벤트로 독서 기록이 추가됨")
+    @DisplayName("독서 기록 추가")
     void updateBookRead_shouldAddBookToHistory() {
-        // given
         User user = new User();
         user.setId(1L);
         user.setMyBookHistory(new ArrayList<>());
 
         BookViewed event = new BookViewed();
         event.setUserId(1L);
-        event.setBookId(10L);
+        event.setBookId(42L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        // when
         userService.updateBookRead(event);
 
-        // then
-        assert user.getMyBookHistory().contains(10L);
+        Assertions.assertTrue(user.getMyBookHistory().contains(42L));
         verify(userRepository).save(user);
     }
 
     @Test
-    @DisplayName("구독 상태를 반환한다")
+    @DisplayName("구독 상태 조회")
     void getSubscriptionStatus_shouldReturnCorrectValue() {
         User user = new User();
         user.setHasActiveSubscription(true);
@@ -170,21 +234,61 @@ public class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         boolean result = userService.getSubscriptionStatus(1L);
-
-        assert result;
+        Assertions.assertTrue(result);
     }
 
     @Test
-    @DisplayName("열람 기록을 반환한다")
-    void getContentHistory_shouldReturnBookHistory() {
+    @DisplayName("열람 내역 조회")
+    void getContentHistory_shouldReturnHistory() {
         User user = new User();
-        List<Long> history = List.of(1L, 2L, 3L);
-        user.setMyBookHistory(history);
+        user.setMyBookHistory(List.of(1L, 2L, 3L));
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         List<Long> result = userService.getContentHistory(1L);
 
-        assert result.size() == 3;
+        Assertions.assertEquals(3, result.size());
+        Assertions.assertTrue(result.contains(2L));
     }
+
+    @Test
+    @DisplayName("작가 승인 이벤트 처리 시 isAuthor=true로 변경")
+    void authorApproved_should_setIsAuthorTrue() {
+        // given
+        User user = new User();
+        user.setId(1L);
+        user.setIsAuthor(false);
+
+        AuthorAccepted event = new AuthorAccepted(1L, 2L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        // when
+        userService.authorApproved(event);
+
+        // then
+        Assertions.assertTrue(user.getIsAuthor());
+        verify(userRepository).findById(1L);
+    }
+
+    @Test
+    @DisplayName("getUserInfo()는 UserInfoResponse를 반환한다")
+    void getUserInfo_should_return_dto() {
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("dto@example.com");
+        user.setIsKt(true);
+        user.setIsAuthor(false);
+        user.setHasActiveSubscription(false);
+        user.setMyBookHistory(List.of(10L, 11L));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        UserInfoResponse dto = userService.getUserInfo(1L);
+
+        Assertions.assertEquals("dto@example.com", dto.email());
+        Assertions.assertTrue(dto.isKT());
+        Assertions.assertEquals(List.of(10L, 11L), dto.contentHistory());
+    }
+
 }

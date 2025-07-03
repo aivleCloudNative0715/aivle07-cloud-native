@@ -26,9 +26,11 @@ services:
   user:
     depends_on:
       - kafka
-    image: adoptopenjdk/maven-openjdk11:latest
+    image: laylaoh/user:20250702
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    env_file:
+      - .env
     command: mvn spring-boot:run
     ports:
       - 8082:8082
@@ -57,19 +59,19 @@ services:
     build:
       context: ./aiservice
       dockerfile: Dockerfile
+    env_file:
+      - .env
     ports:
       - 8084:8084
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      # ✨ 아래 두 줄은 application.yml의 docker 프로파일에 이미 설정되어 있다면 삭제하는 것을 권장합니다.
-      # ✨ 만약 반드시 여기서 환경 변수로 오버라이드해야 한다면, 아래처럼 수정하세요:
-      # - SPRING_GPT_BASE_URL=https://api.openai.com/v1
-      # - SPRING_GPT_IMAGE_URL=https://api.openai.com/v1
+      - SPRING_GPT_BASE_URL=https://api.openai.com/v1
+      - SPRING_GPT_IMAGE_URL=https://api.openai.com/v1/images/generations
       - SPRING_GPT_MODEL=gpt-4o-mini
       - SPRING_GPT_IMAGE_MODEL=dall-e-3
-      - SPRING_GPT_API_KEY=${SPRING_GPT_API_KEY} # 호스트 환경 변수에서 가져옴. 필수!
-      - SPRING_CLOUD_STREAM_KAFKA_BINDINGS_PUBLICATIONREQUESTEDCONSUMER_GROUP=aiservice
-      - SPRING_CLOUD_STREAM_KAFKA_BINDINGS_PUBLICATIONINFOCREATIONREQUESTEDCONSUMER_GROUP=aiservice
+      - SPRING_GPT_API_KEY=${SPRING_GPT_API_KEY}
+    # networks 설정이 완전히 제거되었습니다.
+
   platform:
     depends_on:
       - kafka

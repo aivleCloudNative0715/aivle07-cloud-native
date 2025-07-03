@@ -41,10 +41,7 @@ public abstract class AbstractEvent {
         .registerModule(new JavaTimeModule());
 
     private Long id;
-
-    @JsonIgnore
     private String eventType;
-
     private LocalDateTime timestamp = LocalDateTime.now();
 
 

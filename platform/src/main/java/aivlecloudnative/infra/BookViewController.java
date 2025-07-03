@@ -2,44 +2,30 @@ package aivlecloudnative.infra;
 
 import aivlecloudnative.domain.BookView;
 import aivlecloudnative.domain.BookViewRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RestController;
 
-//<<< Clean Arch / Inbound Adaptor
+import java.util.List;
 
 @RestController
-@RequestMapping(value="/bookViews")
-@Transactional
+@RequestMapping(value = "/bookViews") // /bookViews 경로로 API 제공
+@RequiredArgsConstructor // BookViewRepository 주입
 public class BookViewController {
 
-    @Autowired
-    BookViewRepository bookViewRepository;
+    private final BookViewRepository bookViewRepository;
 
-    // 모든 BookView 목록 조회 API (페이징 지원)
-    @GetMapping
-    public Page<BookView> getAllBookViews(Pageable pageable) {
-        return bookViewRepository.findAll(pageable);
+    // 특정 사용자의 도서 열람 기록 조회 API
+    @GetMapping("/users/{userId}")
+    public List<BookView> getPersonalBookViewHistory(@PathVariable Long userId) {
+        return bookViewRepository.findByUserId(userId);
     }
 
-    // 베스트셀러 목록 조회 API (isbestseller=true 인 도서만 조회, 페이징 지원)
-    @GetMapping("/bestsellers")
-    public Page<BookView> getBestsellers(Pageable pageable) {
-        return bookViewRepository.findByIsbestsellerTrue(pageable);
-    }
-
-    // 상위 N개 조회 API >>>
-    @GetMapping("/top-ranked-books")
-    public Page<BookView> getTopRankedBooks(
-        Pageable pageable // Pageable을 직접 받아옴
-    ) {
-        // 클라이언트에서 page=0, size=10, sort=viewCount,desc 와 같이 요청하면 됨
-        // 예: /bookViews/top-ranked-books?page=0&size=10&sort=viewCount,desc
-        return bookViewRepository.findByOrderByViewCountDesc(pageable);
+    // 특정 사용자의 특정 도서 열람 기록 조회 API (선택적)
+    @GetMapping("/users/{userId}/books/{bookId}")
+    public BookView getPersonalBookView(@PathVariable Long userId, @PathVariable Long bookId) {
+        return bookViewRepository.findByUserIdAndBookId(userId, bookId).orElse(null);
     }
 }
-//>>> Clean Arch / Inbound Adaptor

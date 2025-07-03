@@ -4,10 +4,13 @@ server:
 spring:
   application:
     name: author
----
 
+---
 spring:
-  profiles: default
+  config:
+    activate:
+      on-profile: default
+
   jpa:
     properties:
       hibernate:
@@ -30,14 +33,10 @@ spring:
       bindings:
         event-in:
           group: author
-#<<< EDA / Topic Name
           destination: aivlecloudnative
-#>>> EDA / Topic Name
           contentType: application/json
         event-out:
-#<<< EDA / Topic Name
           destination: aivlecloudnative
-#>>> EDA / Topic Name
           contentType: application/json
 
 logging:
@@ -45,14 +44,18 @@ logging:
     org.hibernate.type: trace
     org.springframework.cloud: debug
 
-
 server:
   port: 8083
 
----
+jwt:
+  secret: ${JWT_SECRET}
 
+---
 spring:
-  profiles: docker
+  config:
+    activate:
+      on-profile: docker
+
   jpa:
     properties:
       hibernate:
@@ -80,5 +83,3 @@ spring:
         event-out:
           destination: aivlecloudnative
           contentType: application/json
-
-

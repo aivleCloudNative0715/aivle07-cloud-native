@@ -1,6 +1,7 @@
 package aivlecloudnative.domain;
 
 import aivlecloudnative.UserApplication;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,20 +22,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(unique = true)
     private String email;
 
     private String userName;
 
-    private Boolean hasActiveSubscription;
+    private Boolean hasActiveSubscription = false;
 
     private String message;
 
     private Long subscriptionDueDate;
 
     @ElementCollection
-    private List<Long> myBookHistory;
+    private List<Long> myBookHistory = new ArrayList<>();
 
     private Boolean isKt;
+
+    private String password;
+
+    private Boolean isAuthor = false;
+
+    private Boolean isAdmin = false;
 
     public static UserRepository repository() {
         return UserApplication.applicationContext.getBean(
@@ -49,10 +57,6 @@ public class User {
     }
 
     public void addBookToHistory(Long bookId) {
-        if (this.myBookHistory == null) {
-            this.myBookHistory = new ArrayList<>();
-        }
-
         if (!this.myBookHistory.contains(bookId)) {
             this.myBookHistory.add(bookId);
         }
