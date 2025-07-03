@@ -124,7 +124,7 @@ public class ManuscriptListViewHandler {
             manuscriptList -> {
                 // 리드 모델의 status와 lastModifiedAt만 업데이트
                 manuscriptList.setStatus("PUBLICATION_REQUESTED");
-                manuscriptList.setLastModifiedAt(LocalDateTime.now()); // 현재 시간으로 업데이트
+                manuscriptList.setLastModifiedAt(System.currentTimeMillis()); // 현재 시간으로 업데이트
 
 
                 manuscriptListRepository.save(manuscriptList);
