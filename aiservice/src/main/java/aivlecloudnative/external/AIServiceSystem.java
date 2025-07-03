@@ -33,7 +33,7 @@ public class AIServiceSystem {
             @Value("${spring.gpt.image-model}") String imageModel,
             @Value("${spring.gpt.api-key}") String openAiApiKey) {
 
-        this.openAiApiKey = openAiApiKey;
+        this.openAiApiKey = openAiApiKey.trim();
         this.gptModel = gptModel;
         this.imageModel = imageModel;
         this.objectMapper = new ObjectMapper();
