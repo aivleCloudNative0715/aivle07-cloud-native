@@ -55,15 +55,15 @@ export function LoginPage() {
 }
 
 export function SignUpPage() {
-    const [email, setEmail] = useState("example@gamil.com");
+    const [email, setEmail] = useState("example@gmail.com");
     const [userName, setUserName] = useState("홍길동");
     const [password, setPassword] = useState("1234");
     const [isKt, setIsKt] = useState(false);
-    const { signUp, login } = useAuth();
+    const { signUp } = useAuth();
     const navigate = useNavigate();
 
     const handleSignUp = async () => {
-        const { success, errorCode, message } = await signUp({
+        const { success, errorCode} = await signUp({
             email,
             userName,
             password,

@@ -93,10 +93,15 @@ export default function BookDetail() {
                 <div className="flex flex-col md:flex-row gap-8">
                     {/* ───── 표지 ───── */}
                     <img
-                        src={book.coverImageUrl}
+                        src={
+                            !book.coverImageUrl || book.coverImageUrl === "https://via.placeholder.com/150?text=Error"
+                                ? "../images/default-cover.png"
+                                : book.coverImageUrl
+                        }
                         alt="표지 이미지"
                         className="w-48 h-64 object-cover border rounded shadow"
                     />
+
 
                     {/* ───── 메타 정보 & 콘텐츠 ───── */}
                     <div className="flex flex-col gap-2">

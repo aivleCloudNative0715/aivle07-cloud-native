@@ -88,7 +88,9 @@ export default function ManuscriptList() {
                                     >
                                         <td className="p-2 border text-center">{m.manuscriptId}</td>
                                         <td className="p-2 border">{m.title}</td>
-                                        <td className="p-2 border text-center">{m.lastModifiedAt?.split("T")[0]}</td>
+                                        <td className="p-2 border text-center">
+                                            {m.lastModifiedAt ? new Date(m.lastModifiedAt).toISOString().split("T")[0] : "-"}
+                                        </td>
                                         <td className="p-2 border text-center">{getStatusLabel(m.status)}</td>
                                     </tr>
                                 ))
