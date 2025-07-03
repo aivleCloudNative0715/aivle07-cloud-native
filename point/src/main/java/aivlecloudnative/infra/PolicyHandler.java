@@ -80,7 +80,7 @@ public class PolicyHandler {
                                 userSignedUp.getUserId(), existingPoint.getId());
                         return null;
                     } else {
-                        Point newPoint = Point.createInitialPoint(userSignedUp.getUserId(), userSignedUp.getIsKT());
+                        Point newPoint = Point.createInitialPoint(userSignedUp.getUserId(), userSignedUp.getIsKt());
                         pointRepository.save(newPoint);
                         log.info("Granted {} points to user {} (Initial Point ID: {})",
                                 newPoint.getCurrentPoints(), newPoint.getUserId(), newPoint.getId());
@@ -194,7 +194,7 @@ public class PolicyHandler {
                     }
                     Long requiredPoints = optionalBookInfo.get().getPrice();
 
-                    Optional<Point> optionalPoint = pointRepository.findByUserId(userId);
+                    Optional<Point> optionalPoint = pointRepository.findByUserId(Long.valueOf(userId));
                     if (optionalPoint.isEmpty()) {
                         log.warn("Points for userId {} not found. Cannot deduct points.", userId);
                         return null;

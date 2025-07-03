@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
+import {jwtDecode} from "jwt-decode";
 
 const AuthContext = createContext();
 
@@ -11,14 +12,27 @@ export function AuthProvider({ children }) {
         if (savedUser) setUser(savedUser);
     }, []);
 
+    const parseJwt = (token) => {
+        try {
+            const decoded = jwtDecode(token);
+            return {
+                email: decoded.email,
+                userId: decoded.userId,
+                isAuthor: decoded.isAuthor || false,
+                isAdmin: decoded.isAdmin || false,
+            };
+        } catch (e) {
+            console.error("Invalid JWT:", e);
+            return null;
+        }
+    };
+
     // ✅ 회원가입 함수
     const signUp = async ({ email, password, userName, isKt }) => {
         try {
             const response = await fetch(`${API_BASE}/users/signup`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password, isKt, userName }),
             });
 
@@ -35,31 +49,31 @@ export function AuthProvider({ children }) {
         }
     };
 
-
     // ✅ 로그인 함수
     const login = async (email, password) => {
         try {
             const response = await fetch(`${API_BASE}/users/login`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
             });
 
             if (!response.ok) throw new Error("로그인 실패");
 
             const data = await response.json();
+            const token = data.accessToken;
 
-            console.log(data);
+            const decoded = parseJwt(token);
+            if (!decoded) return { success: false, data: null };
 
             const userInfo = {
-                token: data.accessToken,
+                token,
                 tokenType: data.tokenType,
-                userId: data.userId,
-                email: data.email,
-                isAuthor: data.isAuthor || false,
-                isAdmin: data.isAdmin || false,
+                email: decoded.email,
+                userId: decoded.userId,
+                isAuthor: decoded.isAuthor,
+                isAdmin: decoded.isAdmin,
+                username: data.userName
             };
 
             setUser(userInfo);
@@ -72,7 +86,6 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // ✅ 로그아웃 함수
     const logout = async () => {
         try {
             await fetch(`${API_BASE}/users/logout`, {

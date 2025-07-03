@@ -21,12 +21,12 @@ public class Point {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 포인트 고유 ID
 
-    private String userId;
+    private Long userId;
     private Long currentPoints;
     private Boolean isKTmember;
 
     // 초기 포인트 지급을 위한 팩토리 메서드
-    public static Point createInitialPoint(String userId, boolean isKTmember) {
+    public static Point createInitialPoint(Long userId, boolean isKTmember) {
         return Point.builder()
                 .userId(userId)
                 .currentPoints(isKTmember ? 5000L : 1000L) // KT 고객 5000, 일반 1000

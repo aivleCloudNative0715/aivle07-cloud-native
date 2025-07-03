@@ -13,6 +13,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class PointQueryResponse {
     private Long id;          // 포인트 고유 ID
-    private String userId;    // 사용자 ID
+    private Long userId;    // 사용자 ID
     private Long currentPoints; // 현재 포인트
 }

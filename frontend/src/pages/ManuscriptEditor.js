@@ -60,7 +60,6 @@ export default function ManuscriptEditor() {
             const url = isEdit
                 ? `${API_BASE}/manuscripts/${manuscriptId}/save`
                 : `${API_BASE}/manuscripts/registration`;
-
             const method = isEdit ? "PUT" : "POST";
 
             const payload = {
@@ -82,14 +81,19 @@ export default function ManuscriptEditor() {
             });
 
             if (!res.ok) throw new Error("저장 실패");
-            setStatus("saved");
 
-            setTimeout(() => setStatus("idle"), 2000);
+            // 저장 성공 시 3초 후 리스트로 새로고침 이동
+            setStatus("saved");
+            window.location.href = "/manuscriptList";
+            setTimeout(() => {
+            }, 3000); // 3초 후 이동
+
         } catch (e) {
             console.error(e);
             setStatus("idle");
         }
     };
+
 
     const handlePublishRequest = async () => {
         setStatus("publishing");
@@ -194,23 +198,23 @@ export default function ManuscriptEditor() {
                                 disabled={status === "saving" || status === "publishing"}
                                 onClick={handleSave}
                             >
-                                {status === "saving" && (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                )}
+                                {status === "saving" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 저장
                             </Button>
 
-                            <Button
-                                disabled={status === "publishing" || status === "saving"}
-                                onClick={handlePublishRequest}
-                            >
-                                {status === "publishing" && (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                )}
-                                출간 요청
-                            </Button>
-                        </div>)
-                    }
+                            {isEdit && (
+                                <Button
+                                    disabled={status === "publishing" || status === "saving"}
+                                    onClick={handlePublishRequest}
+                                >
+                                    {status === "publishing" && (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    )}
+                                    출간 요청
+                                </Button>
+                            )}
+                        </div>
+                    )}
 
                     {/* 상태 메시지 */}
                     {status === "saved" && (

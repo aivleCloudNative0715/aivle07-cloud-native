@@ -28,7 +28,7 @@ public class PointController {
     public ResponseEntity<PointQueryResponse> getPointByUserId(@PathVariable String userId) {
         log.info("Attempting to retrieve points for userId: {}", userId);
 
-        return pointRepository.findByUserId(userId)
+        return pointRepository.findByUserId(Long.valueOf(userId))
                 .map(point -> {
                     PointQueryResponse response = new PointQueryResponse(
                         point.getId(),

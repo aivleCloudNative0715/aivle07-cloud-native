@@ -22,18 +22,22 @@ public class JwtTokenProvider {
     private String secretKey;
     private final long validityMs = 60 * 60 * 1000; // 1 시간
 
-    public String createToken(Long userId, Collection<String> roles) {
+    public String createToken(Long userId, String email, boolean isAuthor, boolean isAdmin) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + validityMs);
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
-                .claim("roles", roles)
+                .claim("userId", userId)
+                .claim("email", email)
+                .claim("isAuthor", isAuthor)
+                .claim("isAdmin", isAdmin)
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()), SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     public boolean validate(String token) {
         try {

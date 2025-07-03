@@ -11,6 +11,7 @@ import aivlecloudnative.domain.OutboxMessageRepository;
 import aivlecloudnative.domain.RequestContentAccessCommand;
 import aivlecloudnative.domain.RequestSubscriptionCommand;
 import aivlecloudnative.domain.SignUpCommand;
+import aivlecloudnative.domain.SignUpResponse;
 import aivlecloudnative.domain.User;
 import aivlecloudnative.domain.UserInfoResponse;
 import aivlecloudnative.domain.UserRepository;
@@ -39,7 +40,7 @@ public class UserService {
     private final TokenBlacklistService tokenBlacklistService;
 
     @Transactional
-    public User signUp(SignUpCommand cmd) {
+    public SignUpResponse signUp(SignUpCommand cmd) {
         if (userRepository.existsByEmail(cmd.getEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
@@ -54,7 +55,11 @@ public class UserService {
 
         saveOutbox(new UserSignedUp(savedUser), "UserSignedUp");
 
-        return savedUser;
+        return new SignUpResponse(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getUserName()
+        );
     }
 
     public LoginResponse login(LoginCommand cmd) {
@@ -66,16 +71,18 @@ public class UserService {
         }
 
         // ✅ JWT 토큰 생성 (권한 정보 포함)
-        String token = jwtTokenProvider.createToken(user.getId(), List.of("ROLE_USER"));
+        String token = jwtTokenProvider.createToken(
+                user.getId(),
+                user.getEmail(),
+                user.getIsAuthor(),
+                user.getIsAdmin()
+        );
 
         // ✅ 토큰 + 사용자 정보 응답
         return new LoginResponse(
                 token,
                 "Bearer",
-                user.getId(),
-                user.getEmail(),
-                user.getIsAuthor(),
-                user.getIsAdmin()
+                user.getUserName()
         );
     }
 
@@ -101,8 +108,6 @@ public class UserService {
         Long bookId = command.getBookId();
 
         User user = findUserByIdOrThrow(userId);
-
-        //TODO: bookId가 유효한지 확인
 
         boolean subscribed = user.getHasActiveSubscription();
 
@@ -158,7 +163,7 @@ public class UserService {
 
     @Transactional
     public void authorApproved(AuthorAccepted authorAccepted) {
-        Long userId = authorAccepted.getId();
+        Long userId = authorAccepted.getUserId();
 
         User user = findUserByIdOrThrow(userId);
         user.setIsAuthor(true);

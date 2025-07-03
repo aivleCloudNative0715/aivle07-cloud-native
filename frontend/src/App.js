@@ -21,7 +21,7 @@ function App() {
                 <Route path="/mypage" element={<MyPage />} />
 
                 <Route path="/manuscriptList" element={<ManuscriptList />} />
-                <Route path="/manuscript/:authorId/new" element={<ManuscriptEditor />} />
+
                 <Route path="/manuscript/:authorId/:manuscriptId" element={<ManuscriptEditor />} />
 
                 <Route path="/books" element={<AllBooksPage />} />
