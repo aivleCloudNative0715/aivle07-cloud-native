@@ -114,7 +114,9 @@ export default function AllBooksPage() {
                             <div
                                 className="w-full h-40 bg-gray-200 mb-2"
                                 style={{
-                                    backgroundImage: `url(${book.coverImageUrl})`,
+                                    backgroundImage: `url(${!book.coverImageUrl || book.coverImageUrl === "https://via.placeholder.com/150?text=Error"
+                                        ? "/images/default-cover.png"
+                                        : book.coverImageUrl})`,
                                     backgroundSize: "cover",
                                     backgroundPosition: "center",
                                 }}
@@ -125,6 +127,7 @@ export default function AllBooksPage() {
                         </div>
                     ))}
                 </div>
+            />
             </main>
         </div>
     );
