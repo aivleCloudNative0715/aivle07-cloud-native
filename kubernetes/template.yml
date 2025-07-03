@@ -325,7 +325,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: universeonoff/gateway:20250703
+          image: laylaoh/gateway:20250704
           ports:
             - containerPort: 8088
 
@@ -455,9 +455,10 @@ metadata:
   labels:
     app: gateway
 spec:
-  ports:
-    - port: 8088
-      targetPort: 8088
   selector:
     app: gateway
-  type: LoadBalancer
+  ports:
+    - name: http
+      port: 8088
+      targetPort: 8088
+  type: ClusterIP

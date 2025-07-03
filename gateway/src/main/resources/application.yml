@@ -55,16 +55,6 @@ spring:
               - "*"
             allowCredentials: true
 
-server:
-  port: 8088 # Ensure this port is correctly exposed by your Kubernetes service
-  ssl:
-    enabled: true
-    key-store: classpath:keystore.p12 # Ensure this file is present in src/main/resources and packaged in the Docker image
-    key-store-type: PKCS12
-    key-store-password: ${KEYSTORE_PASSWORD}
-    key-alias: springboot
-    key-password: ${KEY_PASSWORD}
-
 ---
 
 spring:
@@ -114,13 +104,3 @@ spring:
             allowedHeaders:
               - "*"
             allowCredentials: true
-
-server:
-  port: 8088 # Ensure this port is correctly exposed by your Kubernetes service
-  ssl:
-    enabled: true
-    key-store: classpath:keystore.p12 # Ensure this file is present in src/main/resources and packaged in the Docker image
-    key-store-type: PKCS12
-    key-store-password: ${KEYSTORE_PASSWORD}
-    key-alias: springboot
-    key-password: ${KEY_PASSWORD}
