@@ -95,7 +95,7 @@ export default function BookDetail() {
                     <img
                         src={
                             !book.coverImageUrl || book.coverImageUrl === "https://via.placeholder.com/150?text=Error"
-                                ? "../images/default-cover.png"
+                                ? "/images/default-cover.png"
                                 : book.coverImageUrl
                         }
                         alt="표지 이미지"
