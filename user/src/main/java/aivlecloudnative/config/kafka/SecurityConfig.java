@@ -40,7 +40,8 @@ public class SecurityConfig {
                                 // ✅ Swagger 관련 경로 허용
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/actuator/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

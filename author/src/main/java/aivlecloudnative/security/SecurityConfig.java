@@ -33,6 +33,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/actuator/**").permitAll()
                 // 작가 심사 API: isAdmin이 true인 경우 (ROLE_ADMIN)만 허용
                 .requestMatchers("/authors/judge").hasRole("ADMIN")
                 // 작가 신청 목록 조회 (관리자만)
