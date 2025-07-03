@@ -1,40 +1,49 @@
 package aivlecloudnative.infra;
 
-import aivlecloudnative.domain.*;
-import org.springframework.beans.BeanUtils; // BeanUtils 사용을 위한 import 추가
-import java.util.Optional;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import aivlecloudnative.infra.BookWorkRequestDto;
+import aivlecloudnative.domain.BookWork;
+import aivlecloudnative.domain.BookWorkRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import java.util.List;
+import java.util.Collections;
+import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(value = "/bookWorks")
-@Transactional
+@RequestMapping("/bookWorks")
 public class BookWorkController {
 
-    @Autowired
-    BookWorkRepository bookWorkRepository;
+    // 로거 클래스 이름 수정
+    private static final Logger log = LoggerFactory.getLogger(BookWorkController.class);
+    private final BookWorkRepository bookWorkRepository;
 
-    @GetMapping("/{id}")
-    public Optional<BookWork> getBookWorkById(@PathVariable Long id) {
-        return bookWorkRepository.findById(id);
+    public BookWorkController(BookWorkRepository bookWorkRepository) {
+        this.bookWorkRepository = bookWorkRepository;
     }
 
-    @PostMapping
-    public BookWork createBookWork(@RequestBody BookWorkRequestDto requestDto) {
-        // 1. DTO의 속성을 PublicationRequested 이벤트 객체로 복사
-        PublicationRequested publicationRequested = new PublicationRequested();
-        BeanUtils.copyProperties(requestDto, publicationRequested);
+    // authorId로 BookWork 조회 API (단일 BookWork 반환 가정)
+    @GetMapping("/{authorId}")
+    public ResponseEntity<List<BookWork>> getBookWorksByAuthorId(@PathVariable String authorId) { // 메서드명 변경 (복수형)
+        log.info("Attempting to retrieve BookWorks for authorId: {}", authorId);
 
-        // 2. BookWork 엔티티의 static 메서드를 호출하여 비즈니스 로직 실행
-        // 이 메서드 안에서 BookWork가 저장되고 PublicationInfoCreationRequested 이벤트가 발행될 것입니다.
-        // 이 메서드는 이제 저장된 BookWork 인스턴스를 반환하도록 BookWork.java 파일을 수정해야 합니다.
-        BookWork createdBookWork = BookWork.requestNewBookPublication(publicationRequested);
+        // bookWorkRepository.findByAuthorId(authorId)가 List<BookWork>를 반환한다고 가정
+        List<BookWork> books = bookWorkRepository.findByAuthorId(authorId);
 
-        // 3. 비즈니스 로직 처리 후 반환된 BookWork 객체를 클라이언트에 응답
-        return createdBookWork;
+        if (!books.isEmpty()) {
+            log.info("Successfully retrieved {} BookWorks for authorId: {}", books.size(), authorId);
+            return new ResponseEntity<>(books, HttpStatus.OK); // 조회된 목록 전체 반환
+        } else {
+            log.warn("No BookWorks found for authorId: {}", authorId);
+            // 책이 없을 경우, 404 Not Found 대신 빈 리스트와 200 OK를 반환하는 것이 RESTful API에서 더 흔함
+            // 클라이언트는 빈 배열을 받고 '책이 없음'을 인지할 수 있습니다.
+            return new ResponseEntity<>(Collections.emptyList(), HttpStatus.OK);
+            // 만약 404를 원한다면:
+            // return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
-
-    // 기타 필요한 CRUD 메서드 (PUT, DELETE 등)를 추가할 수 있습니다.
 }

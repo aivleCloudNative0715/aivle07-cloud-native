@@ -9,5 +9,5 @@ public class PublicationRequestCommand {
 
     private String authorId;
     private Long manuscriptId;
-
 }
+

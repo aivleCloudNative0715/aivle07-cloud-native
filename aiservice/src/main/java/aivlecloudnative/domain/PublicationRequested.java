@@ -1,17 +1,23 @@
 package aivlecloudnative.domain;
 
-import aivlecloudnative.domain.*;
+import lombok.NoArgsConstructor;
 import aivlecloudnative.infra.AbstractEvent;
-import java.util.*;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@Data
-@ToString
+@Getter
+@Setter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PublicationRequested extends AbstractEvent {
 
     private Long manuscriptId;
     private String title;
+    private String content;
     private String summary;
-    private String keywords;
     private String authorName;
+    private String keywords;
+    private String authorId;
 }

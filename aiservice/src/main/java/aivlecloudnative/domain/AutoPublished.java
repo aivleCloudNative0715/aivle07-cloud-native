@@ -1,26 +1,35 @@
 package aivlecloudnative.domain;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import aivlecloudnative.infra.AbstractEvent; // 올바른 AbstractEvent import
+import aivlecloudnative.infra.AbstractEvent;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@Data
-@EqualsAndHashCode(callSuper = false) // AbstractEvent를 상속받는 경우
+@Getter
+@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AutoPublished extends AbstractEvent {
 
-    private Long id; // BookWork의 ID
-    private Long manuscriptId;
+    private Long id;
     private String title;
+    private Long manuscriptId;
+    private String content;
     private String summary;
     private String keywords;
+    private String authorId;
+    private String authorName;
+
     private String coverImageUrl;
     private String ebookUrl;
     private String category;
     private Integer price;
-    private String status;
-    private String authorName;
 
-    public AutoPublished() {
-        super(); // AbstractEvent의 기본 생성자 호출
-    }
+    private String status;
+
 }

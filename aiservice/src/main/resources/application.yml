@@ -1,13 +1,22 @@
 server:
-  port: 8080 # default 프로파일이 활성화되면 이 포트가 사용됩니다.
+    port: 8084
 
 spring:
   application:
     name: aiservice
-  # --- 기본 프로파일 설정 ---
+  # --- 기본 프로필 (default) 설정 ---
   config:
     activate:
       on-profile: default
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
   jpa:
     properties:
       hibernate:
@@ -15,12 +24,13 @@ spring:
         format_sql: true
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
+    function:
+      # publicationRequested: 집필관리 서비스에서 발행한 출간요청됨 이벤트 구독
+      definition: publicationRequestedSubscriber;autoPublishedPublisher
     stream:
-      function:
-        definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: localhost:9092 # 로컬 환경 카프카 브로커 주소
         streams:
           binder:
             configuration:
@@ -30,26 +40,28 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        publicationRequestedConsumer-in-0:
-          destination: bookwork.publication.requested
-          group: aiservice
-          contentType: application/json
-        publicationInfoCreationRequestedConsumer-in-0:
-          destination: bookwork.publication-info.creation-requested
-          group: aiservice
-          contentType: application/json
-        # ⭐️ 이 부분의 destination을 위 publicationInfoCreationRequestedConsumer-in-0과 동일하게 수정했습니다.
-        event-out-0:
-          destination: bookwork.publication-info.creation-requested # <--- 이 부분을 수정!
-          contentType: application/json
-          producer:
-            headerMode: embeddedHeaders
+        # --- 인바운드 (구독) 바인딩 설정 ---
 
-  # --- GPT API 설정 (default 프로파일 안에 포함) ---
+        # 1. 출간요청됨(publicationRequested) 이벤트 구독 (집필관리 -> ai서비스)
+        publicationRequestedSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: ai-book-publicationRequested-group # 이 컨슈머 그룹의 이름
+          contentType: application/json # 메시지 콘텐츠 타입
+          consumer:
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
+
+        # --- 아웃바운드 (발행) 바인딩 설정 ---
+
+        # 2. 자동출간됨(AutoPublished) 이벤트 발행 (ai서비스 -> 도서 플랫폼)
+        autoPublishedPublisher-out-0:
+          destination: aivlecloudnative # 이벤트가 발행될 Kafka 토픽
+          producer:
+            headerMode: headers # 메시지 헤더 모드
+            partitionCount: 1 # 토픽 파티션 수
   gpt:
     api-key: ${SPRING_GPT_API_KEY}
-    base-url: https://api.openai.com/v1/chat/completions
-    image-url: https://api.openai.com/v1/images/generations
+    base-url: https://api.openai.com/v1
+    image-url: https://api.openai.com/v1
     model: gpt-4o-mini
     image-model: dall-e-3
 
@@ -59,11 +71,12 @@ logging:
     org.springframework.cloud: debug
 
 ---
-# --- Docker 프로파일 설정 ---
+
 server:
-  port: 8084 # docker 프로파일이 활성화되면 이 포트가 사용됩니다.
+  port: 8087 # Docker 프로필에서도 포트 변경
 
 spring:
+  # --- Docker 프로필 설정 ---
   config:
     activate:
       on-profile: docker
@@ -74,12 +87,13 @@ spring:
         format_sql: true
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
+    function:
+      definition: publicationRequestedSubscriber;
+                  autoPublishedPublisher
     stream:
-      function:
-        definition: publicationRequestedConsumer;publicationInfoCreationRequestedConsumer
       kafka:
         binder:
-          brokers: my-kafka:9092
+          brokers: my-kafka:9092 # Docker 환경에서는 도커 네트워크 내부의 카프카 서비스 이름 사용
         streams:
           binder:
             configuration:
@@ -89,33 +103,28 @@ spring:
                 value:
                   serde: org.apache.kafka.common.serialization.Serdes$StringSerde
       bindings:
-        publicationRequestedConsumer-in-0:
-          destination: bookwork.publication.requested
-          group: aiservice
-          contentType: application/json
-        publicationInfoCreationRequestedConsumer-in-0:
-          destination: bookwork.publication-info.creation-requested
-          group: aiservice
-          contentType: application/json
-        # ⭐️ 이 부분의 destination을 위 publicationInfoCreationRequestedConsumer-in-0과 동일하게 수정했습니다.
-        event-out-0:
-          destination: bookwork.publication-info.creation-requested # <--- 이 부분을 수정!
-          contentType: application/json
+        # --- 인바운드 (구독) 바인딩 설정 ---
+
+        # 1. 출간요청됨(publicationRequested) 이벤트 구독 (집필관리 -> ai서비스)
+        publicationRequestedSubscriber-in-0:
+          destination: aivlecloudnative # 이벤트가 발행되는 Kafka 토픽
+          group: ai-book-publicationRequested-group # 이 컨슈머 그룹의 이름
+          contentType: application/json # 메시지 콘텐츠 타입
+          consumer:
+            maxAttempts: 3 # 메시지 처리 실패 시 재시도 횟수
+
+        # --- 아웃바운드 (발행) 바인딩 설정 ---
+
+        # 2. 자동출간됨(AutoPublished) 이벤트 발행 (ai서비스 -> 도서 플랫폼)
+        autoPublishedPublisher-out-0:
+          destination: aivlecloudnative # 이벤트가 발행될 Kafka 토픽
           producer:
-            headerMode: embeddedHeaders
+            headerMode: headers # 메시지 헤더 모드
+            partitionCount: 1 # 토픽 파티션 수
 
-  # --- Docker 프로파일에도 GPT API 설정을 포함 ---
-  gpt:
-    api-key: ${SPRING_GPT_API_KEY}
-    base-url: https://api.openai.com/v1/chat/completions
-    image-url: https://api.openai.com/v1/images/generations
-    model: gpt-4o-mini
-    image-model: dall-e-3
-
-logging:
-  level:
-    root: INFO
-    org.hibernate.type: trace
-    org.springframework.cloud: DEBUG
-    org.springframework.web.reactive.function.client: DEBUG # WebClient 로그
-    aivlecloudnative: DEBUG
+gpt:
+  api-key: ${SPRING_GPT_API_KEY}
+  base-url: https://api.openai.com/v1
+  image-url: https://api.openai.com/v1
+  model: gpt-4o-mini
+  image-model: dall-e-3

@@ -17,9 +17,9 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://my-kafka:29092,PLAINTEXT_HOST://my-kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://my-kafka:9092 # <-- 이 부분을 이렇게 변경! 29092 부분을 제거합니다.
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT # <-- 이 부분을 이렇게 변경! PLAINTEXT_HOST 부분을 제거합니다.
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT # <-- 이 라인은 그대로 둡니다.
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
@@ -113,5 +113,3 @@ services:
     volumes:
       - ./point:/usr/src
       - ./maven-repo:/root/.m2
-
-# networks 블록 전체가 제거되었습니다.
