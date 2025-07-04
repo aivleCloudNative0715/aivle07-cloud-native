@@ -121,10 +121,9 @@ spring:
           producer:
             headerMode: headers # 메시지 헤더 모드
             partitionCount: 1 # 토픽 파티션 수
-
-gpt:
-  api-key: ${SPRING_GPT_API_KEY}
-  base-url: https://api.openai.com/v1
-  image-url: https://api.openai.com/v1
-  model: gpt-4o-mini
-  image-model: dall-e-3
+  gpt:
+    api-key: ${SPRING_GPT_API_KEY}
+    base-url: https://api.openai.com/v1
+    image-url: https://api.openai.com/v1
+    model: gpt-4o-mini
+    image-model: dall-e-3
