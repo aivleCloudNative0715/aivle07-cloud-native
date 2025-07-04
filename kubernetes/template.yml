@@ -159,7 +159,7 @@ spec:
             - name: SPRING_GPT_MODEL
               value: gpt-4o-mini
             - name: SPRING_GPT_IMAGE_MODEL
-              value: dall-e-2
+              value: dall-e-3
             - name: SPRING_GPT_API_KEY
               valueFrom:
                 secretKeyRef:
