@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 
 export default function AdminAuthorDetail() {
-    const { id } = useParams();
     const { user } = useAuth();
     const API_BASE = process.env.REACT_APP_API_URL;
     const [author, setAuthor] = useState(null);
@@ -62,7 +61,7 @@ export default function AdminAuthorDetail() {
                     <div className="space-y-4">
                         <div><strong>ID:</strong> {author.id}</div>
                         <div><strong>이름:</strong> {author.authorName}</div>
-                        <div><strong>이메일:</strong> {author.email}</div>
+                        <div><strong>이메일:</strong> {author.authorId}</div>
                         <div><strong>대표 작품:</strong> {author.representativeWork || "없음"}</div>
                         <div><strong>포트폴리오:</strong> {author.portfolio || "없음"}</div>
                         <div><strong>소개:</strong> {author.bio || "없음"}</div>
