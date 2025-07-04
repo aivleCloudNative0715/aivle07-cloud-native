@@ -13,12 +13,20 @@ spec:
     metadata:
       labels:
         app: user
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: user
-          image: "laylaoh/user:lastest"
+          image: project15acr.azurecr.io/user:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8082
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: jwt_secret
           readinessProbe:
             httpGet:
               path: '/actuator/health'

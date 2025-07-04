@@ -13,10 +13,12 @@ spec:
     metadata:
       labels:
         app: platform
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: platform
-          image: "universeonoff/platform:20250703"
+          image: project15acr.azurecr.io/platform:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8085
           readinessProbe:
