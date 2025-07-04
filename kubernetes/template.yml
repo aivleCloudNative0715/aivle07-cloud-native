@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app: redis
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
       - name: redis
@@ -48,6 +49,7 @@ spec:
     metadata:
       labels:
         app: user
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: user
@@ -95,6 +97,7 @@ spec:
     metadata:
       labels:
         app: author
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: author
@@ -142,6 +145,7 @@ spec:
     metadata:
       labels:
         app: aiservice
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: aiservice
@@ -199,6 +203,7 @@ spec:
     metadata:
       labels:
         app: platform
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: platform
@@ -240,6 +245,7 @@ spec:
     metadata:
       labels:
         app: writing
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: writing
@@ -281,6 +287,7 @@ spec:
     metadata:
       labels:
         app: point
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: point
@@ -322,6 +329,7 @@ spec:
     metadata:
       labels:
         app: gateway
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: gateway
