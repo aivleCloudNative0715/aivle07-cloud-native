@@ -13,12 +13,20 @@ spec:
     metadata:
       labels:
         app: author
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: author
-          image: "sung0/author:20250703"
+          image: project15acr.azurecr.io/author:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8083
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: jwt_secret
           readinessProbe:
             httpGet:
               path: '/actuator/health'

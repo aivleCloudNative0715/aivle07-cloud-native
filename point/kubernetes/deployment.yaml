@@ -13,10 +13,12 @@ spec:
     metadata:
       labels:
         app: point
+        'sidecar.istio.io/inject': "true"
     spec:
       containers:
         - name: point
-          image: "bildad01/point:20250703"
+          image: project15acr.azurecr.io/point:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8087
           readinessProbe:
