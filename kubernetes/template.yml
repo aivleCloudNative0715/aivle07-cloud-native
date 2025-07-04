@@ -145,7 +145,7 @@ spec:
     spec:
       containers:
         - name: aiservice
-          image: laylaoh/aiservice:20250704_v2
+          image: gnoejnahi/aiservice:250703
           imagePullPolicy: Always
           ports:
             - containerPort: 8084
