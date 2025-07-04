@@ -16,21 +16,30 @@ AI 기반 자동 출간 및 구독 플랫폼
 ## 🎯 핵심 기능
 
 - AI 기반 자동 출판 기능
-- 포인트 기반 전자책 구독 시스템
 - 구독 및 열람 내역 실시간 반영 (CQRS)
 - 작가 및 관리자 기능
 - 실시간 메시징 및 상태 전달 (Event)
 
 ---
 
-## 🔌 API Gateway
+## 🚀 배포 및 운영 환경
 
-본 프로젝트의 API Gateway는 **8088 포트**에서 실행됩니다.  
-각 마이크로서비스의 라우팅 테스트 시 반드시 **http://localhost:8088** 주소를 사용해야 합니다.
+- **프론트엔드**는 Vercel을 통해 배포됨  
+  👉 https://aivle07-cloud-native.vercel.app/
 
-예시 (회원가입 테스트):
-```bash
-http POST http://localhost:8088/users/signup name=홍길동 email=test@example.com
-```
+- **백엔드**는 Azure Kubernetes Service(AKS) 환경에서 운영  
+  👉 https://yolang.shop/
 
-> 📁 Repository 구조, 사용 방법, 시연 영상 등은 추후 업데이트 예정입니다.
+- **Ingress Gateway**를 활용해 모든 HTTP 요청을 HTTPS로 안전하게 수신
+  - Let's Encrypt + cert-manager를 사용한 자동 SSL 인증서 발급/갱신 구성
+
+- **도메인 연결**
+  - yolang.shop 도메인을 Ingress Controller와 연결
+  - 마이크로서비스는 path 기반 routing으로 구분 (`/users`, `/books` 등)
+
+- **CI/CD 자동화**
+  - GitHub Actions 기반 파이프라인 구성
+  - Docker 이미지는 Azure 기본 레지스트리를 사용하여 권한 문제 해결
+
+- **보안 고려**
+  - 프론트엔드에서 발생하는 HTTP 차단 이슈를 도메인 및 HTTPS 설정으로 해결
