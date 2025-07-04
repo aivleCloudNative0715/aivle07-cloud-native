@@ -155,7 +155,7 @@ spec:
             - name: SPRING_GPT_BASE_URL
               value: https://api.openai.com/v1
             - name: SPRING_GPT_IMAGE_URL
-              value: https://api.openai.com/v1/images/generations
+              value: https://api.openai.com/v1
             - name: SPRING_GPT_MODEL
               value: gpt-4o-mini
             - name: SPRING_GPT_IMAGE_MODEL
