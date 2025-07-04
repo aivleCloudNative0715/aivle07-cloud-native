@@ -127,7 +127,6 @@ export default function AllBooksPage() {
                         </div>
                     ))}
                 </div>
-            />
             </main>
         </div>
     );

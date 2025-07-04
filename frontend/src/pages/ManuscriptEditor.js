@@ -86,7 +86,7 @@ export default function ManuscriptEditor() {
             setStatus("saved");
             window.location.href = "/manuscriptList";
             setTimeout(() => {
-            }, 3000); // 3초 후 이동
+            }, 5000); // 3초 후 이동
 
         } catch (e) {
             console.error(e);
