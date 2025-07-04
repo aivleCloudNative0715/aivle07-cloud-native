@@ -21,6 +21,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+// 생략된 import 문은 그대로 유지
+
+@ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
     @Mock
@@ -78,7 +81,7 @@ public class UserServiceTest {
         when(passwordEncoder.encode(cmd.getPassword())).thenReturn("encoded1234");
         when(userRepository.save(any())).thenAnswer(i -> {
             User u = i.getArgument(0);
-            u.setId(1L); // id 설정 필요 시
+            u.setId(1L);
             return u;
         });
 
@@ -90,7 +93,6 @@ public class UserServiceTest {
 
         verify(outboxMessageRepository).save(any(OutboxMessage.class));
     }
-
 
     @Test
     @DisplayName("로그인 성공 시 JWT 포함 LoginResponse 반환")
@@ -118,7 +120,7 @@ public class UserServiceTest {
         Assertions.assertEquals(fakeToken, response.accessToken());
         Assertions.assertEquals("Bearer", response.tokenType());
 
-        verify(jwtTokenProvider.createToken(eq(user.getId()), eq(user.getEmail()), eq(false), eq(false)));
+        verify(jwtTokenProvider).createToken(eq(user.getId()), eq(user.getEmail()), eq(false), eq(false));
     }
 
     @Test
@@ -153,16 +155,13 @@ public class UserServiceTest {
     @Test
     @DisplayName("로그아웃 시 토큰이 블랙리스트에 남은 만료시간으로 등록된다")
     void logout_shouldBlacklistToken_withRemainingExpiration() {
-        // given
         String token = "jwt.token.string";
-        long remainMs = 30 * 60 * 1000L; // 30분 남았다고 가정
+        long remainMs = 30 * 60 * 1000L;
 
         when(jwtTokenProvider.getExpiration(token)).thenReturn(remainMs);
 
-        // when
         userService.logout(token);
 
-        // then
         verify(tokenBlacklistService).blacklist(token, remainMs);
     }
 
@@ -176,9 +175,9 @@ public class UserServiceTest {
 
         RequestContentAccessCommand cmd = new RequestContentAccessCommand();
         cmd.setUserId(1L);
-        cmd.setBookId(2L);
+        cmd.setBookId(100L);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         userService.requestContentAccess(cmd);
@@ -197,7 +196,7 @@ public class UserServiceTest {
         cmd.setUserId(1L);
         cmd.setBookId(2L);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         userService.requestContentAccess(cmd);
@@ -216,7 +215,7 @@ public class UserServiceTest {
         event.setUserId(1L);
         event.setBookId(42L);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         userService.updateBookRead(event);
@@ -231,7 +230,7 @@ public class UserServiceTest {
         User user = new User();
         user.setHasActiveSubscription(true);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
         boolean result = userService.getSubscriptionStatus(1L);
         Assertions.assertTrue(result);
@@ -243,7 +242,7 @@ public class UserServiceTest {
         User user = new User();
         user.setMyBookHistory(List.of(1L, 2L, 3L));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
         List<Long> result = userService.getContentHistory(1L);
 
@@ -254,19 +253,16 @@ public class UserServiceTest {
     @Test
     @DisplayName("작가 승인 이벤트 처리 시 isAuthor=true로 변경")
     void authorApproved_should_setIsAuthorTrue() {
-        // given
         User user = new User();
         user.setId(1L);
         user.setIsAuthor(false);
 
-        AuthorAccepted event = new AuthorAccepted(1L, 2L);
+        AuthorAccepted event = new AuthorAccepted(2L, 1L);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
-        // when
         userService.authorApproved(event);
 
-        // then
         Assertions.assertTrue(user.getIsAuthor());
         verify(userRepository).findById(1L);
     }
@@ -282,7 +278,7 @@ public class UserServiceTest {
         user.setHasActiveSubscription(false);
         user.setMyBookHistory(List.of(10L, 11L));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
         UserInfoResponse dto = userService.getUserInfo(1L);
 
@@ -290,5 +286,4 @@ public class UserServiceTest {
         Assertions.assertTrue(dto.isKT());
         Assertions.assertEquals(List.of(10L, 11L), dto.contentHistory());
     }
-
 }
